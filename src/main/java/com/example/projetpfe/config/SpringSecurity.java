@@ -49,6 +49,10 @@ public class SpringSecurity {
                                 .requestMatchers("/login-success").permitAll()
                                 .requestMatchers("/edit-user/**").hasRole("ADMIN")
                                 .requestMatchers("/users-home").permitAll()
+                                .requestMatchers("/agenda/**").authenticated()
+                                .requestMatchers("/clients/**").authenticated()
+                                .requestMatchers("/admin/**").hasRole("ADMIN")
+
                 ).sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                         .invalidSessionUrl("/login")
@@ -69,7 +73,7 @@ public class SpringSecurity {
                                 .logoutSuccessUrl("/login?logout")  // Ajoutez cette ligne
                                 .deleteCookies("JSESSIONID")        // Ajoutez cette ligne
                                 .clearAuthentication(true)          // Ajoutez cette ligne
-                                .invalidateHttpSession(true)        // Ajoutez cette ligne
+                                .invalidateHttpSession(true)
                                 .permitAll()
                 );
         return http.build();

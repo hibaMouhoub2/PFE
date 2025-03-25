@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mise à jour du statut client - ATTAWFIQ MICRO-FINANCE</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Style CSS identique à celui de agenda/index.html - à extraire dans un fichier CSS commun -->
+    <style>
+        :root {
+            --primary-color: #FF8C00;
+            --secondary-color: #222;
+            --accent-color: #FF6B00;
+            --light-color: #f8f9fa;
+            --dark-color: #111;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: var(--secondary-color);
+        }
+
+        .navbar {
+            background-color: var(--secondary-color) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color) !important;
+        }
+
+        .nav-link {
+            color: #fff !important;
+            font-weight: 500;
+            margin: 0 10px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary-color) !important;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .btn-warning {
+            background-color: #FFC107;
+            border-color: #FFC107;
+        }
+
+        .client-info-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-landmark me-2"></i>ATTAWFIQ MICRO-FINANCE
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/agenda}">
+                        <i class="fas fa-chart-pie me-1"></i>Tableau de bord
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('USER')">
+                    <a class="nav-link" th:href="@{/agenda/index}">
+                        <i class="fas fa-calendar-alt me-1"></i>Agenda
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/clients}">
+                        <i class="fas fa-users me-1"></i>Clients
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/unassigned-clients}">
+                        <i class="fas fa-user-plus me-1"></i>A assigner
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/users}">
+                        <i class="fas fa-users-cog me-1"></i>Utilisateurs
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" th:href="@{/logout}">
+                        <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <a th:href="@{/agenda/index}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour à l'agenda
+            </a>
+        </div>
+    </div>
+
+    <!-- Messages d'alerte -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle me-2"></i><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary-custom text-white">
+            <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Mise à jour du statut client</h4>
+        </div>
+        <div class="card-body">
+            <!-- Informations du client -->
+            <div class="client-info-card">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Nom:</strong> <span th:text="${client.nom}">Nom</span></p>
+                        <p><strong>Prénom:</strong> <span th:text="${client.prenom}">Prénom</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Téléphone:</strong> <span th:text="${client.telephone}">+212 600000000</span></p>
+                        <p><strong>Email:</strong> <span th:text="${client.email ?: '-'}">client@example.com</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulaire de mise à jour du statut -->
+            <form th:action="@{/clients/{id}/status(id=${client.id})}" method="post">
+                <div class="mb-3">
+                    <label for="status" class="form-label">Statut du client <span class="text-danger">*</span></label>
+                    <select id="status" name="status" class="form-select" required onchange="toggleFields()">
+                        <option value="">-- Sélectionnez un statut --</option>
+                        <option th:each="status : ${statuses}" th:value="${status}" th:text="${status.displayName}"></option>
+                    </select>
+                </div>
+
+                <!-- Champ pour la date de rappel (visible uniquement pour ABSENT) -->
+                <div id="rappelDateField" class="mb-3" style="display: none;">
+                    <label for="rappelDate" class="form-label">Date de rappel <span class="text-danger">*</span></label>
+                    <input type="datetime-local" id="rappelDate" name="rappelDate" class="form-control">
+                    <div class="form-text">La date à laquelle le client doit être rappelé.</div>
+                </div>
+
+                <!-- Champ pour les notes -->
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Notes</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="Ajoutez des notes concernant le traitement de ce client..."></textarea>
+                </div>
+
+                <!-- Boutons du formulaire -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a th:href="@{/agenda/index}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>Annuler
+                    </a>
+
+                    <div id="status-buttons">
+                        <button type="submit" class="btn btn-primary" id="btn-submit">
+                            <i class="fas fa-save me-1"></i>Enregistrer
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+
+<!-- Script pour la gestion de l'affichage conditionnel des champs -->
+<script>
+    function toggleFields() {
+        const status = document.getElementById('status').value;
+        const rappelDateField = document.getElementById('rappelDateField');
+        const btnSubmit = document.getElementById('btn-submit');
+
+        // Réinitialiser le style du bouton
+        btnSubmit.className = 'btn btn-primary';
+        btnSubmit.innerHTML = '<i class="fas fa-save me-1"></i>Enregistrer';
+
+        // Afficher/masquer le champ date de rappel
+        if (status === 'ABSENT') {
+            rappelDateField.style.display = 'block';
+            btnSubmit.className = 'btn btn-warning';
+            btnSubmit.innerHTML = '<i class="fas fa-phone me-1"></i>Programmer un rappel';
+        } else {
+            rappelDateField.style.display = 'none';
+        }
+
+        // Changer le style du bouton selon le statut
+        if (status === 'CONTACTE') {
+            btnSubmit.className = 'btn btn-success';
+            btnSubmit.innerHTML = '<i class="fas fa-check-circle me-1"></i>Marquer comme contacté';
+        } else if (status === 'REFUS') {
+            btnSubmit.className = 'btn btn-danger';
+            btnSubmit.innerHTML = '<i class="fas fa-times-circle me-1"></i>Marquer comme refus';
+        }
+    }
+
+    // Initialiser l'état des champs au chargement de la page
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleFields();
+    });
+</script>
+</body>
+</html>

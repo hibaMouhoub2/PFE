@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clients Non Assignés - ATTAWFIQ MICRO-FINANCE</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Style CSS - à extraire dans un fichier CSS commun -->
+    <style>
+        :root {
+            --primary-color: #FF8C00;
+            --secondary-color: #222;
+            --accent-color: #FF6B00;
+            --light-color: #f8f9fa;
+            --dark-color: #111;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: var(--secondary-color);
+        }
+
+        .navbar {
+            background-color: var(--secondary-color) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color) !important;
+        }
+
+        .nav-link {
+            color: #fff !important;
+            font-weight: 500;
+            margin: 0 10px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary-color) !important;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .page-header {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .select-checkbox {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+<!-- Barre de navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-landmark me-2"></i>ATTAWFIQ MICRO-FINANCE
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/agenda}">
+                        <i class="fas fa-chart-pie me-1"></i>Tableau de bord
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('USER')">
+                    <a class="nav-link" th:href="@{/agenda/index}">
+                        <i class="fas fa-calendar-alt me-1"></i>Agenda
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/clients}">
+                        <i class="fas fa-users me-1"></i>Clients
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/unassigned-clients}">
+                        <i class="fas fa-user-plus me-1"></i>A assigner
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/users}">
+                        <i class="fas fa-users-cog me-1"></i>Utilisateurs
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" th:href="@{/logout}">
+                        <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-user-plus me-2"></i>Clients non assignés</h2>
+            <div>
+                <a th:href="@{/admin/clients}" class="btn btn-primary">
+                    <i class="fas fa-list me-1"></i>Tous les clients
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages d'alerte -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle me-2"></i><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Tableau des clients non assignés avec sélection multiple -->
+    <form th:action="@{/admin/clients/assign-multiple}" method="post" id="assignMultipleForm">
+        <div class="card">
+            <div class="card-header bg-primary-custom text-white d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-list me-2"></i>Clients à assigner</span>
+                <div id="bulkAssignSection" class="d-flex align-items-center">
+                    <select class="form-select form-select-sm d-inline-block me-2" name="userId" id="bulkAssignUserId" style="width: 200px;" required>
+                        <option value="">-- Sélectionner un utilisateur --</option>
+                        <option th:each="user : ${users}" th:value="${user.id}" th:text="${user.firstName + ' ' + user.lastName}">
+                            Nom utilisateur
+                        </option>
+                    </select>
+                    <button type="submit" id="bulkAssignButton" class="btn btn-sm btn-warning">
+                        <i class="fas fa-user-plus me-1"></i>Assigner la sélection
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(clients)}" class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>Aucun client non assigné pour le moment.
+                </div>
+
+                <div class="table-responsive" th:unless="${#lists.isEmpty(clients)}">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAll" class="select-checkbox">
+                                </th>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>Téléphone</th>
+                                <th>Email</th>
+                                <th>Date de création</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="client : ${clients}">
+                            <td>
+                                <input type="checkbox" name="clientIds" th:value="${client.id}" class="client-checkbox select-checkbox">
+                            </td>
+                            <td th:text="${client.nom}">Nom</td>
+                            <td th:text="${client.prenom}">Prénom</td>
+                            <td th:text="${client.telephone}">+212 600000000</td>
+                            <td th:text="${client.email ?: '-'}">client@example.com</td>
+                            <td th:text="${#temporals.format(client.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2023 10:00</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye me-1"></i>Détails
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" th:data-bs-target="'#assignModal-' + ${client.id}">
+                                        <i class="fas fa-user-plus me-1"></i>Assigner
+                                    </button>
+                                </div>
+
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+    <!-- Modal pour assigner un utilisateur -->
+    <div th:each="client : ${clients}">
+        <div class="modal fade" th:id="'assignModal-' + ${client.id}" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="assignModalLabel">Assigner le client</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form th:action="@{/clients/{id}/assign(id=${client.id})}" method="post">
+                        <div class="modal-body">
+                            <p>
+                                Vous allez assigner le client <strong th:text="${client.prenom + ' ' + client.nom}">Nom client</strong>
+                                à un utilisateur. Veuillez sélectionner l'utilisateur ci-dessous:
+                            </p>
+                            <div class="mb-3">
+                                <label class="form-label">Utilisateur</label>
+                                <select th:id="'singleUserId-' + ${client.id}" name="userId" class="form-select" required>
+                                    <option value="">-- Sélectionner un utilisateur --</option>
+                                    <option th:each="user : ${users}" th:value="${user.id}" th:text="${user.firstName + ' ' + user.lastName}">
+                                        Nom utilisateur
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-primary">Confirmer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+
+<!-- Script pour la gestion des checkboxes et l'affichage du formulaire d'assignation multiple -->
+<script>
+    // Remplacez votre script JavaScript par celui-ci
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAll = document.getElementById('selectAll');
+        const clientCheckboxes = document.querySelectorAll('.client-checkbox');
+        const bulkAssignButton = document.getElementById('bulkAssignButton');
+        const assignMultipleForm = document.getElementById('assignMultipleForm');
+
+        // Fonction pour mettre à jour l'état du bouton
+        function updateBulkAssignButton() {
+            const anyChecked = Array.from(clientCheckboxes).some(cb => cb.checked);
+            bulkAssignButton.disabled = !anyChecked;
+
+            // Style visuel pour indiquer l'état
+            if (anyChecked) {
+                bulkAssignButton.classList.add('btn-danger');
+                bulkAssignButton.classList.remove('btn-warning');
+            } else {
+                bulkAssignButton.classList.add('btn-warning');
+                bulkAssignButton.classList.remove('btn-danger');
+            }
+        }
+
+        // Gérer la sélection de tous les clients
+        selectAll.addEventListener('change', function() {
+            clientCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateBulkAssignButton();
+        });
+
+        // Gérer les sélections individuelles
+        clientCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateBulkAssignButton();
+                // Mettre à jour le selectAll
+                selectAll.checked = Array.from(clientCheckboxes).every(cb => cb.checked);
+            });
+        });
+
+        // Vérifier que des clients sont sélectionnés avant soumission
+        assignMultipleForm.addEventListener('submit', function(event) {
+            const checkedBoxes = document.querySelectorAll('.client-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                event.preventDefault();
+                alert('Veuillez sélectionner au moins un client à assigner.');
+            }
+        });
+
+        // Initialiser l'état du bouton
+        updateBulkAssignButton();
+    });
+</script>
+</body>
+</html>

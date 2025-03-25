@@ -13,4 +13,5 @@ public interface UserService {
     void updateUser(Long id, UserDto userDto);
     UserDto findUserById(Long id);
     List<UserDto> findAllUsers();
+    public User findById(Long id);
 }

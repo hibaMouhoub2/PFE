@@ -31,6 +31,11 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    public User findById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'ID: " + id));
+    }
+
     @Override
     public void saveUser(UserDto userDto) {
         User user = new User();

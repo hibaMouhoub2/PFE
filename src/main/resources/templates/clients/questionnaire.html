@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Questionnaire Client - ATTAWFIQ MICRO-FINANCE</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+        crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #FF8C00;
+      --secondary-color: #222;
+      --accent-color: #FF6B00;
+      --light-color: #f8f9fa;
+      --dark-color: #111;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      color: var(--secondary-color);
+    }
+
+    .navbar {
+      background-color: var(--secondary-color) !important;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--primary-color) !important;
+    }
+
+    .nav-link {
+      color: #fff !important;
+      font-weight: 500;
+      margin: 0 10px;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: var(--primary-color) !important;
+    }
+
+    .card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
+
+    .client-info-card {
+      background-color: #f8f9fa;
+      border-left: 4px solid var(--primary-color);
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    .question-card {
+      border-left: 4px solid var(--primary-color);
+      background-color: white;
+      border-radius: 4px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .question-number {
+      background-color: var(--primary-color);
+      color: white;
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container">
+    <a class="navbar-brand" href="#">
+      <i class="fas fa-landmark me-2"></i>ATTAWFIQ MICRO-FINANCE
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+          <a class="nav-link" th:href="@{/admin/agenda}">
+            <i class="fas fa-chart-pie me-1"></i>Tableau de bord
+          </a>
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('USER')">
+          <a class="nav-link" th:href="@{/agenda/index}">
+            <i class="fas fa-calendar-alt me-1"></i>Agenda
+          </a>
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+          <a class="nav-link" th:href="@{/admin/clients}">
+            <i class="fas fa-users me-1"></i>Clients
+          </a>
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+          <a class="nav-link" th:href="@{/admin/unassigned-clients}">
+            <i class="fas fa-user-plus me-1"></i>A assigner
+          </a>
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+          <a class="nav-link" th:href="@{/users}">
+            <i class="fas fa-users-cog me-1"></i>Utilisateurs
+          </a>
+        </li>
+        <li class="nav-item" sec:authorize="isAuthenticated()">
+          <a class="nav-link" th:href="@{/logout}">
+            <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <div class="row mb-3">
+    <div class="col">
+      <a th:href="@{/agenda/index}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Retour à l'agenda
+      </a>
+    </div>
+  </div>
+
+  <!-- Messages d'alerte -->
+  <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+    <i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+    <i class="fas fa-exclamation-circle me-2"></i><span th:text="${error}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+
+  <div class="card">
+    <div class="card-header bg-primary-custom text-white">
+      <h4 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Questionnaire Client</h4>
+    </div>
+    <div class="card-body">
+      <!-- Informations du client -->
+      <div class="client-info-card mb-4">
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>Nom:</strong> <span th:text="${client.nom}">Nom</span></p>
+            <p><strong>Prénom:</strong> <span th:text="${client.prenom}">Prénom</span></p>
+          </div>
+          <div class="col-md-6">
+            <p><strong>Téléphone:</strong> <span th:text="${client.telephone}">+212 600000000</span></p>
+            <p><strong>Email:</strong> <span th:text="${client.email ?: '-'}">client@example.com</span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulaire du questionnaire -->
+      <form th:action="@{/clients/{id}/questionnaire(id=${client.id})}" th:object="${clientDto}" method="post">
+        <input type="hidden" th:field="*{id}" />
+        <input type="hidden" th:field="*{nom}" />
+        <input type="hidden" th:field="*{prenom}" />
+        <input type="hidden" th:field="*{telephone}" />
+        <input type="hidden" th:field="*{email}" />
+        <input type="hidden" th:field="*{status}" />
+        <input type="hidden" th:field="*{assignedUserId}" />
+
+        <!-- Question 1 -->
+        <div class="question-card">
+          <h5><span class="question-number">1</span> Pourquoi vous n'avez pas renouvelé votre crédit? <span class="text-danger">*</span></h5>
+          <div class="mb-3">
+            <select th:field="*{raisonNonRenouvellement}" class="form-select" required onchange="toggleOtherReason()">
+              <option value="">-- Sélectionnez une raison --</option>
+              <option th:each="raison : ${raisonsNonRenouvellement}"
+                      th:value="${raison}"
+                      th:text="${raison.displayName}"></option>
+            </select>
+          </div>
+          <!-- Champ pour préciser si "Autres raisons" est sélectionné -->
+          <div id="autresRaisons" class="mb-3" style="display: none;">
+            <label for="autresFacteurs" class="form-label">Veuillez préciser:</label>
+            <textarea th:field="*{autresFacteurs}" id="autresFacteurs" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="question-card">
+          <h5><span class="question-number">2</span> Comment était la qualité du service lors de votre dernier crédit? <span class="text-danger">*</span></h5>
+          <div class="mb-3">
+            <select th:field="*{qualiteService}" class="form-select" required>
+              <option value="">-- Sélectionnez une option --</option>
+              <option th:each="qualite : ${qualitesService}"
+                      th:value="${qualite}"
+                      th:text="${qualite.displayName}"></option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Question 3 -->
+        <div class="question-card">
+          <h5><span class="question-number">3</span> Est-ce que vous avez rencontré des difficultés? <span class="text-danger">*</span></h5>
+          <div class="mb-3">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" id="difficulteOui" th:field="*{ADifficultesRencontrees}" value="true" onchange="toggleDifficultesPrecision()">
+              <label class="form-check-label" for="difficulteOui">OUI</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" id="difficulteNon" th:field="*{ADifficultesRencontrees}" value="false" onchange="toggleDifficultesPrecision()">
+              <label class="form-check-label" for="difficulteNon">NON</label>
+            </div>
+          </div>
+          <!-- Champ pour préciser si "OUI" est sélectionné -->
+          <div id="precisionDifficultes" class="mb-3" style="display: none;">
+            <label for="precisionDifficultesField" class="form-label">Veuillez préciser les difficultés rencontrées:</label>
+            <textarea th:field="*{precisionDifficultes}" id="precisionDifficultesField" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+
+        <!-- Question 4 -->
+        <div class="question-card">
+          <h5><span class="question-number">4</span> Est-ce que vous serez intéressé par un nouveau crédit? <span class="text-danger">*</span></h5>
+          <div class="mb-3">
+            <select th:field="*{interetNouveauCredit}" class="form-select" required>
+              <option value="">-- Sélectionnez une option --</option>
+              <option th:each="interet : ${interetsCredit}"
+                      th:value="${interet}"
+                      th:text="${interet.displayName}"></option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Question 5 -->
+        <div class="question-card">
+          <h5><span class="question-number">5</span> Est-ce qu'on vous programme un rendez-vous dans une de nos agences? <span class="text-danger">*</span></h5>
+          <div class="mb-3">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" id="rdvOui" th:field="*{rendezVousAgence}" value="true" onchange="toggleRendezVous()">
+              <label class="form-check-label" for="rdvOui">OUI</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" id="rdvNon" th:field="*{rendezVousAgence}" value="false" onchange="toggleRendezVous()">
+              <label class="form-check-label" for="rdvNon">NON</label>
+            </div>
+          </div>
+          <!-- Champs pour la date et l'agence si "OUI" est sélectionné -->
+          <div id="rendezVousDetails" class="row" style="display: none;">
+            <div class="col-md-6 mb-3">
+              <label for="dateHeureRendezVous" class="form-label">Date et heure du rendez-vous:</label>
+              <input type="datetime-local" th:field="*{dateHeureRendezVous}" id="dateHeureRendezVous" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="agence" class="form-label">Agence:</label>
+              <select id="agence" class="form-select">
+                <option value="">-- Sélectionnez une agence --</option>
+                <option value="Agence Centrale">Agence Centrale</option>
+                <option value="Agence Nord">Agence Nord</option>
+                <option value="Agence Sud">Agence Sud</option>
+                <option value="Agence Est">Agence Est</option>
+                <option value="Agence Ouest">Agence Ouest</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 6 -->
+        <div class="question-card">
+          <h5><span class="question-number">6</span> Quels sont les facteurs qui influencent votre décision de prendre un crédit? <span class="text-danger">*</span></h5>
+          <div class="mb-3">
+            <select th:field="*{facteurInfluence}" class="form-select" required onchange="toggleAutresCriteres()">
+              <option value="">-- Sélectionnez un facteur --</option>
+              <option th:each="facteur : ${facteursInfluence}"
+                      th:value="${facteur}"
+                      th:text="${facteur.displayName}"></option>
+            </select>
+          </div>
+          <!-- Champ pour préciser si "Autres critères" est sélectionné -->
+          <div id="autresCriteres" class="mb-3" style="display: none;">
+            <label for="autresCriteresField" class="form-label">Veuillez préciser les autres critères:</label>
+            <textarea th:field="*{autresFacteurs}" id="autresCriteresField" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+
+        <!-- Boutons du formulaire -->
+        <div class="d-flex justify-content-between mt-4">
+          <a th:href="@{/agenda/index}" class="btn btn-secondary">
+            <i class="fas fa-times me-1"></i>Annuler
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i>Enregistrer le questionnaire
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+
+<!-- Script pour la gestion de l'affichage conditionnel des champs -->
+<script>
+  function toggleOtherReason() {
+    const raison = document.querySelector('select[name="raisonNonRenouvellement"]').value;
+    const autresRaisons = document.getElementById('autresRaisons');
+
+    if (raison === 'AUTRES') {
+      autresRaisons.style.display = 'block';
+    } else {
+      autresRaisons.style.display = 'none';
+    }
+  }
+
+  function toggleDifficultesPrecision() {
+    const difficultes = document.querySelector('input[name="aDifficultesRencontrees"]:checked');
+    const precisionDiv = document.getElementById('precisionDifficultes');
+
+    if (difficultes && difficultes.value === "true") {
+      precisionDiv.style.display = 'block';
+    } else {
+      precisionDiv.style.display = 'none';
+    }
+  }
+
+  function toggleRendezVous() {
+    const rdv = document.querySelector('input[name="rendezVousAgence"]:checked');
+    const rendezVousDetails = document.getElementById('rendezVousDetails');
+
+    if (rdv && rdv.value === "true") {
+      rendezVousDetails.style.display = 'flex';
+    } else {
+      rendezVousDetails.style.display = 'none';
+    }
+  }
+
+  function toggleAutresCriteres() {
+    const facteur = document.querySelector('select[name="facteurInfluence"]').value;
+    const autresCriteres = document.getElementById('autresCriteres');
+
+    if (facteur === 'AUTRES') {
+      autresCriteres.style.display = 'block';
+    } else {
+      autresCriteres.style.display = 'none';
+    }
+  }
+
+  // Initialiser l'état des champs au chargement de la page
+  document.addEventListener('DOMContentLoaded', function() {
+    toggleOtherReason();
+    toggleDifficultesPrecision();
+    toggleRendezVous();
+    toggleAutresCriteres();
+  });
+</script>
+</body>
+</html>

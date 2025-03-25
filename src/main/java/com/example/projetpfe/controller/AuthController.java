@@ -81,9 +81,9 @@ public class AuthController {
                 .collect(Collectors.toList());
 
         if (roles.contains("ROLE_ADMIN")) {
-            return "redirect:/users";
+            return "redirect:/admin/agenda";
         } else {
-            return "redirect:/index";
+            return "redirect:/agenda/index";
         }
     }
 
