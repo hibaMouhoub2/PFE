@@ -156,7 +156,7 @@
     </div>
 
     <div class="card">
-        <div class="card-header bg-primary-custom text-white">
+        <div class="card-header bg-dark text-white">
             <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Mise à jour du statut client</h4>
         </div>
         <div class="card-body">
@@ -170,6 +170,11 @@
                     <div class="col-md-6">
                         <p><strong>Téléphone:</strong> <span th:text="${client.telephone}">+212 600000000</span></p>
                         <p><strong>Email:</strong> <span th:text="${client.email ?: '-'}">client@example.com</span></p>
+                    </div>
+                    <div class="col-12 text-end mt-2">
+                        <a th:href="@{/clients/{id}(id=${client.id})}" class="btn btn-info btn-sm">
+                            <i class="fas fa-info-circle me-1"></i>Détails
+                        </a>
                     </div>
                 </div>
             </div>

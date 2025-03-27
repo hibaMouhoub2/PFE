@@ -58,6 +58,54 @@ public class ClientController {
         return "clients/detail";
     }
 
+    @GetMapping("/{id}/edit")
+    public String editClient(@PathVariable Long id, Model model) {
+        Client client = clientService.getById(id);
+        ClientDto clientDto = clientService.convertToDto(client);
+
+        model.addAttribute("client", client);
+        model.addAttribute("clientDto", clientDto);
+        model.addAttribute("statuses", ClientStatus.values());
+        model.addAttribute("raisonsNonRenouvellement", RaisonNonRenouvellement.values());
+        model.addAttribute("qualitesService", QualiteService.values());
+        model.addAttribute("interetsCredit", InteretCredit.values());
+        model.addAttribute("facteursInfluence", FacteurInfluence.values());
+        model.addAttribute("isEditMode", true);
+
+        return "clients/edit";
+    }
+
+    @PostMapping("/{id}/edit")
+    public String saveEditedClient(@PathVariable Long id,
+                                   @Valid @ModelAttribute("clientDto") ClientDto clientDto,
+                                   BindingResult bindingResult,
+                                   Model model,
+                                   RedirectAttributes redirectAttributes) {
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("client", clientService.getById(id));
+            model.addAttribute("statuses", ClientStatus.values());
+            model.addAttribute("raisonsNonRenouvellement", RaisonNonRenouvellement.values());
+            model.addAttribute("qualitesService", QualiteService.values());
+            model.addAttribute("interetsCredit", InteretCredit.values());
+            model.addAttribute("facteursInfluence", FacteurInfluence.values());
+            model.addAttribute("isEditMode", true);
+            return "clients/edit";
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+
+        try {
+            clientService.updateClientAndQuestionnaire(id, clientDto, userEmail);
+            redirectAttributes.addFlashAttribute("success", "Client modifié avec succès");
+            return "redirect:/agenda/index";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la modification: " + e.getMessage());
+            return "redirect:/clients/" + id + "/edit";
+        }
+    }
+
     @GetMapping("/{id}/status")
     public String updateStatusForm(@PathVariable Long id, Model model) {
         Client client = clientService.getById(id);
@@ -85,7 +133,7 @@ public class ClientController {
                 return "redirect:/agenda/index";
             } else if (status == ClientStatus.CONTACTE) {
                 redirectAttributes.addFlashAttribute("success", "Statut mis à jour");
-                return "redirect:/clients/" + id + "clients/questionnaire";
+                return "redirect:/clients/" + id + "/questionnaire";
             } else if (status == ClientStatus.REFUS) {
                 redirectAttributes.addFlashAttribute("success", "Client marqué comme refus");
                 return "redirect:/agenda/index";

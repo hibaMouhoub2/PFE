@@ -188,7 +188,18 @@
         <input type="hidden" th:field="*{email}" />
         <input type="hidden" th:field="*{status}" />
         <input type="hidden" th:field="*{assignedUserId}" />
-
+        <div class="question-card">
+          <h5><span class="question-number">0</span> Statut du client <span class="text-danger">*</span></h5>
+          <div class="mb-3">
+            <select th:field="*{status}" class="form-select" required>
+              <option th:each="statusOption : ${statuses}"
+                      th:value="${statusOption}"
+                      th:text="${statusOption.displayName}"
+                      th:selected="${client.status == statusOption}">
+              </option>
+            </select>
+          </div>
+        </div>
         <!-- Question 1 -->
         <div class="question-card">
           <h5><span class="question-number">1</span> Pourquoi vous n'avez pas renouvelé votre crédit? <span class="text-danger">*</span></h5>
@@ -310,7 +321,7 @@
             <i class="fas fa-times me-1"></i>Annuler
           </a>
           <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save me-1"></i>Enregistrer le questionnaire
+            <i class="fas fa-save me-1"></i>Mettre à jour
           </button>
         </div>
       </form>

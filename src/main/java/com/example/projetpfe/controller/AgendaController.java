@@ -16,9 +16,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/agenda")
@@ -46,27 +45,43 @@ public class AgendaController {
         String userEmail = auth.getName();
         User currentUser = userRepository.findByEmail(userEmail);
 
-        // Récupérer les clients par statut
+        // Clients à traiter
         List<Client> clientsNonTraites = clientService.findClientsByUserAndStatus(currentUser, ClientStatus.NON_TRAITE);
+
+        // Clients absents (à rappeler)
         List<Client> clientsAbsents = clientService.findClientsByUserAndStatus(currentUser, ClientStatus.ABSENT);
-        List<Client> clientsContactes = clientService.findClientsByUserAndStatus(currentUser, ClientStatus.CONTACTE);
-        List<Client> clientsRefus = clientService.findClientsByUserAndStatus(currentUser, ClientStatus.REFUS);
 
         // Rappels à effectuer
         List<Rappel> rappels = rappelService.getRappelsForUser(currentUser);
 
+        // Récupérer les rappels pour aujourd'hui
+        List<Rappel> todayRappels = rappelService.findTodayRappelsForUser(currentUser);
+
+        // Initialiser le Set vide (jamais null)
+        Set<Long> todayRappelClientIds = new HashSet<>();
+
+        // Ajouter les IDs des clients qui ont des rappels aujourd'hui
+        if (!todayRappels.isEmpty()) {
+            todayRappelClientIds = todayRappels.stream()
+                    .map(rappel -> rappel.getClient().getId())
+                    .collect(Collectors.toSet());
+        }
+
         // Statistiques
-        Map<String, Long> stats = new HashMap<>();
+        Map<String, Object> stats = new HashMap<>();
         stats.put("nonTraites", clientRepository.countByAssignedUserAndStatus(currentUser, ClientStatus.NON_TRAITE));
         stats.put("absents", clientRepository.countByAssignedUserAndStatus(currentUser, ClientStatus.ABSENT));
         stats.put("contactes", clientRepository.countByAssignedUserAndStatus(currentUser, ClientStatus.CONTACTE));
         stats.put("refus", clientRepository.countByAssignedUserAndStatus(currentUser, ClientStatus.REFUS));
 
+        // Ajouter le nombre de rappels pour aujourd'hui
+        stats.put("todayRappelsCount", todayRappels.size());
+
         model.addAttribute("clientsNonTraites", clientsNonTraites);
         model.addAttribute("clientsAbsents", clientsAbsents);
-        model.addAttribute("clientsContactes", clientsContactes);
-        model.addAttribute("clientsRefus", clientsRefus);
         model.addAttribute("rappels", rappels);
+        model.addAttribute("todayRappels", todayRappels);
+        model.addAttribute("todayRappelClientIds", todayRappelClientIds);
         model.addAttribute("stats", stats);
 
         return "agenda/index";

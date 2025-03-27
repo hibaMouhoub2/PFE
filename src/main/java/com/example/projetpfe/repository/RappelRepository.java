@@ -19,4 +19,9 @@ public interface RappelRepository extends JpaRepository<Rappel, Long> {
     List<Rappel> findByCompletedFalseOrderByDateRappel();
     List<Rappel> findByClientAssignedUserAndCompletedFalseOrderByDateRappel(User user);
     List<Rappel> findByDateRappelBetweenAndCompletedFalse(LocalDateTime start, LocalDateTime end);
+    long countByClientAssignedUserAndDateRappelBetweenAndCompletedFalse(
+            User user, LocalDateTime start, LocalDateTime end);
+
+    List<Rappel> findByClientAssignedUserAndDateRappelBetweenAndCompletedFalseOrderByDateRappel(
+            User user, LocalDateTime start, LocalDateTime end);
 }

@@ -39,6 +39,33 @@ public class ClientService {
         return clientRepository.findByStatusAndUpdatedAtBetween(ClientStatus.CONTACTE, start, end);
     }
 
+    @Transactional
+    public Client updateClientAndQuestionnaire(Long clientId, ClientDto dto, String userEmail) {
+        Client client = getById(clientId);
+        User user = userRepository.findByEmail(userEmail);
+
+        // Mise à jour du statut
+        if (dto.getStatus() != null) {
+            client.setStatus(dto.getStatus());
+        }
+
+        // Mise à jour des champs du questionnaire
+        client.setRaisonNonRenouvellement(dto.getRaisonNonRenouvellement());
+        client.setQualiteService(dto.getQualiteService());
+        client.setADifficultesRencontrees(dto.getADifficultesRencontrees());
+        client.setPrecisionDifficultes(dto.getPrecisionDifficultes());
+        client.setInteretNouveauCredit(dto.getInteretNouveauCredit());
+        client.setRendezVousAgence(dto.getRendezVousAgence());
+        client.setDateHeureRendezVous(dto.getDateHeureRendezVous());
+        client.setFacteurInfluence(dto.getFacteurInfluence());
+        client.setAutresFacteurs(dto.getAutresFacteurs());
+
+        client.setUpdatedBy(user);
+        client.setUpdatedAt(LocalDateTime.now());
+
+        return clientRepository.save(client);
+    }
+
     public List<Client> findWithRendezVousOnDate(LocalDate date) {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(LocalTime.MAX);
@@ -57,7 +84,7 @@ public class ClientService {
                 .orElseThrow(() -> new RuntimeException("Client non trouvé avec l'ID: " + id));
     }
 
-    
+
 
     public List<Client> findByUser(User user) {
         return clientRepository.findByAssignedUser(user);

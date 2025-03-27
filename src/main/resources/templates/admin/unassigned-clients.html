@@ -223,7 +223,7 @@
                         <h5 class="modal-title" id="assignModalLabel">Assigner le client</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form th:action="@{/clients/{id}/assign(id=${client.id})}" method="post">
+                    <form th:action="@{/admin/clients/{id}/assign(id=${client.id})}" method="post">
                         <div class="modal-body">
                             <p>
                                 Vous allez assigner le client <strong th:text="${client.prenom + ' ' + client.nom}">Nom client</strong>

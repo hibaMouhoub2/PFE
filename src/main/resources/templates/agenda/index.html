@@ -237,6 +237,7 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="absents-tab" data-bs-toggle="tab" data-bs-target="#absents" type="button" role="tab" aria-controls="absents" aria-selected="false">
                 <i class="fas fa-phone-alt me-1"></i>À rappeler
+                <span th:if="${stats.todayRappelsCount > 0}" class="badge bg-danger ms-1" th:text="${stats.todayRappelsCount}">0</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -319,7 +320,8 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr th:each="client : ${clientsAbsents}">
+                            <tr th:each="client : ${clientsAbsents}" th:class="${todayRappelClientIds != null && todayRappelClientIds.contains(client.id)} ? 'table-warning' : ''">
+
                                 <td th:text="${client.nom}">Nom</td>
                                 <td th:text="${client.prenom}">Prénom</td>
                                 <td th:text="${client.telephone}">+212 600000000</td>
@@ -370,6 +372,9 @@
                                     <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye me-1"></i>Détails
                                     </a>
+                                    <a th:href="@{'/clients/' + ${client.id} + '/edit'}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit me-1"></i>Modifier
+                                    </a>
 <!--                                    <a th:href="@{'/clients/' + ${client.id} + '/status'}" class="btn btn-sm btn-warning">-->
 <!--                                        <i class="fas fa-edit me-1"></i>Traiter-->
 <!--                                    </a>-->
@@ -411,6 +416,9 @@
                                 <td>
                                     <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye me-1"></i>Détails
+                                    </a>
+                                    <a th:href="@{'/clients/' + ${client.id} + '/edit'}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit me-1"></i>Modifier
                                     </a>
 <!--                                    <a th:href="@{'/clients/' + ${client.id} + '/status'}" class="btn btn-sm btn-warning">-->
 <!--                                        <i class="fas fa-edit me-1"></i>Traiter-->
@@ -515,6 +523,12 @@
             card.addEventListener('mouseleave', function() {
                 this.style.transform = 'translateY(0)';
             });
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     });
 </script>

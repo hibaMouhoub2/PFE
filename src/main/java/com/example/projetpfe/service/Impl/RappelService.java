@@ -64,6 +64,22 @@ public class RappelService {
         return rappelRepository.save(rappel);
     }
 
+    public long countTodayRappels(User user) {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+
+        return rappelRepository.countByClientAssignedUserAndDateRappelBetweenAndCompletedFalse(
+                user, startOfDay, endOfDay);
+    }
+
+    public List<Rappel> findTodayRappelsForUser(User user) {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+
+        return rappelRepository.findByClientAssignedUserAndDateRappelBetweenAndCompletedFalseOrderByDateRappel(
+                user, startOfDay, endOfDay);
+    }
+
     public List<Rappel> findByDate(LocalDate date) {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(LocalTime.MAX);
