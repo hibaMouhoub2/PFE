@@ -20,6 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/clients")
@@ -145,6 +146,32 @@ public class ClientController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur lors de la mise à jour: " + e.getMessage());
             return "redirect:/clients/" + id + "/status";
+        }
+    }
+
+    @GetMapping("/search")
+    public String searchClient(@RequestParam String query, Model model, RedirectAttributes redirectAttributes, Authentication authentication) {
+        // Rechercher par CIN ou téléphone
+        List<Client> clients = clientService.findByCinOrPhone(query);
+
+        if (clients.isEmpty()) {
+            redirectAttributes.addFlashAttribute("info", "Aucun client trouvé pour: " + query);
+            return "redirect:/agenda/index";
+        }
+
+        // Pour tous les cas (un seul ou plusieurs résultats),
+        // on redirige vers la page de résultats avec les IDs
+        List<Long> clientIds = clients.stream().map(Client::getId).collect(Collectors.toList());
+        redirectAttributes.addFlashAttribute("searchResults", clientIds);
+        redirectAttributes.addFlashAttribute("searchQuery", query);
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            return "redirect:/admin/search-results";
+        } else {
+            return "redirect:/agenda/search-results";
         }
     }
 

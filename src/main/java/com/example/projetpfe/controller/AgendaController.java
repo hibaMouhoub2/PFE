@@ -15,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -114,6 +115,56 @@ public class AgendaController {
         model.addAttribute("stats", stats);
 
         return "agenda/index";
+    }
+
+    @GetMapping("/search-results")
+    public String showAgendaSearchResults(
+            @RequestParam(required = false) String query,
+            Model model,
+            Authentication authentication) {
+
+        // Récupérer les attributs flash d'abord (pour les redirections depuis /clients/search)
+        @SuppressWarnings("unchecked")
+        List<Long> flashClientIds = (List<Long>) model.asMap().get("searchResults");
+        String flashSearchQuery = (String) model.asMap().get("searchQuery");
+
+        // Variables qui contiendront le résultat final
+        List<Client> resultClients;
+        String resultQuery;
+
+        // Si on a des résultats en flash (redirection), les utiliser
+        if (flashClientIds != null && !flashClientIds.isEmpty()) {
+            resultClients = flashClientIds.stream()
+                    .map(id -> clientService.getById(id))
+                    .collect(Collectors.toList());
+            resultQuery = flashSearchQuery;
+        }
+        // Sinon, si on a un paramètre de requête, effectuer une nouvelle recherche
+        else if (query != null && !query.isEmpty()) {
+            // Effectuer une recherche par CIN ou téléphone
+            resultClients = clientService.findByCinOrPhone(query);
+            resultQuery = query;
+        }
+        // Si aucune des deux conditions n'est remplie, afficher juste la page vide
+        else {
+            model.addAttribute("searchResults", List.of());
+            model.addAttribute("searchQuery", "");
+            return "agenda/search-results";
+        }
+
+        // Filtrer pour ne montrer que les clients assignés à l'utilisateur courant
+        String userEmail = authentication.getName();
+        User currentUser = userRepository.findByEmail(userEmail);
+
+        List<Client> assignedClients = resultClients.stream()
+                .filter(client -> client.getAssignedUser() != null &&
+                        client.getAssignedUser().getId().equals(currentUser.getId()))
+                .collect(Collectors.toList());
+
+        model.addAttribute("searchResults", assignedClients);
+        model.addAttribute("searchQuery", resultQuery);
+
+        return "agenda/search-results";
     }
     @GetMapping("/history")
     public String viewHistory(Model model) {

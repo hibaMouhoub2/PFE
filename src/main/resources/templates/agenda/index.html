@@ -110,6 +110,10 @@
 <!-- Navigation Bar - ceci se répète, vous pouvez en faire un fragment -->
 <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
+        <!-- Ajouter avant la liste des liens de navigation -->
+        <form class="d-flex me-auto" th:action="@{/search}" method="get">
+
+        </form>
         <a class="navbar-brand" href="#">
             <i class="fas fa-landmark me-2"></i>ATTAWFIQ MICRO-FINANCE
         </a>
@@ -126,6 +130,11 @@
                 <li class="nav-item" sec:authorize="hasRole('USER')">
                     <a class="nav-link" th:href="@{/agenda/index}">
                         <i class="fas fa-calendar-alt me-1"></i>Agenda
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('USER')">
+                    <a class="nav-link" th:href="@{/agenda/search-results}">
+                        <i class="fas fa-calendar-alt me-1"></i>Rechercher
                     </a>
                 </li>
                 <li class="nav-item" sec:authorize="hasRole('ADMIN')">

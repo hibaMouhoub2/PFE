@@ -132,9 +132,9 @@
         <div class="d-flex justify-content-between align-items-center">
             <h2><i class="fas fa-user-plus me-2"></i>Clients non assignés</h2>
             <div>
-                <a th:href="@{/admin/clients}" class="btn btn-primary">
-                    <i class="fas fa-list me-1"></i>Tous les clients
-                </a>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                    <i class="fas fa-file-import me-1"></i>Importer des clients
+                </button>
             </div>
         </div>
     </div>
@@ -246,6 +246,30 @@
                     </form>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Importer des clients</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form th:action="@{/admin/clients/import}" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="excelFile" class="form-label">Fichier Excel</label>
+                        <input type="file" class="form-control" id="excelFile" name="file" accept=".xlsx, .xls" required>
+                        <div class="form-text">Téléchargez un fichier au format Excel (.xlsx, .xls)</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Importer</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

@@ -213,6 +213,13 @@
                     </button>
                 </div>
             </form>
+            <!-- À ajouter près des filtres dans admin/clients.html -->
+            <div class="col-md-12 mt-3 text-end">
+                <a th:href="@{/admin/clients/export(q=${searchQuery},status=${selectedStatus},userId=${selectedUserId})}"
+                   class="btn btn-success">
+                    <i class="fas fa-file-excel me-1"></i>Exporter en Excel
+                </a>
+            </div>
         </div>
     </div>
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -262,7 +269,7 @@
                             <span th:class="'status-badge status-' + ${client.status}" th:text="${client.status.displayName}">Statut</span>
                         </td>
                         <td th:text="${client.assignedUser != null ? client.assignedUser.name : 'Non assigné'}">Utilisateur</td>
-                        <td th:text="${#temporals.format(client.updatedAtdAt, 'dd/MM/yyyy HH:mm')}">01/01/2023 10:00</td>
+                        <td th:text="${#temporals.format(client.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2023 10:00</td>
                         <td>
                             <div class="btn-group">
                                 <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">

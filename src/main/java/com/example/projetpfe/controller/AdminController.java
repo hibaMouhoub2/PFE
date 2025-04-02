@@ -11,17 +11,25 @@ import com.example.projetpfe.repository.UserRepository;
 import com.example.projetpfe.service.Impl.ClientService;
 import com.example.projetpfe.service.Impl.RappelService;
 import com.example.projetpfe.service.UserService;
+import com.example.projetpfe.util.ExcelExportUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +40,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
+    @Autowired
+    private ExcelExportUtil excelExportUtil;
     @Autowired
     private ClientRepository clientRepository;
 
@@ -99,6 +109,33 @@ public class AdminController {
         model.addAttribute("selectedUserId", userId);
 
         return "admin/clients";
+    }
+
+    @GetMapping("/search-results")
+    public String showAdminSearchResults(Model model) {
+        // Récupérer les résultats de recherche depuis l'attribut flash
+        @SuppressWarnings("unchecked")
+        List<Long> clientIds = (List<Long>) model.asMap().get("searchResults");
+        String searchQuery = (String) model.asMap().get("searchQuery");
+
+        if (clientIds == null || clientIds.isEmpty()) {
+            return "redirect:/admin/clients";
+        }
+
+        // Récupérer les clients correspondants
+        List<Client> clients = clientIds.stream()
+                .map(id -> clientService.getById(id))
+                .collect(Collectors.toList());
+
+        model.addAttribute("clients", clients);
+        model.addAttribute("searchQuery", searchQuery);
+        model.addAttribute("clientCount", clients.size());
+
+        // Ajouter la liste des utilisateurs pour d'éventuelles actions
+        List<UserDto> users = userService.findAllUsers();
+        model.addAttribute("users", users);
+
+        return "admin/clients"; // Utiliser la page clients existante
     }
 
     @GetMapping("/unassigned-clients")
@@ -274,5 +311,71 @@ public class AdminController {
         model.addAttribute("users", users);
 
         return "admin/agenda";
+    }
+    @GetMapping("/clients/export")
+    public ResponseEntity<byte[]> exportClients(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long userId) throws IOException {
+
+        // Utiliser la même logique que dans listAllClients pour appliquer les filtres
+        List<Client> clients = clientService.findAll();
+
+        // Appliquer les filtres
+        if (q != null && !q.isEmpty()) {
+            clients = clients.stream()
+                    .filter(client ->
+                            (client.getNom() != null && client.getNom().toLowerCase().contains(q.toLowerCase())) ||
+                                    (client.getPrenom() != null && client.getPrenom().toLowerCase().contains(q.toLowerCase())) ||
+                                    (client.getCin() != null && client.getCin().toLowerCase().contains(q.toLowerCase()))
+                    )
+                    .collect(Collectors.toList());
+        }
+
+        if (status != null && !status.isEmpty()) {
+            ClientStatus clientStatus = ClientStatus.valueOf(status);
+            clients = clients.stream()
+                    .filter(client -> client.getStatus() == clientStatus)
+                    .collect(Collectors.toList());
+        }
+
+        if (userId != null) {
+            clients = clients.stream()
+                    .filter(client ->
+                            client.getAssignedUser() != null &&
+                                    client.getAssignedUser().getId().equals(userId)
+                    )
+                    .collect(Collectors.toList());
+        }
+
+        // Générer le fichier Excel
+        byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
+
+        // Préparer la réponse HTTP
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+
+        // Définir le nom du fichier avec la date actuelle
+        String filename = "clients_export_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
+        headers.setContentDispositionFormData("attachment", filename);
+
+        return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
+    }
+
+    @PostMapping("/clients/import")
+    public String importClientsFromExcel(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+        if (file.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Veuillez sélectionner un fichier à importer");
+            return "redirect:/admin/unassigned-clients";
+        }
+
+        try {
+            int importedCount = clientService.importClientsFromExcel(file);
+            redirectAttributes.addFlashAttribute("success", importedCount + " client(s) importé(s) avec succès");
+            return "redirect:/admin/clients";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de l'importation: " + e.getMessage());
+            return "redirect:/admin/unassigned-clients";
+        }
     }
 }

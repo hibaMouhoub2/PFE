@@ -23,4 +23,6 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     List<Client> findByStatusAndUpdatedAtBetween(ClientStatus status, LocalDateTime start, LocalDateTime end);
     List<Client> findByRendezVousAgenceTrueAndDateHeureRendezVousBetween(LocalDateTime start, LocalDateTime end);
     long countByStatus(ClientStatus status);
+    @Query("SELECT c FROM Client c WHERE c.cin = :query OR c.telephone = :query OR c.telephone2 = :query")
+    List<Client> findByCinOrPhone(@Param("query") String query);
 }

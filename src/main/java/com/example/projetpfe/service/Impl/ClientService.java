@@ -7,13 +7,17 @@ import com.example.projetpfe.entity.User;
 import com.example.projetpfe.repository.ClientRepository;
 import com.example.projetpfe.repository.RappelRepository;
 import com.example.projetpfe.repository.UserRepository;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -223,5 +227,74 @@ public class ClientService {
         dto.setAutresRaisons(client.getAutresRaisons());
 
         return dto;
+    }
+
+    @Transactional
+    public int importClientsFromExcel(MultipartFile file) throws IOException {
+        int importedCount = 0;
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // Skip header row
+            Iterator<Row> rowIterator = sheet.rowIterator();
+            if (rowIterator.hasNext()) {
+                rowIterator.next(); // Skip header row
+            }
+
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+
+                // Skip empty rows
+                if (isEmptyRow(row)) continue;
+
+                Client client = new Client();
+                client.setNom(getCellValueAsString(row.getCell(0)));
+                client.setPrenom(getCellValueAsString(row.getCell(1)));
+                client.setCin(getCellValueAsString(row.getCell(2)));
+                client.setTelephone(getCellValueAsString(row.getCell(3)));
+                client.setTelephone2(getCellValueAsString(row.getCell(4)));
+
+                // Set default values
+                client.setStatus(ClientStatus.NON_TRAITE);
+                client.setCreatedAt(LocalDateTime.now());
+                client.setUpdatedAt(LocalDateTime.now());
+
+                clientRepository.save(client);
+                importedCount++;
+            }
+        }
+        return importedCount;
+    }
+
+    private boolean isEmptyRow(Row row) {
+        if (row == null) return true;
+
+        for (int i = 0; i < 5; i++) {
+            Cell cell = row.getCell(i);
+            if (cell != null && cell.getCellType() != CellType.BLANK) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return null;
+
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    return cell.getLocalDateTimeCellValue().toString();
+                }
+                return String.valueOf((int) cell.getNumericCellValue());
+            default:
+                return null;
+        }
+    }
+
+    public List<Client> findByCinOrPhone(String query) {
+        return clientRepository.findByCinOrPhone(query);
     }
 }

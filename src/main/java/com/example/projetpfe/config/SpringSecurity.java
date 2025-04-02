@@ -44,6 +44,7 @@ public class SpringSecurity {
                 .authorizeHttpRequests((authorize) ->
                         authorize.requestMatchers("/register/**").permitAll()
                                 .requestMatchers("/index").permitAll()
+                                .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                                 .requestMatchers("/users").hasRole("ADMIN")
                                 .requestMatchers("/delete-user/**").hasRole("ADMIN")
                                 .requestMatchers("/login-success").permitAll()
