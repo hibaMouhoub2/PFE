@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Getter
 @Setter
@@ -22,10 +23,22 @@ public class Client {
     private String nom;
     private String prenom;
     private String telephone;
-    private String email;
-
+    private String cin;
+    private String NMDIR;
+    private String NMREG;
     @Enumerated(EnumType.STRING)
-    private ClientStatus status = ClientStatus.NON_TRAITE;
+    private Branche NMBRA;
+    private Date DTFINC;
+    private Date DTDEBC;
+    private String telephone2;
+    private String activiteActuelle;
+    private String BAREM;
+    private Double MNTDEB;
+    private Integer NBINC;
+    private Integer AgeClient;
+    private Integer NBPRETS;
+
+
 
     @ManyToOne
     @JoinColumn(name = "assigned_user_id")
@@ -34,6 +47,16 @@ public class Client {
     // Champs du questionnaire
     @Enumerated(EnumType.STRING)
     private RaisonNonRenouvellement raisonNonRenouvellement;
+
+
+    @Enumerated(EnumType.STRING)
+    private ActiviteClient activiteClient;
+
+    @Enumerated(EnumType.STRING)
+    private Profil profil;
+
+    @Enumerated(EnumType.STRING)
+    private ClientStatus status = ClientStatus.NON_TRAITE;
 
     @Enumerated(EnumType.STRING)
     private QualiteService qualiteService;
@@ -51,6 +74,7 @@ public class Client {
     private FacteurInfluence facteurInfluence;
 
     private String autresFacteurs;
+    private String autresRaisons;
 
     // Audit fields
     @ManyToOne

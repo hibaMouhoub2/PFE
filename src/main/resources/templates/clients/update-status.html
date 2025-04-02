@@ -169,7 +169,7 @@
                     </div>
                     <div class="col-md-6">
                         <p><strong>Téléphone:</strong> <span th:text="${client.telephone}">+212 600000000</span></p>
-                        <p><strong>Email:</strong> <span th:text="${client.email ?: '-'}">client@example.com</span></p>
+                        <p><strong>CIN:</strong> <span th:text="${client.cin ?: '-'}">XX111111</span></p>
                     </div>
                     <div class="col-12 text-end mt-2">
                         <a th:href="@{/clients/{id}(id=${client.id})}" class="btn btn-info btn-sm">

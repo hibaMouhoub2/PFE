@@ -267,20 +267,18 @@
                         <table class="table table-striped table-hover">
                             <thead>
                             <tr>
+                                <th>CIN</th>
                                 <th>Nom</th>
                                 <th>Prénom</th>
-                                <th>Téléphone</th>
-                                <th>Email</th>
                                 <th>Utilisateur assigné</th>
                                 <th>Actions</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr th:each="client : ${clientsNonTraites}">
+                                <td th:text="${client.cin ?: '-'}">XX111111</td>
                                 <td th:text="${client.nom}">Nom</td>
                                 <td th:text="${client.prenom}">Prénom</td>
-                                <td th:text="${client.telephone}">+212 600000000</td>
-                                <td th:text="${client.email ?: '-'}">client@example.com</td>
                                 <td th:text="${client.assignedUser != null ? client.assignedUser.name : 'Non assigné'}">Utilisateur</td>
                                 <td>
                                     <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">
@@ -316,20 +314,29 @@
                         <table class="table table-striped table-hover">
                             <thead>
                             <tr>
+                                <th>CIN</th>
                                 <th>Nom</th>
                                 <th>Prénom</th>
-                                <th>Téléphone</th>
-                                <th>Email</th>
+                                <th>date de rappel</th>
                                 <th>Utilisateur assigné</th>
                                 <th>Actions</th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr th:each="client : ${clientsAbsents}">
+                            <tr th:each="client : ${clientsAbsents}" th:class="${todayRappelClientIds != null && todayRappelClientIds.contains(client.id)} ? 'table-warning' : ''">
+                                <td th:text="${client.cin ?: '-'}">XX111111</td>
                                 <td th:text="${client.nom}">Nom</td>
                                 <td th:text="${client.prenom}">Prénom</td>
-                                <td th:text="${client.telephone}">+212 600000000</td>
-                                <td th:text="${client.email ?: '-'}">client@example.com</td>
+                                <td>
+                                    <span th:if="${clientRappelMap != null && clientRappelMap.containsKey(client.id)}"
+                                          th:with="rappelDate=${clientRappelMap.get(client.id).dateRappel}, now=${T(java.time.LocalDateTime).now()}"
+                                          th:text="${#temporals.format(rappelDate, 'dd/MM/yyyy HH:mm')}"
+                                          th:class="${rappelDate.isBefore(now) ? 'text-danger fw-bold' :
+                                                   (rappelDate.isBefore(now.plusHours(2)) ? 'text-warning fw-bold' : '')}">
+                                        01/01/2023 10:00
+                                    </span>
+                                    <span th:unless="${clientRappelMap != null && clientRappelMap.containsKey(client.id)}">-</span>
+                                </td>
                                 <td th:text="${client.assignedUser != null ? client.assignedUser.name : 'Non assigné'}">Utilisateur</td>
                                 <td>
                                     <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">
@@ -365,10 +372,9 @@
                         <table class="table table-striped table-hover">
                             <thead>
                             <tr>
+                                <th>CIN</th>
                                 <th>Nom</th>
                                 <th>Prénom</th>
-                                <th>Téléphone</th>
-                                <th>Email</th>
                                 <th>Utilisateur assigné</th>
                                 <th>Date de contact</th>
                                 <th>Actions</th>
@@ -376,10 +382,11 @@
                             </thead>
                             <tbody>
                             <tr th:each="client : ${clientsContactes}">
+                                <td th:text="${client.cin ?: '-'}">XX111111</td>
                                 <td th:text="${client.nom}">Nom</td>
                                 <td th:text="${client.prenom}">Prénom</td>
-                                <td th:text="${client.telephone}">+212 600000000</td>
-                                <td th:text="${client.email ?: '-'}">client@example.com</td>
+
+
                                 <td th:text="${client.assignedUser != null ? client.assignedUser.name : 'Non assigné'}">Utilisateur</td>
                                 <td th:text="${#temporals.format(client.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2023</td>
                                 <td>
@@ -413,10 +420,9 @@
                         <table class="table table-striped table-hover">
                             <thead>
                             <tr>
+                                <th>CIN</th>
                                 <th>Nom</th>
                                 <th>Prénom</th>
-                                <th>Téléphone</th>
-                                <th>Email</th>
                                 <th>Utilisateur assigné</th>
                                 <th>Date de refus</th>
                                 <th>Actions</th>
@@ -424,10 +430,9 @@
                             </thead>
                             <tbody>
                             <tr th:each="client : ${clientsRefus}">
+                                <td th:text="${client.cin ?: '-'}">XX111111</td>
                                 <td th:text="${client.nom}">Nom</td>
                                 <td th:text="${client.prenom}">Prénom</td>
-                                <td th:text="${client.telephone}">+212 600000000</td>
-                                <td th:text="${client.email ?: '-'}">client@example.com</td>
                                 <td th:text="${client.assignedUser != null ? client.assignedUser.name : 'Non assigné'}">Utilisateur</td>
                                 <td th:text="${#temporals.format(client.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2023</td>
                                 <td>

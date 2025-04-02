@@ -59,6 +59,7 @@ public class ClientService {
         client.setDateHeureRendezVous(dto.getDateHeureRendezVous());
         client.setFacteurInfluence(dto.getFacteurInfluence());
         client.setAutresFacteurs(dto.getAutresFacteurs());
+        client.setAutresRaisons(dto.getAutresRaisons());
 
         client.setUpdatedBy(user);
         client.setUpdatedAt(LocalDateTime.now());
@@ -71,9 +72,9 @@ public class ClientService {
         LocalDateTime end = date.atTime(LocalTime.MAX);
         return clientRepository.findByRendezVousAgenceTrueAndDateHeureRendezVousBetween(start, end);
     }
-    // Ajouter cette méthode à ClientService.java
+
     public List<Client> searchClients(String query) {
-        return clientRepository.searchByNomOrPrenom(query);
+        return clientRepository.searchByNomOrPrenomOrCin(query);
     }
     public List<Client> findByStatus(ClientStatus status) {
         return clientRepository.findByStatus(status);
@@ -148,6 +149,8 @@ public class ClientService {
         // Mise à jour des champs du questionnaire
         client.setRaisonNonRenouvellement(dto.getRaisonNonRenouvellement());
         client.setQualiteService(dto.getQualiteService());
+        client.setActiviteClient(dto.getActiviteClient());
+        client.setNMBRA(dto.getNMBRA());
         client.setADifficultesRencontrees(dto.getADifficultesRencontrees());
         client.setPrecisionDifficultes(dto.getPrecisionDifficultes());
         client.setInteretNouveauCredit(dto.getInteretNouveauCredit());
@@ -155,7 +158,8 @@ public class ClientService {
         client.setDateHeureRendezVous(dto.getDateHeureRendezVous());
         client.setFacteurInfluence(dto.getFacteurInfluence());
         client.setAutresFacteurs(dto.getAutresFacteurs());
-
+        client.setAutresRaisons(dto.getAutresRaisons());
+        client.setProfil(dto.getProfil());
         client.setStatus(ClientStatus.CONTACTE);
         client.setUpdatedBy(user);
         client.setUpdatedAt(LocalDateTime.now());
@@ -170,7 +174,7 @@ public class ClientService {
         client.setNom(dto.getNom());
         client.setPrenom(dto.getPrenom());
         client.setTelephone(dto.getTelephone());
-        client.setEmail(dto.getEmail());
+        client.setCin(dto.getCin());
 
         if (dto.getAssignedUserId() != null) {
             User assignedUser = userRepository.findById(dto.getAssignedUserId())
@@ -185,7 +189,19 @@ public class ClientService {
         dto.setNom(client.getNom());
         dto.setPrenom(client.getPrenom());
         dto.setTelephone(client.getTelephone());
-        dto.setEmail(client.getEmail());
+        dto.setCin(client.getCin());
+        dto.setNMDIR(client.getNMDIR());
+        dto.setNMREG(client.getNMREG());
+        dto.setNMBRA(client.getNMBRA());
+        dto.setDTFINC(client.getDTFINC());
+        dto.setDTDEBC(client.getDTDEBC());
+        dto.setTelephone2(client.getTelephone2());
+        dto.setActiviteActuelle(client.getActiviteActuelle());
+        dto.setBAREM(client.getBAREM());
+        dto.setMNTDEB(client.getMNTDEB());
+        dto.setNBINC(client.getNBINC());
+        dto.setNBPRETS(client.getNBPRETS());
+        dto.setAgeClient(client.getAgeClient());
         dto.setStatus(client.getStatus());
 
         if (client.getAssignedUser() != null) {
@@ -195,13 +211,16 @@ public class ClientService {
         // Champs du questionnaire
         dto.setRaisonNonRenouvellement(client.getRaisonNonRenouvellement());
         dto.setQualiteService(client.getQualiteService());
+        dto.setActiviteClient(client.getActiviteClient());
         dto.setADifficultesRencontrees(client.getADifficultesRencontrees());
         dto.setPrecisionDifficultes(client.getPrecisionDifficultes());
         dto.setInteretNouveauCredit(client.getInteretNouveauCredit());
         dto.setRendezVousAgence(client.getRendezVousAgence());
         dto.setDateHeureRendezVous(client.getDateHeureRendezVous());
         dto.setFacteurInfluence(client.getFacteurInfluence());
+        dto.setProfil(client.getProfil());
         dto.setAutresFacteurs(client.getAutresFacteurs());
+        dto.setAutresRaisons(client.getAutresRaisons());
 
         return dto;
     }

@@ -245,10 +245,10 @@
                         <th>Nom</th>
                         <th>Prénom</th>
                         <th>Téléphone</th>
-                        <th>Email</th>
+                        <th>CIN</th>
                         <th>Statut</th>
                         <th>Utilisateur assigné</th>
-                        <th>Date de création</th>
+                        <th>Date de modification</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -257,12 +257,12 @@
                         <td th:text="${client.nom}">Nom</td>
                         <td th:text="${client.prenom}">Prénom</td>
                         <td th:text="${client.telephone}">+212 600000000</td>
-                        <td th:text="${client.email ?: '-'}">client@example.com</td>
+                        <td th:text="${client.cin ?: '-'}">XX111111</td>
                         <td>
                             <span th:class="'status-badge status-' + ${client.status}" th:text="${client.status.displayName}">Statut</span>
                         </td>
                         <td th:text="${client.assignedUser != null ? client.assignedUser.name : 'Non assigné'}">Utilisateur</td>
-                        <td th:text="${#temporals.format(client.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2023 10:00</td>
+                        <td th:text="${#temporals.format(client.updatedAtdAt, 'dd/MM/yyyy HH:mm')}">01/01/2023 10:00</td>
                         <td>
                             <div class="btn-group">
                                 <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">

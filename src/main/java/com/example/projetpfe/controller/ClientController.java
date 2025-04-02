@@ -2,12 +2,7 @@ package com.example.projetpfe.controller;
 
 import com.example.projetpfe.dto.ClientDto;
 import com.example.projetpfe.dto.UserDto;
-import com.example.projetpfe.entity.Client;
-import com.example.projetpfe.entity.ClientStatus;
-import com.example.projetpfe.entity.FacteurInfluence;
-import com.example.projetpfe.entity.InteretCredit;
-import com.example.projetpfe.entity.QualiteService;
-import com.example.projetpfe.entity.RaisonNonRenouvellement;
+import com.example.projetpfe.entity.*;
 import com.example.projetpfe.service.Impl.ClientService;
 import com.example.projetpfe.service.Impl.RappelService;
 import com.example.projetpfe.service.UserService;
@@ -68,7 +63,10 @@ public class ClientController {
         model.addAttribute("statuses", ClientStatus.values());
         model.addAttribute("raisonsNonRenouvellement", RaisonNonRenouvellement.values());
         model.addAttribute("qualitesService", QualiteService.values());
+        model.addAttribute("activitesClient", ActiviteClient.values());
         model.addAttribute("interetsCredit", InteretCredit.values());
+        model.addAttribute("profil", Profil.values());
+        model.addAttribute("branche", Branche.values());
         model.addAttribute("facteursInfluence", FacteurInfluence.values());
         model.addAttribute("isEditMode", true);
 
@@ -87,7 +85,10 @@ public class ClientController {
             model.addAttribute("statuses", ClientStatus.values());
             model.addAttribute("raisonsNonRenouvellement", RaisonNonRenouvellement.values());
             model.addAttribute("qualitesService", QualiteService.values());
+            model.addAttribute("activitesClient", ActiviteClient.values());
             model.addAttribute("interetsCredit", InteretCredit.values());
+            model.addAttribute("profil", Profil.values());
+            model.addAttribute("branche", Branche.values());
             model.addAttribute("facteursInfluence", FacteurInfluence.values());
             model.addAttribute("isEditMode", true);
             return "clients/edit";
@@ -156,6 +157,9 @@ public class ClientController {
         model.addAttribute("clientDto", clientDto);
         model.addAttribute("raisonsNonRenouvellement", RaisonNonRenouvellement.values());
         model.addAttribute("qualitesService", QualiteService.values());
+        model.addAttribute("activitesClient", ActiviteClient.values());
+        model.addAttribute("profil", Profil.values());
+        model.addAttribute("branche", Branche.values());
         model.addAttribute("interetsCredit", InteretCredit.values());
         model.addAttribute("facteursInfluence", FacteurInfluence.values());
 
@@ -168,26 +172,39 @@ public class ClientController {
                                     BindingResult bindingResult,
                                     Model model,
                                     RedirectAttributes redirectAttributes) {
-
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("client", clientService.getById(id));
-            model.addAttribute("raisonsNonRenouvellement", RaisonNonRenouvellement.values());
-            model.addAttribute("qualitesService", QualiteService.values());
-            model.addAttribute("interetsCredit", InteretCredit.values());
-            model.addAttribute("facteursInfluence", FacteurInfluence.values());
-            return "clients/questionnaire";
-        }
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = auth.getName();
-
+        Client client = clientService.getById(id);
+        // Capture toutes les exceptions pour les afficher
         try {
+            if (bindingResult.hasErrors()) {
+                model.addAttribute("client", client);
+                model.addAttribute("raisonsNonRenouvellement", RaisonNonRenouvellement.values());
+                model.addAttribute("qualitesService", QualiteService.values());
+                model.addAttribute("activitesClient", ActiviteClient.values());
+                model.addAttribute("interetsCredit", InteretCredit.values());
+                model.addAttribute("profil", Profil.values());
+                model.addAttribute("branche", Branche.values());
+                model.addAttribute("facteursInfluence", FacteurInfluence.values());
+                return "clients/questionnaire";
+            }
+
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = auth.getName();
+
             clientService.saveQuestionnaire(id, clientDto, userEmail);
             redirectAttributes.addFlashAttribute("success", "Questionnaire sauvegardé avec succès");
             return "redirect:/agenda/index";
         } catch (Exception e) {
+            e.printStackTrace(); // Pour voir l'erreur dans les logs
             redirectAttributes.addFlashAttribute("error", "Erreur lors de la sauvegarde: " + e.getMessage());
-            return "redirect:/clients/" + id + "/questionnaire";
+            model.addAttribute("client", clientService.getById(id));
+            model.addAttribute("raisonsNonRenouvellement", RaisonNonRenouvellement.values());
+            model.addAttribute("qualitesService", QualiteService.values());
+            model.addAttribute("activitesClient", ActiviteClient.values());
+            model.addAttribute("interetsCredit", InteretCredit.values());
+            model.addAttribute("profil", Profil.values());
+            model.addAttribute("branche", Branche.values());
+            model.addAttribute("facteursInfluence", FacteurInfluence.values());
+            return "clients/questionnaire";
         }
     }
 

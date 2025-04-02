@@ -181,7 +181,7 @@
                                 <th>Nom</th>
                                 <th>Prénom</th>
                                 <th>Téléphone</th>
-                                <th>Email</th>
+                                <th>CIN</th>
                                 <th>Date de création</th>
                                 <th>Actions</th>
                             </tr>
@@ -194,7 +194,7 @@
                             <td th:text="${client.nom}">Nom</td>
                             <td th:text="${client.prenom}">Prénom</td>
                             <td th:text="${client.telephone}">+212 600000000</td>
-                            <td th:text="${client.email ?: '-'}">client@example.com</td>
+                            <td th:text="${client.cin ?: '-'}">XX111111</td>
                             <td th:text="${#temporals.format(client.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2023 10:00</td>
                             <td>
                                 <div class="btn-group">

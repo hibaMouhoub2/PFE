@@ -50,7 +50,7 @@ public class SpringSecurity {
                                 .requestMatchers("/edit-user/**").hasRole("ADMIN")
                                 .requestMatchers("/users-home").permitAll()
                                 .requestMatchers("/agenda/**").authenticated()
-                                .requestMatchers("/clients/**").authenticated()
+                                .requestMatchers("/clients/**").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
 
                 ).sessionManagement(session -> session
@@ -70,9 +70,9 @@ public class SpringSecurity {
                 ).logout(
                         logout -> logout
                                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                                .logoutSuccessUrl("/login?logout")  // Ajoutez cette ligne
-                                .deleteCookies("JSESSIONID")        // Ajoutez cette ligne
-                                .clearAuthentication(true)          // Ajoutez cette ligne
+                                .logoutSuccessUrl("/login?logout")
+                                .deleteCookies("JSESSIONID")
+                                .clearAuthentication(true)
                                 .invalidateHttpSession(true)
                                 .permitAll()
                 );

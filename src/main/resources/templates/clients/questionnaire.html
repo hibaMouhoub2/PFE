@@ -174,7 +174,7 @@
           </div>
           <div class="col-md-6">
             <p><strong>Téléphone:</strong> <span th:text="${client.telephone}">+212 600000000</span></p>
-            <p><strong>Email:</strong> <span th:text="${client.email ?: '-'}">client@example.com</span></p>
+            <p><strong>CIN:</strong> <span th:text="${client.cin ?: '-'}">XX111111</span></p>
           </div>
         </div>
       </div>
@@ -185,9 +185,10 @@
         <input type="hidden" th:field="*{nom}" />
         <input type="hidden" th:field="*{prenom}" />
         <input type="hidden" th:field="*{telephone}" />
-        <input type="hidden" th:field="*{email}" />
+        <input type="hidden" th:field="*{cin}" />
         <input type="hidden" th:field="*{status}" />
         <input type="hidden" th:field="*{assignedUserId}" />
+
 
         <!-- Question 1 -->
         <div class="question-card">
@@ -201,9 +202,9 @@
             </select>
           </div>
           <!-- Champ pour préciser si "Autres raisons" est sélectionné -->
-          <div id="autresRaisons" class="mb-3" style="display: none;">
-            <label for="autresFacteurs" class="form-label">Veuillez préciser:</label>
-            <textarea th:field="*{autresFacteurs}" id="autresFacteurs" class="form-control" rows="2"></textarea>
+          <div id="autresRaisonsDiv" class="mb-3" style="display: none;">
+            <label for="autresRaisonField" class="form-label">Veuillez préciser:</label>
+            <textarea th:field="*{autresRaisons}" id="autresRaisonField" class="form-control" rows="2"></textarea>
           </div>
         </div>
 
@@ -219,6 +220,7 @@
             </select>
           </div>
         </div>
+
 
         <!-- Question 3 -->
         <div class="question-card">
@@ -239,10 +241,34 @@
             <textarea th:field="*{precisionDifficultes}" id="precisionDifficultesField" class="form-control" rows="2"></textarea>
           </div>
         </div>
-
         <!-- Question 4 -->
         <div class="question-card">
-          <h5><span class="question-number">4</span> Est-ce que vous serez intéressé par un nouveau crédit? <span class="text-danger">*</span></h5>
+          <h5><span class="question-number">4</span> Quelle est votre profession? <span class="text-danger">*</span></h5>
+          <div class="mb-3">
+            <select th:field="*{profil}" class="form-select" required>
+              <option value="">-- Sélectionnez une option --</option>
+              <option th:each="p : ${profil}"
+                      th:value="${p}"
+                      th:text="${p.displayName}"></option>
+            </select>
+          </div>
+        </div>
+        <!-- Question 5 -->
+        <div class="question-card">
+          <h5><span class="question-number">5</span> Quelle est votre activité actuelle? <span class="text-danger">*</span></h5>
+          <div class="mb-3">
+            <select th:field="*{activiteClient}" class="form-select" required>
+              <option value="">-- Sélectionnez une option --</option>
+              <option th:each="activite : ${activitesClient}"
+                      th:value="${activite}"
+                      th:text="${activite.displayName}"></option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Question 6 -->
+        <div class="question-card">
+          <h5><span class="question-number">6</span> Est-ce que vous serez intéressé par un nouveau crédit? <span class="text-danger">*</span></h5>
           <div class="mb-3">
             <select th:field="*{interetNouveauCredit}" class="form-select" required>
               <option value="">-- Sélectionnez une option --</option>
@@ -253,9 +279,9 @@
           </div>
         </div>
 
-        <!-- Question 5 -->
+        <!-- Question 7 -->
         <div class="question-card">
-          <h5><span class="question-number">5</span> Est-ce qu'on vous programme un rendez-vous dans une de nos agences? <span class="text-danger">*</span></h5>
+          <h5><span class="question-number">7</span> Est-ce qu'on vous programme un rendez-vous dans une de nos agences? <span class="text-danger">*</span></h5>
           <div class="mb-3">
             <div class="form-check form-check-inline">
               <input class="form-check-input" type="radio" id="rdvOui" th:field="*{rendezVousAgence}" value="true" onchange="toggleRendezVous()">
@@ -274,21 +300,19 @@
             </div>
             <div class="col-md-6 mb-3">
               <label for="agence" class="form-label">Agence:</label>
-              <select id="agence" class="form-select">
-                <option value="">-- Sélectionnez une agence --</option>
-                <option value="Agence Centrale">Agence Centrale</option>
-                <option value="Agence Nord">Agence Nord</option>
-                <option value="Agence Sud">Agence Sud</option>
-                <option value="Agence Est">Agence Est</option>
-                <option value="Agence Ouest">Agence Ouest</option>
+              <select id="agence" th:field="*{NMBRA}" class="form-select" required onchange="toggleAutresCriteres()">
+                <option value="">-- Sélectionnez une branche --</option>
+                <option th:each="b : ${branche}"
+                        th:value="${b}"
+                        th:text="${b.displayName}"></option>
               </select>
             </div>
           </div>
         </div>
 
-        <!-- Question 6 -->
+        <!-- Question 8-->
         <div class="question-card">
-          <h5><span class="question-number">6</span> Quels sont les facteurs qui influencent votre décision de prendre un crédit? <span class="text-danger">*</span></h5>
+          <h5><span class="question-number">8</span> Quels sont les facteurs qui influencent votre décision de prendre un crédit? <span class="text-danger">*</span></h5>
           <div class="mb-3">
             <select th:field="*{facteurInfluence}" class="form-select" required onchange="toggleAutresCriteres()">
               <option value="">-- Sélectionnez un facteur --</option>
@@ -327,17 +351,18 @@
 <script>
   function toggleOtherReason() {
     const raison = document.querySelector('select[name="raisonNonRenouvellement"]').value;
-    const autresRaisons = document.getElementById('autresRaisons');
+    const autresRaisonsDiv = document.getElementById('autresRaisonsDiv');
 
     if (raison === 'AUTRES') {
-      autresRaisons.style.display = 'block';
+      autresRaisonsDiv.style.display = 'block';
     } else {
-      autresRaisons.style.display = 'none';
+      autresRaisonsDiv.style.display = 'none';
     }
   }
 
   function toggleDifficultesPrecision() {
-    const difficultes = document.querySelector('input[name="aDifficultesRencontrees"]:checked');
+    // Sélecteur qui cible l'input par son ID plutôt que son nom
+    const difficultes = document.querySelector('#difficulteOui:checked, #difficulteNon:checked');
     const precisionDiv = document.getElementById('precisionDifficultes');
 
     if (difficultes && difficultes.value === "true") {
