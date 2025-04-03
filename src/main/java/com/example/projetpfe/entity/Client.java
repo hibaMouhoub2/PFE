@@ -44,6 +44,9 @@ public class Client {
     @JoinColumn(name = "assigned_user_id")
     private User assignedUser;
 
+    public String getAssignedUserName() {
+        return assignedUser != null ? assignedUser.getName() : "Non assigné";
+    }
     // Champs du questionnaire
     @Enumerated(EnumType.STRING)
     private RaisonNonRenouvellement raisonNonRenouvellement;

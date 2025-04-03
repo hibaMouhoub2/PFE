@@ -242,9 +242,9 @@
         <p><span class="info-label">Âge:</span> <span th:text="${client.AgeClient}">-</span> ans</p>
       </div>
       <div class="col-md-6">
-        <p><span class="info-label">Téléphone principal:</span> <span th:text="${client.telephone}">-</span></p>
-        <p><span class="info-label">Téléphone secondaire:</span> <span th:text="${client.telephone2 ?: '-'}">-</span></p>
-        <p><span class="info-label">Profil:</span> <span th:text="${client.profil?.displayName ?: '-'}">-</span></p>
+        <p><span class="info-label">Téléphone principal:</span> <span th:text="${client.telephone2}">-</span></p>
+        <p><span class="info-label">Téléphone secondaire:</span> <span th:text="${client.telephone ?: '-'}">-</span></p>
+<!--        <p><span class="info-label">Profil:</span> <span th:text="${client.profil?.displayName ?: '-'}">-</span></p>-->
         <p><span class="info-label">Activité actuelle:</span> <span th:text="${client.activiteActuelle ?: '-'}">-</span></p>
       </div>
     </div>

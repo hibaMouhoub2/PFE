@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -45,15 +46,20 @@ public class SpringSecurity {
                         authorize.requestMatchers("/register/**").permitAll()
                                 .requestMatchers("/index").permitAll()
                                 .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                                .requestMatchers("/login-success").permitAll()
+                                .requestMatchers("/users-home").permitAll()
                                 .requestMatchers("/users").hasRole("ADMIN")
                                 .requestMatchers("/delete-user/**").hasRole("ADMIN")
-                                .requestMatchers("/login-success").permitAll()
                                 .requestMatchers("/edit-user/**").hasRole("ADMIN")
-                                .requestMatchers("/users-home").permitAll()
-                                .requestMatchers("/agenda/**").authenticated()
-                                .requestMatchers("/clients/**").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
-
+                                .requestMatchers("/clients/*/questionnaire").access(
+                                        (authentication, object) -> new AuthorizationDecision(
+                                                authentication.get().getAuthorities().stream()
+                                                        .anyMatch(a -> a.getAuthority().equals("ROLE_USER") || a.getAuthority().equals("ROLE_ADMIN"))
+                                        )
+                                )
+                                .requestMatchers("/clients/**").authenticated()
+                                .requestMatchers("/agenda/**").authenticated()
                 ).sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                         .invalidSessionUrl("/login")

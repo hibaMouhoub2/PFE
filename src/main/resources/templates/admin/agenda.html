@@ -481,7 +481,7 @@
                                         <span th:text="${rappel.client.prenom + ' ' + rappel.client.nom}">Nom client</span>
                                     </a>
                                 </td>
-                                <td th:text="${rappel.client.telephone}">0600000000</td>
+                                <td th:text="${rappel.client.telephone2}">0600000000</td>
                                 <td th:text="${rappel.client.assignedUser != null ? rappel.client.assignedUser.name : 'Non assigné'}">Agent</td>
                                 <td th:text="${#temporals.format(rappel.dateRappel, 'dd/MM/yyyy HH:mm')}">01/01/2023</td>
                                 <td th:text="${rappel.notes ?: '-'}">Note</td>

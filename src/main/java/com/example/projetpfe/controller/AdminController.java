@@ -65,38 +65,17 @@ public class AdminController {
             @RequestParam(required = false) Long userId,
             Model model) {
 
-        // Commencer avec tous les clients
-        List<Client> clients = clientService.findAll();
-
-        // Appliquer les filtres de manière cumulative
-        if (q != null && !q.isEmpty()) {
-            // Si une recherche par texte est demandée, mettre à jour la liste
-            clients = clients.stream()
-                    .filter(client ->
-                            (client.getNom() != null && client.getNom().toLowerCase().contains(q.toLowerCase())) ||
-                                    (client.getPrenom() != null && client.getPrenom().toLowerCase().contains(q.toLowerCase())) ||
-                                    (client.getCin() != null && client.getCin().toLowerCase().contains(q.toLowerCase()))
-                    )
-                    .collect(Collectors.toList());
-        }
-
+        // Utiliser la méthode optimisée findByFilters
+        ClientStatus statusEnum = null;
         if (status != null && !status.isEmpty()) {
-            // Filtrer par statut parmi les résultats déjà filtrés
-            ClientStatus clientStatus = ClientStatus.valueOf(status);
-            clients = clients.stream()
-                    .filter(client -> client.getStatus() == clientStatus)
-                    .collect(Collectors.toList());
+            try {
+                statusEnum = ClientStatus.valueOf(status);
+            } catch (IllegalArgumentException e) {
+                // Ignorer si le statut n'est pas valide
+            }
         }
 
-        if (userId != null) {
-            // Filtrer par utilisateur parmi les résultats déjà filtrés
-            clients = clients.stream()
-                    .filter(client ->
-                            client.getAssignedUser() != null &&
-                                    client.getAssignedUser().getId().equals(userId)
-                    )
-                    .collect(Collectors.toList());
-        }
+        List<Client> clients = clientRepository.findByFilters(q, statusEnum, userId);
 
         // Ajouter la liste des utilisateurs pour le filtre
         List<UserDto> users = userService.findAllUsers();
@@ -248,12 +227,12 @@ public class AdminController {
         return "admin/rendez-vous-report";
     }
 
-    @GetMapping("/export/clients")
-    public String exportClients(Model model) {
-        // La fonction d'export sera implémentée plus tard
-        model.addAttribute("message", "Fonction d'export en cours de développement");
-        return "admin/export";
-    }
+//    @GetMapping("/export/clients")
+//    public String exportClients(Model model) {
+//        // La fonction d'export sera implémentée plus tard
+//        model.addAttribute("message", "Fonction d'export en cours de développement");
+//        return "admin/export";
+//    }
     @GetMapping("/agenda")
     public String viewAdminAgenda(Model model) {
         // Récupération de tous les clients par statut

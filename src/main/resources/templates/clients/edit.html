@@ -173,7 +173,8 @@
             <p><strong>Prénom:</strong> <span th:text="${client.prenom}">Prénom</span></p>
           </div>
           <div class="col-md-6">
-            <p><strong>Téléphone:</strong> <span th:text="${client.telephone}">+212 600000000</span></p>
+            <p><strong>Téléphone :</strong> <span th:text="${client.telephone}">+212 600000000</span></p>
+            <p><strong>Téléphone 2 :</strong> <span th:text="${client.telephone2 ?: '-'}">+212 600000000</span></p>
             <p><strong>CIN:</strong> <span th:text="${client.cin ?: '-'}">XX111111</span></p>
           </div>
         </div>
@@ -182,9 +183,11 @@
       <!-- Formulaire du questionnaire -->
       <form th:action="@{/clients/{id}/questionnaire(id=${client.id})}" th:object="${clientDto}" method="post">
         <input type="hidden" th:field="*{id}" />
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
         <input type="hidden" th:field="*{nom}" />
         <input type="hidden" th:field="*{prenom}" />
         <input type="hidden" th:field="*{telephone}" />
+        <input type="hidden" th:field="*{telephone2}" />
         <input type="hidden" th:field="*{cin}" />
         <input type="hidden" th:field="*{status}" />
         <input type="hidden" th:field="*{assignedUserId}" />

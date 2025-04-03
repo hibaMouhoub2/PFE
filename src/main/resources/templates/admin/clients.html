@@ -263,7 +263,7 @@
                     <tr th:each="client : ${clients}">
                         <td th:text="${client.nom}">Nom</td>
                         <td th:text="${client.prenom}">Prénom</td>
-                        <td th:text="${client.telephone}">+212 600000000</td>
+                        <td th:text="${client.telephone2}">+212 600000000</td>
                         <td th:text="${client.cin ?: '-'}">XX111111</td>
                         <td>
                             <span th:class="'status-badge status-' + ${client.status}" th:text="${client.status.displayName}">Statut</span>
@@ -330,7 +330,7 @@
                                             <div class="modal-body">
                                                 <p>
                                                     Vous allez réassigner le client <strong th:text="${client.prenom + ' ' + client.nom}">Nom client</strong>
-                                                    qui est actuellement assigné à <strong th:text="${client.assignedUser.name}">Utilisateur</strong>.
+                                                    qui est actuellement assigné à <strong th:text="${client.getAssignedUserName()}">Utilisateur</strong>.
                                                 </p>
                                                 <div class="mb-3">
                                                     <label for="reassignUserId" class="form-label">Nouvel utilisateur</label>

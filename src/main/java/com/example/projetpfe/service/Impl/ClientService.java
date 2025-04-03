@@ -1,6 +1,7 @@
 package com.example.projetpfe.service.Impl;
 
 import com.example.projetpfe.dto.ClientDto;
+import com.example.projetpfe.entity.Branche;
 import com.example.projetpfe.entity.Client;
 import com.example.projetpfe.entity.ClientStatus;
 import com.example.projetpfe.entity.User;
@@ -248,11 +249,72 @@ public class ClientService {
                 if (isEmptyRow(row)) continue;
 
                 Client client = new Client();
-                client.setNom(getCellValueAsString(row.getCell(0)));
-                client.setPrenom(getCellValueAsString(row.getCell(1)));
-                client.setCin(getCellValueAsString(row.getCell(2)));
-                client.setTelephone(getCellValueAsString(row.getCell(3)));
-                client.setTelephone2(getCellValueAsString(row.getCell(4)));
+
+                // Mappage des colonnes Excel vers les propriétés de l'entité Client
+                client.setNMDIR(getCellValueAsString(row.getCell(0)));  // NMDIR
+                client.setNMREG(getCellValueAsString(row.getCell(1)));  // NMREG
+
+                // Pour NMBRA (enum), conversion nécessaire
+                String nmbraStr = getCellValueAsString(row.getCell(2));
+                if (nmbraStr != null && !nmbraStr.isEmpty()) {
+                    try {
+                        // Tentative de conversion directe (si les valeurs correspondent exactement)
+                        client.setNMBRA(Branche.valueOf(nmbraStr));
+                    } catch (IllegalArgumentException e) {
+                        // Si échec, tentative de trouver une correspondance par displayName
+                        for (Branche branche : Branche.values()) {
+                            if (branche.getDisplayName().equalsIgnoreCase(nmbraStr)) {
+                                client.setNMBRA(branche);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                client.setCin(getCellValueAsString(row.getCell(3)));  // cin
+                client.setNom(getCellValueAsString(row.getCell(4)));  // NMCLI
+                client.setPrenom(getCellValueAsString(row.getCell(5)));  // PNCLI
+
+                // Pour DTFINC (date)
+                Cell dtfincCell = row.getCell(6);
+                if (dtfincCell != null && dtfincCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dtfincCell)) {
+                    client.setDTFINC(dtfincCell.getDateCellValue());
+                }
+
+                client.setTelephone(getCellValueAsString(row.getCell(7)));  // teledo
+                client.setTelephone2(getCellValueAsString(row.getCell(8)));  // telex
+                client.setActiviteActuelle(getCellValueAsString(row.getCell(9)));  // activ
+                client.setBAREM(getCellValueAsString(row.getCell(10)));  // BAREM
+
+                // Pour date_deb (date)
+                Cell dtdebcCell = row.getCell(11);
+                if (dtdebcCell != null && dtdebcCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dtdebcCell)) {
+                    client.setDTDEBC(dtdebcCell.getDateCellValue());
+                }
+
+                // Pour mnt_deb (double)
+                Cell mntDebCell = row.getCell(12);
+                if (mntDebCell != null && mntDebCell.getCellType() == CellType.NUMERIC) {
+                    client.setMNTDEB(mntDebCell.getNumericCellValue());
+                }
+
+                // Pour nbre_inc (integer)
+                Cell nbreIncCell = row.getCell(13);
+                if (nbreIncCell != null && nbreIncCell.getCellType() == CellType.NUMERIC) {
+                    client.setNBINC((int) nbreIncCell.getNumericCellValue());
+                }
+
+                // Pour age_clt (integer)
+                Cell ageCell = row.getCell(14);
+                if (ageCell != null && ageCell.getCellType() == CellType.NUMERIC) {
+                    client.setAgeClient((int) ageCell.getNumericCellValue());
+                }
+
+                // Pour nbre_prets (integer)
+                Cell nbrePretsCell = row.getCell(15);
+                if (nbrePretsCell != null && nbrePretsCell.getCellType() == CellType.NUMERIC) {
+                    client.setNBPRETS((int) nbrePretsCell.getNumericCellValue());
+                }
 
                 // Set default values
                 client.setStatus(ClientStatus.NON_TRAITE);
@@ -269,7 +331,8 @@ public class ClientService {
     private boolean isEmptyRow(Row row) {
         if (row == null) return true;
 
-        for (int i = 0; i < 5; i++) {
+        // Vérifier au moins les colonnes essentielles (nom, prénom, CIN, téléphone)
+        for (int i : new int[]{3, 4, 5, 7}) {  // indices de cin, NMCLI, PNCLI, teledo
             Cell cell = row.getCell(i);
             if (cell != null && cell.getCellType() != CellType.BLANK) {
                 return false;

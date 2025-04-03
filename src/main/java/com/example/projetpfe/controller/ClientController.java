@@ -200,8 +200,26 @@ public class ClientController {
                                     Model model,
                                     RedirectAttributes redirectAttributes) {
         Client client = clientService.getById(id);
-        // Capture toutes les exceptions pour les afficher
+
         try {
+            // 1. Prétraitez les données conditionnelles
+            if (Boolean.FALSE.equals(clientDto.getRendezVousAgence())) {
+                // Si pas de rendez-vous agence, nettoyez les champs associés
+                clientDto.setNMBRA(null);
+                clientDto.setDateHeureRendezVous(null);
+            }
+
+            // 2. Vérifiez que les champs obligatoires sont présents si rendezVousAgence est true
+            if (Boolean.TRUE.equals(clientDto.getRendezVousAgence())) {
+                if (clientDto.getNMBRA() == null) {
+                    bindingResult.rejectValue("NMBRA", "error.clientDto", "L'agence est requise pour un rendez-vous");
+                }
+                if (clientDto.getDateHeureRendezVous() == null) {
+                    bindingResult.rejectValue("dateHeureRendezVous", "error.clientDto", "La date de rendez-vous est requise");
+                }
+            }
+
+            // 3. Vérifiez les erreurs après notre validation supplémentaire
             if (bindingResult.hasErrors()) {
                 model.addAttribute("client", client);
                 model.addAttribute("raisonsNonRenouvellement", RaisonNonRenouvellement.values());
@@ -222,7 +240,21 @@ public class ClientController {
             return "redirect:/agenda/index";
         } catch (Exception e) {
             e.printStackTrace(); // Pour voir l'erreur dans les logs
-            redirectAttributes.addFlashAttribute("error", "Erreur lors de la sauvegarde: " + e.getMessage());
+            // Message d'erreur plus spécifique selon le type d'exception
+            String errorMessage = "Erreur lors de la sauvegarde: ";
+
+            // Vérifiez les types d'erreurs courants pour donner des messages plus précis
+            if (e instanceof NullPointerException) {
+                errorMessage += "Une valeur requise est manquante";
+            } else if (e instanceof IllegalArgumentException) {
+                errorMessage += "Valeur incorrecte: " + e.getMessage();
+            } else {
+                errorMessage += e.getMessage();
+            }
+
+            redirectAttributes.addFlashAttribute("error", errorMessage);
+
+            // Préparez les données pour le formulaire
             model.addAttribute("client", clientService.getById(id));
             model.addAttribute("raisonsNonRenouvellement", RaisonNonRenouvellement.values());
             model.addAttribute("qualitesService", QualiteService.values());
@@ -231,6 +263,7 @@ public class ClientController {
             model.addAttribute("profil", Profil.values());
             model.addAttribute("branche", Branche.values());
             model.addAttribute("facteursInfluence", FacteurInfluence.values());
+
             return "clients/questionnaire";
         }
     }

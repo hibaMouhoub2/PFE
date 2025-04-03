@@ -25,4 +25,16 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     long countByStatus(ClientStatus status);
     @Query("SELECT c FROM Client c WHERE c.cin = :query OR c.telephone = :query OR c.telephone2 = :query")
     List<Client> findByCinOrPhone(@Param("query") String query);
+    @Query("SELECT c FROM Client c WHERE " +
+            "(:query IS NULL OR LOWER(c.nom) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(c.prenom) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(c.cin) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
+            "(:status IS NULL OR c.status = :status) AND " +
+            "(:userId IS NULL OR c.assignedUser.id = :userId)")
+    List<Client> findByFilters(@Param("query") String query,
+                               @Param("status") ClientStatus status,
+                               @Param("userId") Long userId);
+    List<Client> findByStatusAndAssignedUserId(ClientStatus status, Long userId);
+    List<Client> findByAssignedUserId(Long userId);
+
 }
