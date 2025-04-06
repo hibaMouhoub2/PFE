@@ -26,7 +26,7 @@ public class ClientDto {
     @NotEmpty(message = "Le prénom est requis")
     private String prenom;
 
-    @NotEmpty(message = "Le téléphone est requis")
+
     private String telephone;
 
     private String cin;

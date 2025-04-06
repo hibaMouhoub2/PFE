@@ -1,5 +1,6 @@
 package com.example.projetpfe.repository;
 
+import com.example.projetpfe.entity.Branche;
 import com.example.projetpfe.entity.Client;
 import com.example.projetpfe.entity.ClientStatus;
 import com.example.projetpfe.entity.User;
@@ -22,6 +23,8 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     List<Client> findByStatus(ClientStatus status);
     List<Client> findByStatusAndUpdatedAtBetween(ClientStatus status, LocalDateTime start, LocalDateTime end);
     List<Client> findByRendezVousAgenceTrueAndDateHeureRendezVousBetween(LocalDateTime start, LocalDateTime end);
+    List<Client> findByRendezVousAgenceTrueAndDateHeureRendezVousBetweenAndNMBRA(
+            LocalDateTime start, LocalDateTime end, Branche branche);
     long countByStatus(ClientStatus status);
     @Query("SELECT c FROM Client c WHERE c.cin = :query OR c.telephone = :query OR c.telephone2 = :query")
     List<Client> findByCinOrPhone(@Param("query") String query);
@@ -34,7 +37,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     List<Client> findByFilters(@Param("query") String query,
                                @Param("status") ClientStatus status,
                                @Param("userId") Long userId);
-    List<Client> findByStatusAndAssignedUserId(ClientStatus status, Long userId);
-    List<Client> findByAssignedUserId(Long userId);
+//    List<Client> findByStatusAndAssignedUserId(ClientStatus status, Long userId);
+//    List<Client> findByAssignedUserId(Long userId);
 
 }

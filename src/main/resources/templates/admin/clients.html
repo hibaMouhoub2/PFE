@@ -219,9 +219,13 @@
                    class="btn btn-success">
                     <i class="fas fa-file-excel me-1"></i>Exporter en Excel
                 </a>
+                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#emailModal">
+                    <i class="fas fa-envelope me-1"></i>Envoyer par Email
+                </button>
             </div>
         </div>
     </div>
+
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0">
             <i class="fas fa-users me-2"></i>
@@ -357,6 +361,44 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailModalLabel">Envoyer les rendez-vous par email</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form th:action="@{/admin/export/rendez-vous/email}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="emailDate" class="form-label">Date des rendez-vous</label>
+                        <input type="date" id="emailDate" name="date" class="form-control" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="emailBranche" class="form-label">Agence (optionnel)</label>
+                        <select id="emailBranche" name="branche" class="form-select">
+                            <option value="">Toutes les agences</option>
+                            <option value="CASA_AZHAR">Casa Azhar</option>
+                            <option value="CASA_DIAR_ELJADIDA">Casa Diar Eljadida</option>
+                            <option value="CASA_HAY_FARAH">Casa Hay Farah</option>
+                            <option value="CASA_KOREA">Casa Koréa</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="emailTo" class="form-label">Adresse email</label>
+                        <input type="email" id="emailTo" name="emailTo" class="form-control" required placeholder="exemple@outlook.com">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-1"></i>Envoyer
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

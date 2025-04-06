@@ -2,13 +2,11 @@ package com.example.projetpfe.controller;
 
 import com.example.projetpfe.dto.ClientDto;
 import com.example.projetpfe.dto.UserDto;
-import com.example.projetpfe.entity.Client;
-import com.example.projetpfe.entity.ClientStatus;
-import com.example.projetpfe.entity.Rappel;
-import com.example.projetpfe.entity.User;
+import com.example.projetpfe.entity.*;
 import com.example.projetpfe.repository.ClientRepository;
 import com.example.projetpfe.repository.UserRepository;
 import com.example.projetpfe.service.Impl.ClientService;
+import com.example.projetpfe.service.Impl.EmailService;
 import com.example.projetpfe.service.Impl.RappelService;
 import com.example.projetpfe.service.UserService;
 import com.example.projetpfe.util.ExcelExportUtil;
@@ -327,7 +325,7 @@ public class AdminController {
                     .collect(Collectors.toList());
         }
 
-        // Générer le fichier Excel
+        // Générer le fichier Excel avec tous les attributs
         byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
 
         // Préparer la réponse HTTP
@@ -355,6 +353,84 @@ public class AdminController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur lors de l'importation: " + e.getMessage());
             return "redirect:/admin/unassigned-clients";
+        }
+    }
+
+    @GetMapping("/export/rendez-vous")
+    public ResponseEntity<byte[]> exportRendezVous(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) String branche) throws IOException {
+
+        // Par défaut, utiliser la date du jour
+        LocalDate exportDate = date != null ? date : LocalDate.now();
+
+        // Convertir la chaîne de branche en enum si nécessaire
+        Branche brancheEnum = null;
+        if (branche != null && !branche.isEmpty()) {
+            try {
+                brancheEnum = Branche.valueOf(branche);
+            } catch (IllegalArgumentException e) {
+                // Gérer l'erreur si la branche n'est pas valide
+            }
+        }
+
+        // Récupérer les clients avec rendez-vous pour cette date et cette branche
+        List<Client> clientsWithRdv = clientService.findClientsWithRendezVousForDateAndBranche(exportDate, brancheEnum);
+
+        // Générer le fichier Excel
+        byte[] excelContent = excelExportUtil.exportRendezVousToExcel(clientsWithRdv, exportDate);
+
+        // Préparer la réponse HTTP
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+
+        // Définir le nom du fichier
+        String brancheStr = brancheEnum != null ? "_" + brancheEnum.name() : "_TOUTES_AGENCES";
+        String filename = "rendez_vous_" + exportDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + brancheStr + ".xlsx";
+        headers.setContentDispositionFormData("attachment", filename);
+
+        return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
+    }
+
+    @Autowired
+    private EmailService emailService;
+
+    @PostMapping("/export/rendez-vous/email")
+    public String exportAndSendRendezVousEmail(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) String branche,
+            @RequestParam String emailTo,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            // Par défaut, utiliser la date du jour
+            LocalDate exportDate = date != null ? date : LocalDate.now();
+
+            // Convertir la chaîne de branche en enum si nécessaire
+            Branche brancheEnum = null;
+            if (branche != null && !branche.isEmpty()) {
+                try {
+                    brancheEnum = Branche.valueOf(branche);
+                } catch (IllegalArgumentException e) {
+                    // Gérer l'erreur si la branche n'est pas valide
+                }
+            }
+
+            // Récupérer les clients avec rendez-vous pour cette date
+            List<Client> clientsWithRdv = clientService.findClientsWithRendezVousForDateAndBranche(exportDate, brancheEnum);
+
+            // Générer le fichier Excel
+            byte[] excelContent = excelExportUtil.exportRendezVousToExcel(clientsWithRdv, exportDate);
+
+            // Envoyer l'email
+            emailService.sendRendezVousSummary(emailTo, clientsWithRdv, exportDate, excelContent);
+
+            redirectAttributes.addFlashAttribute("success", "Email envoyé avec succès à " + emailTo);
+            return "redirect:/admin/clients";
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de l'envoi de l'email: " + e.getMessage());
+            return "redirect:/admin/clients";
         }
     }
 }

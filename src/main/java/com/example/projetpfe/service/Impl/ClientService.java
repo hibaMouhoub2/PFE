@@ -78,6 +78,19 @@ public class ClientService {
         return clientRepository.findByRendezVousAgenceTrueAndDateHeureRendezVousBetween(start, end);
     }
 
+    public List<Client> findClientsWithRendezVousForDateAndBranche(LocalDate date, Branche branche) {
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+        if (branche != null) {
+            return clientRepository.findByRendezVousAgenceTrueAndDateHeureRendezVousBetweenAndNMBRA(
+                    startOfDay, endOfDay, branche);
+        } else {
+            return clientRepository.findByRendezVousAgenceTrueAndDateHeureRendezVousBetween(
+                    startOfDay, endOfDay);
+        }
+    }
+
     public List<Client> searchClients(String query) {
         return clientRepository.searchByNomOrPrenomOrCin(query);
     }
