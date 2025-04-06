@@ -347,8 +347,19 @@ public class AdminController {
         }
 
         try {
-            int importedCount = clientService.importClientsFromExcel(file);
-            redirectAttributes.addFlashAttribute("success", importedCount + " client(s) importé(s) avec succès");
+            ClientService.ImportResult result = clientService.importClientsFromExcel(file);
+
+            String message = result.getImportedCount() + " client(s) importé(s) avec succès";
+
+            if (result.getSkippedCount() > 0) {
+                message += ". " + result.getSkippedCount() + " client(s) ignoré(s) car leur CIN existe déjà dans la base de données";
+
+                if (result.getSkippedCount() <= 5) {
+                    message += " (CINs ignorés : " + String.join(", ", result.getSkippedCins()) + ")";
+                }
+            }
+
+            redirectAttributes.addFlashAttribute("success", message);
             return "redirect:/admin/clients";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur lors de l'importation: " + e.getMessage());
@@ -432,5 +443,16 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "Erreur lors de l'envoi de l'email: " + e.getMessage());
             return "redirect:/admin/clients";
         }
+    }
+
+    @PostMapping("/clients/{id}/delete")
+    public String deleteClient(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            clientService.deleteClient(id);
+            redirectAttributes.addFlashAttribute("success", "Client supprimé avec succès");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la suppression: " + e.getMessage());
+        }
+        return "redirect:/admin/clients";
     }
 }

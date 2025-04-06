@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport de questionnaire - ATTAWFIQ MICRO-FINANCE</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #FF8C00;
+            --secondary-color: #222;
+            --accent-color: #FF6B00;
+        }
+
+        .navbar {
+            background-color: var(--secondary-color) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color) !important;
+        }
+
+        .nav-link {
+            color: #fff !important;
+            font-weight: 500;
+            margin: 0 10px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            background-color: var(--secondary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-landmark me-2"></i>ATTAWFIQ MICRO-FINANCE
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/agenda}">
+                        <i class="fas fa-chart-pie me-1"></i>Tableau de bord
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/clients}">
+                        <i class="fas fa-users me-1"></i>Clients
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/unassigned-clients}">
+                        <i class="fas fa-user-plus me-1"></i>A assigner
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/users}">
+                        <i class="fas fa-users-cog me-1"></i>Utilisateurs
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link active" th:href="@{/admin/reports/questionnaire}">
+                        <i class="fas fa-chart-bar me-1"></i>Rapports
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" th:href="@{/logout}">
+                        <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2><i class="fas fa-chart-bar me-2"></i>Rapport du questionnaire client</h2>
+    <p class="text-muted">Analyse des réponses collectées auprès des clients</p>
+
+    <!-- Ligne 1: Indicateurs clés -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <!-- Graphique de progression -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-2"></i>Progression des contacts clients
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="progressionChart"></canvas>
+                    </div>
+                </div>
+                <div class="text-end mt-2">
+                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="chartId">
+                        <i class="fas fa-download me-1"></i>Exporter
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <!-- Graphique RDV -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-calendar-check me-2"></i>Rendez-vous agence
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="rendezVousChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ligne 2: Raisons et Qualité -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <!-- Graphique raisons non-renouvellement -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-question-circle me-2"></i>Raisons de non-renouvellement
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="raisonsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <!-- Graphique qualité service -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-star me-2"></i>Qualité du service
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="qualiteChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ligne 3: Intérêt et Facteurs -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <!-- Graphique intérêt nouveau crédit -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-money-bill-wave me-2"></i>Intérêt pour un nouveau crédit
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="interetChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <!-- Graphique facteurs d'influence -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-lightbulb me-2"></i>Facteurs d'influence
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="facteursChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ligne 4: Profil et Activité -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <!-- Graphique profil client -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-user-tag me-2"></i>Profil des clients
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="profilChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <!-- Graphique activité client -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-briefcase me-2"></i>Activité des clients
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="activiteChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique par agence -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-building me-2"></i>Répartition par agence
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="brancheChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+
+<!-- Scripts pour les graphiques -->
+<script>
+    // Couleurs pour les graphiques
+    const colors = {
+        backgrounds: [
+            'rgba(255, 140, 0, 0.7)',
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(153, 102, 255, 0.7)',
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(231, 76, 60, 0.7)',
+            'rgba(46, 204, 113, 0.7)',
+            'rgba(52, 152, 219, 0.7)',
+            'rgba(155, 89, 182, 0.7)'
+        ],
+        borders: [
+            'rgba(255, 140, 0, 1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)',
+            'rgba(255, 99, 132, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(231, 76, 60, 1)',
+            'rgba(46, 204, 113, 1)',
+            'rgba(52, 152, 219, 1)',
+            'rgba(155, 89, 182, 1)'
+        ]
+    };
+
+    // Fonction pour charger les données et initialiser les graphiques
+    async function initCharts() {
+        try {
+            const response = await fetch('/admin/reports/api/data');
+            const data = await response.json();
+
+            // Initialiser chaque graphique
+            createProgressionChart(data.progression);
+            createPieChart('rendezVousChart', data.rendezVous, 'Rendez-vous agence');
+            createBarChart('raisonsChart', data.raisonsNonRenouvellement, 'Raisons de non-renouvellement');
+            createPieChart('qualiteChart', data.qualiteService, 'Évaluation de la qualité');
+            createPieChart('interetChart', data.interetCredit, 'Intérêt pour un nouveau crédit');
+            createBarChart('facteursChart', data.facteurInfluence, 'Facteurs d\'influence');
+            createPieChart('profilChart', data.profil, 'Profil des clients');
+            createBarChart('activiteChart', data.activiteClient, 'Activité des clients');
+            createBarChart('brancheChart', data.branche, 'Répartition par agence');
+
+        } catch (error) {
+            console.error('Erreur lors du chargement des données:', error);
+        }
+    }
+
+    // Fonction pour créer un graphique en barres
+    function createBarChart(canvasId, data, title) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const labels = Object.keys(data);
+        const values = Object.values(data);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Nombre de clients',
+                    data: values,
+                    backgroundColor: colors.backgrounds.slice(0, labels.length),
+                    borderColor: colors.borders.slice(0, labels.length),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: title,
+                        font: {
+                            size: 16
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Fonction pour créer un graphique circulaire
+    function createPieChart(canvasId, data, title) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const labels = Object.keys(data);
+        const values = Object.values(data);
+
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors.backgrounds.slice(0, labels.length),
+                    borderColor: colors.borders.slice(0, labels.length),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    title: {
+                        display: true,
+                        text: title,
+                        font: {
+                            size: 16
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Fonction pour créer un graphique linéaire de progression
+    function createProgressionChart(data) {
+        const ctx = document.getElementById('progressionChart').getContext('2d');
+        const labels = Object.keys(data);
+        const values = Object.values(data);
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Clients contactés',
+                    data: values,
+                    backgroundColor: 'rgba(255, 140, 0, 0.2)',
+                    borderColor: 'rgba(255, 140, 0, 1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true
+                    },
+                    title: {
+                        display: true,
+                        text: 'Évolution mensuelle des contacts clients',
+                        font: {
+                            size: 16
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Initialiser les graphiques au chargement de la page
+    document.addEventListener('DOMContentLoaded', initCharts);
+    // Fonction pour exporter un graphique en image
+    document.querySelectorAll('.export-chart-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const chartId = this.getAttribute('data-chart');
+            const canvas = document.getElementById(chartId);
+            const link = document.createElement('a');
+            link.download = `attawfiq-chart-${chartId}-${new Date().toISOString().split('T')[0]}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    });
+</script>
+</body>
+</html>

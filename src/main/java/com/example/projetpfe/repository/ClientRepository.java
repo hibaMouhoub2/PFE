@@ -1,9 +1,6 @@
 package com.example.projetpfe.repository;
 
-import com.example.projetpfe.entity.Branche;
-import com.example.projetpfe.entity.Client;
-import com.example.projetpfe.entity.ClientStatus;
-import com.example.projetpfe.entity.User;
+import com.example.projetpfe.entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -37,7 +34,18 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     List<Client> findByFilters(@Param("query") String query,
                                @Param("status") ClientStatus status,
                                @Param("userId") Long userId);
-//    List<Client> findByStatusAndAssignedUserId(ClientStatus status, Long userId);
-//    List<Client> findByAssignedUserId(Long userId);
+    boolean existsByCin(String cin);
+    long countByRaisonNonRenouvellement(RaisonNonRenouvellement raison);
+    long countByQualiteService(QualiteService qualite);
+    long countByInteretNouveauCredit(InteretCredit interet);
+    long countByFacteurInfluence(FacteurInfluence facteur);
+    long countByProfil(Profil profil);
+    long countByActiviteClient(ActiviteClient activite);
+    long countByRendezVousAgence(Boolean rendezVous);
+    long countByNMBRA(Branche branche);
 
-}
+    // Pour les tendances temporelles
+    @Query("SELECT COUNT(c) FROM Client c WHERE c.status = :status AND c.updatedAt BETWEEN :start AND :end")
+    long countByStatusAndUpdatedAtBetween(@Param("status") ClientStatus status, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    }

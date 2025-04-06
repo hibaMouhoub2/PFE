@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -244,8 +245,10 @@ public class ClientService {
     }
 
     @Transactional
-    public int importClientsFromExcel(MultipartFile file) throws IOException {
+    public ImportResult importClientsFromExcel(MultipartFile file) throws IOException {
         int importedCount = 0;
+        int skippedCount =0 ;
+        List<String> skippedCins = new ArrayList<>();
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
 
@@ -260,6 +263,15 @@ public class ClientService {
 
                 // Skip empty rows
                 if (isEmptyRow(row)) continue;
+                // Récupérer le CIN avant de créer le client
+                String cin = getCellValueAsString(row.getCell(3));  // Indice 3 pour la colonne CIN
+
+                // Vérifier si le CIN existe déjà
+                if (cin != null && !cin.isEmpty() && clientRepository.existsByCin(cin)) {
+                    skippedCount++;
+                    skippedCins.add(cin);
+                    continue; // Passer à la ligne suivante sans traiter ce client
+                }
 
                 Client client = new Client();
 
@@ -284,7 +296,7 @@ public class ClientService {
                     }
                 }
 
-                client.setCin(getCellValueAsString(row.getCell(3)));  // cin
+                client.setCin(cin);  // cin
                 client.setNom(getCellValueAsString(row.getCell(4)));  // NMCLI
                 client.setPrenom(getCellValueAsString(row.getCell(5)));  // PNCLI
 
@@ -338,7 +350,31 @@ public class ClientService {
                 importedCount++;
             }
         }
-        return importedCount;
+        return new ImportResult(importedCount, skippedCount, skippedCins);
+    }
+    // Classe pour retourner les résultats de l'importation
+    public static class ImportResult {
+        private final int importedCount;
+        private final int skippedCount;
+        private final List<String> skippedCins;
+
+        public ImportResult(int importedCount, int skippedCount, List<String> skippedCins) {
+            this.importedCount = importedCount;
+            this.skippedCount = skippedCount;
+            this.skippedCins = skippedCins;
+        }
+
+        public int getImportedCount() {
+            return importedCount;
+        }
+
+        public int getSkippedCount() {
+            return skippedCount;
+        }
+
+        public List<String> getSkippedCins() {
+            return skippedCins;
+        }
     }
 
     private boolean isEmptyRow(Row row) {
@@ -373,4 +409,15 @@ public class ClientService {
     public List<Client> findByCinOrPhone(String query) {
         return clientRepository.findByCinOrPhone(query);
     }
+    @Transactional
+    public void deleteClient(Long id) {
+        Client client = getById(id);
+
+        // D'abord supprimer les rappels associés au client (pour éviter les violations de contraintes FK)
+        rappelRepository.deleteByClient(client);
+
+        // Supprimer le client
+        clientRepository.delete(client);
+    }
+
 }

@@ -138,6 +138,11 @@
                         <i class="fas fa-users-cog me-1"></i>Utilisateurs
                     </a>
                 </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/reports/questionnaire}">
+                        <i class="fas fa-chart-bar me-1"></i>Rapports
+                    </a>
+                </li>
                 <li class="nav-item" sec:authorize="isAuthenticated()">
                     <a class="nav-link" th:href="@{/logout}">
                         <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
@@ -249,6 +254,7 @@
 <!--                <i class="fas fa-bell me-1"></i>Rappels-->
 <!--            </button>-->
 <!--        </li>-->
+
     </ul>
 
     <div class="tab-content" id="clientTabsContent">

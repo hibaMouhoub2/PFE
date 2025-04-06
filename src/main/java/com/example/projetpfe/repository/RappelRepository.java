@@ -1,5 +1,6 @@
 package com.example.projetpfe.repository;
 
+import com.example.projetpfe.entity.Client;
 import com.example.projetpfe.entity.Rappel;
 import com.example.projetpfe.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,4 +25,6 @@ public interface RappelRepository extends JpaRepository<Rappel, Long> {
 
     List<Rappel> findByClientAssignedUserAndDateRappelBetweenAndCompletedFalseOrderByDateRappel(
             User user, LocalDateTime start, LocalDateTime end);
+
+    void deleteByClient(Client client);
 }
