@@ -56,6 +56,15 @@
             height: 300px;
             position: relative;
         }
+        .toast {
+            background-color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast-header {
+            background-color: #f8f9fa;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -123,7 +132,7 @@
                     </div>
                 </div>
                 <div class="text-end mt-2">
-                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="chartId">
+                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="progressionChart">
                         <i class="fas fa-download me-1"></i>Exporter
                     </button>
                 </div>
@@ -139,6 +148,11 @@
                     <div class="chart-container">
                         <canvas id="rendezVousChart"></canvas>
                     </div>
+                </div>
+                <div class="text-end mt-2">
+                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="rendezvousChart">
+                        <i class="fas fa-download me-1"></i>Exporter
+                    </button>
                 </div>
             </div>
         </div>
@@ -157,6 +171,11 @@
                         <canvas id="raisonsChart"></canvas>
                     </div>
                 </div>
+                <div class="text-end mt-2">
+                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="raisonsChart">
+                        <i class="fas fa-download me-1"></i>Exporter
+                    </button>
+                </div>
             </div>
         </div>
         <div class="col-md-6">
@@ -169,6 +188,11 @@
                     <div class="chart-container">
                         <canvas id="qualiteChart"></canvas>
                     </div>
+                </div>
+                <div class="text-end mt-2">
+                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="qualiteChart">
+                        <i class="fas fa-download me-1"></i>Exporter
+                    </button>
                 </div>
             </div>
         </div>
@@ -187,6 +211,11 @@
                         <canvas id="interetChart"></canvas>
                     </div>
                 </div>
+                <div class="text-end mt-2">
+                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="interetChart">
+                        <i class="fas fa-download me-1"></i>Exporter
+                    </button>
+                </div>
             </div>
         </div>
         <div class="col-md-6">
@@ -199,6 +228,11 @@
                     <div class="chart-container">
                         <canvas id="facteursChart"></canvas>
                     </div>
+                </div>
+                <div class="text-end mt-2">
+                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="facteursChart">
+                        <i class="fas fa-download me-1"></i>Exporter
+                    </button>
                 </div>
             </div>
         </div>
@@ -217,6 +251,11 @@
                         <canvas id="profilChart"></canvas>
                     </div>
                 </div>
+                <div class="text-end mt-2">
+                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="profilChart">
+                        <i class="fas fa-download me-1"></i>Exporter
+                    </button>
+                </div>
             </div>
         </div>
         <div class="col-md-6">
@@ -229,6 +268,11 @@
                     <div class="chart-container">
                         <canvas id="activiteChart"></canvas>
                     </div>
+                </div>
+                <div class="text-end mt-2">
+                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="activiteChart">
+                        <i class="fas fa-download me-1"></i>Exporter
+                    </button>
                 </div>
             </div>
         </div>
@@ -245,6 +289,11 @@
                     <div class="chart-container">
                         <canvas id="brancheChart"></canvas>
                     </div>
+                </div>
+                <div class="text-end mt-2">
+                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="brancheChart">
+                        <i class="fas fa-download me-1"></i>Exporter
+                    </button>
                 </div>
             </div>
         </div>
@@ -292,16 +341,18 @@
             const response = await fetch('/admin/reports/api/data');
             const data = await response.json();
 
-            // Initialiser chaque graphique
+            // Graphique de progression (pas d'export interactif pour celui-ci)
             createProgressionChart(data.progression);
-            createPieChart('rendezVousChart', data.rendezVous, 'Rendez-vous agence');
-            createBarChart('raisonsChart', data.raisonsNonRenouvellement, 'Raisons de non-renouvellement');
-            createPieChart('qualiteChart', data.qualiteService, 'Évaluation de la qualité');
-            createPieChart('interetChart', data.interetCredit, 'Intérêt pour un nouveau crédit');
-            createBarChart('facteursChart', data.facteurInfluence, 'Facteurs d\'influence');
-            createPieChart('profilChart', data.profil, 'Profil des clients');
-            createBarChart('activiteChart', data.activiteClient, 'Activité des clients');
-            createBarChart('brancheChart', data.branche, 'Répartition par agence');
+
+            // Graphiques interactifs avec export au clic
+            createInteractivePieChart('rendezVousChart', data.rendezVous, 'Rendez-vous agence', 'rendez-vous');
+            createInteractiveBarChart('raisonsChart', data.raisonsNonRenouvellement, 'Raisons de non-renouvellement', 'raison');
+            createInteractivePieChart('qualiteChart', data.qualiteService, 'Évaluation de la qualité', 'qualite');
+            createInteractivePieChart('interetChart', data.interetCredit, 'Intérêt pour un nouveau crédit', 'interet');
+            createInteractiveBarChart('facteursChart', data.facteurInfluence, 'Facteurs d\'influence', 'facteur');
+            createInteractivePieChart('profilChart', data.profil, 'Profil des clients', 'profil');
+            createInteractiveBarChart('activiteChart', data.activiteClient, 'Activité des clients', 'activite');
+            createInteractiveBarChart('brancheChart', data.branche, 'Répartition par agence', 'branche');
 
         } catch (error) {
             console.error('Erreur lors du chargement des données:', error);
@@ -458,17 +509,249 @@
 
     // Initialiser les graphiques au chargement de la page
     document.addEventListener('DOMContentLoaded', initCharts);
-    // Fonction pour exporter un graphique en image
-    document.querySelectorAll('.export-chart-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const chartId = this.getAttribute('data-chart');
-            const canvas = document.getElementById(chartId);
-            const link = document.createElement('a');
-            link.download = `attawfiq-chart-${chartId}-${new Date().toISOString().split('T')[0]}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+    // Fonction simplifiée pour l'export
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialiser d'abord les graphiques
+        initCharts();
+
+        // Configurer l'export une fois que les graphiques sont prêts
+        setTimeout(() => {
+            document.querySelectorAll('.export-chart-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const chartId = this.getAttribute('data-chart');
+                    const canvas = document.getElementById(chartId);
+
+                    if (!canvas) {
+                        console.error(`Canvas with ID ${chartId} not found`);
+                        return;
+                    }
+
+                    try {
+                        // Version plus simple qui devrait fonctionner dans la plupart des navigateurs
+                        const imageURL = canvas.toDataURL();
+                        const newTab = window.open();
+                        newTab.document.write(`<img src="${imageURL}" alt="${chartId}">`);
+
+                        // Option: possibilité de télécharger depuis le nouvel onglet
+                        newTab.document.write(`<br><p>Cliquez droit sur l'image et sélectionnez "Enregistrer l'image sous..." pour la télécharger</p>`);
+                    } catch (error) {
+                        console.error('Error exporting chart:', error);
+                        alert('Impossible d\'exporter l\'image. Voir la console pour plus de détails.');
+                    }
+                });
+            });
+        }, 1000); // Attendre 1 seconde pour s'assurer que les graphiques sont rendus
+    });
+
+    // Appeler cette fonction après que les graphiques sont initialisés
+    document.addEventListener('DOMContentLoaded', function() {
+        initCharts().then(() => {
+            setupChartExport();
         });
     });
+    // Fonction pour créer un graphique en barres avec export au clic
+    function createInteractiveBarChart(canvasId, data, title, exportType) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const labels = Object.keys(data);
+        const values = Object.values(data);
+
+        // Ajouter une info-bulle au container
+        const container = document.getElementById(canvasId).parentNode;
+        const tooltip = document.createElement('div');
+        tooltip.className = 'text-center text-muted mt-2';
+        tooltip.innerHTML = '<small><i class="fas fa-info-circle me-1"></i>Cliquez sur une barre pour exporter les clients correspondants</small>';
+        container.appendChild(tooltip);
+
+        // Créer le graphique
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Nombre de clients',
+                    data: values,
+                    backgroundColor: colors.backgrounds.slice(0, labels.length),
+                    borderColor: colors.borders.slice(0, labels.length),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: title,
+                        font: {
+                            size: 16
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+                onClick: function(e, elements) {
+                    if (!elements || elements.length === 0) return;
+
+                    const index = elements[0].index;
+                    const label = labels[index];
+
+                    // Convertir l'étiquette en valeur d'enum (majuscules, underscore)
+                    let enumValue = label.toUpperCase().replace(/\s+/g, '_')
+                        .replace(/'/g, '')
+                        .replace(/-/g, '_')
+                        .normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // Enlever les accents
+
+                    // URL pour télécharger
+                    const downloadUrl = `/admin/reports/api/export/${exportType}/${enumValue}`;
+
+                    // Indiquer à l'utilisateur que le téléchargement commence
+                    const loadingToast = document.createElement('div');
+                    loadingToast.className = 'position-fixed bottom-0 end-0 p-3';
+                    loadingToast.style.zIndex = '5';
+                    loadingToast.innerHTML = `
+                    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header">
+                            <i class="fas fa-file-excel me-2 text-success"></i>
+                            <strong class="me-auto">Export Excel</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            <div class="d-flex align-items-center">
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                Préparation de l'export pour "${label}"...
+                            </div>
+                        </div>
+                    </div>
+                `;
+                    document.body.appendChild(loadingToast);
+
+                    // Initier le téléchargement
+                    window.location.href = downloadUrl;
+
+                    // Supprimer la notification après quelques secondes
+                    setTimeout(() => {
+                        loadingToast.remove();
+                    }, 3000);
+                }
+            }
+        });
+    }
+
+    // Fonction pour créer un graphique circulaire avec export au clic
+    function createInteractivePieChart(canvasId, data, title, exportType) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const labels = Object.keys(data);
+        const values = Object.values(data);
+
+        // Ajouter une info-bulle
+        const container = document.getElementById(canvasId).parentNode;
+        const tooltip = document.createElement('div');
+        tooltip.className = 'text-center text-muted mt-2';
+        tooltip.innerHTML = '<small><i class="fas fa-info-circle me-1"></i>Cliquez sur une section pour exporter les clients correspondants</small>';
+        container.appendChild(tooltip);
+
+        // Créer le graphique
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors.backgrounds.slice(0, labels.length),
+                    borderColor: colors.borders.slice(0, labels.length),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    title: {
+                        display: true,
+                        text: title,
+                        font: {
+                            size: 16
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                onClick: function(e, elements) {
+                    if (!elements || elements.length === 0) return;
+
+                    const index = elements[0].index;
+                    const label = labels[index];
+
+                    // Même logique que pour le graphique en barres
+                    let enumValue = label.toUpperCase().replace(/\s+/g, '_')
+                        .replace(/'/g, '')
+                        .replace(/-/g, '_')
+                        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+                    const downloadUrl = `/admin/reports/api/export/${exportType}/${enumValue}`;
+
+                    // Notification
+                    const loadingToast = document.createElement('div');
+                    loadingToast.className = 'position-fixed bottom-0 end-0 p-3';
+                    loadingToast.style.zIndex = '5';
+                    loadingToast.innerHTML = `
+                    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header">
+                            <i class="fas fa-file-excel me-2 text-success"></i>
+                            <strong class="me-auto">Export Excel</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            <div class="d-flex align-items-center">
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                Préparation de l'export pour "${label}"...
+                            </div>
+                        </div>
+                    </div>
+                `;
+                    document.body.appendChild(loadingToast);
+
+                    // Initier le téléchargement
+                    window.location.href = downloadUrl;
+
+                    // Supprimer la notification
+                    setTimeout(() => {
+                        loadingToast.remove();
+                    }, 3000);
+                }
+            }
+        });
+    }
 </script>
 </body>
 </html>

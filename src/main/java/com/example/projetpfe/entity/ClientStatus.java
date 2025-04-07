@@ -4,7 +4,9 @@ public enum ClientStatus {
     NON_TRAITE("Non traité"),
     CONTACTE("Contacté"),
     ABSENT("Absent"),
-    REFUS("Refus");
+    REFUS("Refus"),
+    INJOIGNABLE("Injoignable"),
+    NUMERO_ERRONE("Numéro erroné");
 
     private final String displayName;
 

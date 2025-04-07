@@ -304,7 +304,8 @@
             <th>Nom</th>
             <th>Prénom</th>
             <th>CIN</th>
-            <th>Téléphone</th>
+            <th>Téléphone 1</th>
+            <th>Téléphone 2</th>
             <th>Statut</th>
             <th>Actions</th>
           </tr>
@@ -316,6 +317,7 @@
             <td th:text="${client.prenom}">Prénom</td>
             <td th:text="${client.cin ?: '-'}">XX111111</td>
             <td th:text="${client.telephone}">+212 600000000</td>
+            <td th:text="${client.telephone2}">+212 600000000</td>
             <td>
               <span th:class="'status-badge status-' + ${client.status}" th:text="${client.status.displayName}">Statut</span>
             </td>

@@ -55,6 +55,8 @@ public class AgendaController {
         List<Client> clientsContactes = clientService.findClientsByUserAndStatus(currentUser, ClientStatus.CONTACTE);
 
         List<Client> clientsRefus = clientService.findClientsByUserAndStatus(currentUser, ClientStatus.REFUS);
+        List<Client> clientsInjoignables = clientService.findClientsByUserAndStatus(currentUser, ClientStatus.INJOIGNABLE);
+        List<Client> clientsNumeroErrone = clientService.findClientsByUserAndStatus(currentUser, ClientStatus.NUMERO_ERRONE);
 
         // Rappels à effectuer
         List<Rappel> rappels = rappelService.getRappelsForUser(currentUser);
@@ -91,6 +93,8 @@ public class AgendaController {
         stats.put("absents", clientRepository.countByAssignedUserAndStatus(currentUser, ClientStatus.ABSENT));
         stats.put("contactes", clientRepository.countByAssignedUserAndStatus(currentUser, ClientStatus.CONTACTE));
         stats.put("refus", clientRepository.countByAssignedUserAndStatus(currentUser, ClientStatus.REFUS));
+        stats.put("injoignables",clientRepository.countByAssignedUserAndStatus(currentUser, ClientStatus.INJOIGNABLE));
+        stats.put("numerosErrones",clientRepository.countByAssignedUserAndStatus(currentUser, ClientStatus.NUMERO_ERRONE));
         stats.put("todayRappelsCount", todayRappels.size());
         // Trier les clients absents par date de rappel (les plus proches d'abord)
         clientsAbsents.sort((c1, c2) -> {
@@ -108,6 +112,8 @@ public class AgendaController {
         model.addAttribute("clientsAbsents", clientsAbsents);
         model.addAttribute("clientsContactes", clientsContactes);
         model.addAttribute("clientsRefus", clientsRefus);
+        model.addAttribute("clientsInjoignables", clientsInjoignables);
+        model.addAttribute("clientsNumeroErrone", clientsNumeroErrone);
         model.addAttribute("rappels", rappels);
         model.addAttribute("todayRappels", todayRappels);
         model.addAttribute("todayRappelClientIds", todayRappelClientIds);

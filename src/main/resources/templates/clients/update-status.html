@@ -87,6 +87,16 @@
             border-radius: 4px;
             margin-bottom: 20px;
         }
+        /* Ajouter dans les fichiers CSS ou les balises style des templates concernés */
+        .status-INJOIGNABLE {
+            background-color: #9C27B0; /* Violet */
+            color: white;
+        }
+
+        .status-NUMERO_ERRONE {
+            background-color: #607D8B; /* Bleu-gris */
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -124,6 +134,11 @@
                 <li class="nav-item" sec:authorize="hasRole('ADMIN')">
                     <a class="nav-link" th:href="@{/users}">
                         <i class="fas fa-users-cog me-1"></i>Utilisateurs
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/reports/questionnaire}">
+                        <i class="fas fa-chart-bar me-1"></i>Rapports
                     </a>
                 </li>
                 <li class="nav-item" sec:authorize="isAuthenticated()">
@@ -234,14 +249,21 @@
         // Réinitialiser le style du bouton
         btnSubmit.className = 'btn btn-primary';
         btnSubmit.innerHTML = '<i class="fas fa-save me-1"></i>Enregistrer';
+        rappelDateField.style.display='none';
 
         // Afficher/masquer le champ date de rappel
         if (status === 'ABSENT') {
             rappelDateField.style.display = 'block';
             btnSubmit.className = 'btn btn-warning';
             btnSubmit.innerHTML = '<i class="fas fa-phone me-1"></i>Programmer un rappel';
-        } else {
+        } else if(status ==='CONTACTE'){
             rappelDateField.style.display = 'none';
+            btnSubmit.className='btn btn-success';
+            btnSubmit.innerHTML='<i class="fas fa-check-circle me-1"></i>Marquer comme contacté';
+        }else if(status==='REFUS' || status === 'INJOIGNABLE' || status==='NUMERO ERRONE')
+        {
+            btnSubmit.className = 'btn btn-danger';
+            btnSubmit.innerHTML = '<i class="fas fa-times-circle me-1"></i>Marquer comme'+ document.querySelector('select[name="status"] option:checked').textContent;
         }
 
         // Changer le style du bouton selon le statut

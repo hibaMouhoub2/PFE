@@ -47,5 +47,12 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     // Pour les tendances temporelles
     @Query("SELECT COUNT(c) FROM Client c WHERE c.status = :status AND c.updatedAt BETWEEN :start AND :end")
     long countByStatusAndUpdatedAtBetween(@Param("status") ClientStatus status, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
-
+    List<Client> findByRaisonNonRenouvellement(RaisonNonRenouvellement raison);
+    List<Client> findByQualiteService(QualiteService qualite);
+    List<Client> findByInteretNouveauCredit(InteretCredit interet);
+    List<Client> findByFacteurInfluence(FacteurInfluence facteur);
+    List<Client> findByProfil(Profil profil);
+    List<Client> findByActiviteClient(ActiviteClient activite);
+    List<Client> findByRendezVousAgence(Boolean rendezVous);
+    List<Client> findByNMBRA(Branche branche);
     }

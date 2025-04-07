@@ -2,24 +2,40 @@ package com.example.projetpfe.controller;
 
 
 import ch.qos.logback.core.model.Model;
+import com.example.projetpfe.entity.*;
+import com.example.projetpfe.repository.ClientRepository;
 import com.example.projetpfe.service.Impl.ClientService;
 import com.example.projetpfe.service.Impl.ReportService;
+import com.example.projetpfe.util.ExcelExportUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
 @RequestMapping("/admin/reports")
 @PreAuthorize("hasRole('ADMIN')")
 public class ReportController {
+    @Autowired
+    private ExcelExportUtil excelExportUtil;
 
     private final ReportService reportService;
+    @Autowired
+    private ClientRepository clientRepository;
 
     @Autowired
     public ReportController(ReportService reportService) {
@@ -65,5 +81,98 @@ public class ReportController {
 
         return data;
     }
+    @GetMapping("/api/export/raison/{raisonValue}")
+    public ResponseEntity<byte[]> exportClientsByRaison(
+            @PathVariable String raisonValue) throws IOException {
+
+        // Convertir la chaîne en enum
+        RaisonNonRenouvellement raison;
+        try {
+            raison = RaisonNonRenouvellement.valueOf(raisonValue);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<Client> clients = clientRepository.findByRaisonNonRenouvellement(raison);
+
+        // Générer le fichier Excel
+        byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
+
+        // Préparer la réponse HTTP
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+
+        // Nom du fichier avec date
+        String filename = "clients_raison_" +
+                raison.name().toLowerCase() + "_" +
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) +
+                ".xlsx";
+
+        headers.setContentDispositionFormData("attachment", filename);
+
+        return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/api/export/qualite/{qualiteValue}")
+    public ResponseEntity<byte[]> exportClientsByQualite(
+            @PathVariable String qualiteValue) throws IOException {
+
+        QualiteService qualite;
+        try {
+            qualite = QualiteService.valueOf(qualiteValue);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<Client> clients = clientRepository.findByQualiteService(qualite);
+        byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        String filename = "clients_qualite_" + qualite.name().toLowerCase() + "_" +
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
+        headers.setContentDispositionFormData("attachment", filename);
+
+        return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("api/export/facteur/{facteurValue}")
+    public ResponseEntity<byte[]> exportClientsByFacteur(@PathVariable String facteurValue) throws IOException {
+        FacteurInfluence influence;
+        try{
+            influence = FacteurInfluence.valueOf(facteurValue);
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.badRequest().build();
+        }
+        List<Client> clients = clientRepository.findByFacteurInfluence(influence);
+        byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        String filename = "clients_facteur_" + facteurValue.toLowerCase() +"_" +".xlsx";
+        LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        headers.setContentDispositionFormData("attachment", filename);
+        return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/api/export/interet/{interetValue}")
+    public ResponseEntity<byte[]> exportClientsByInteret(@PathVariable String interetValue) throws IOException {
+        InteretCredit interet ;
+        try {
+            interet = InteretCredit.valueOf(interetValue);
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.badRequest().build();
+        }
+        List<Client> clients = clientRepository.findByInteretNouveauCredit(interet);
+        byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        String filename= "clients_interet_" + interetValue.toLowerCase() +"_" +".xlsx";
+        LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        headers.setContentDispositionFormData("attachment", filename);
+        return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
+    }
+
+
+
 }
 

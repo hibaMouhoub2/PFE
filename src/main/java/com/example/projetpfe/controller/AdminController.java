@@ -238,6 +238,8 @@ public class AdminController {
         List<Client> clientsAbsents = clientService.findByStatus(ClientStatus.ABSENT);
         List<Client> clientsContactes = clientService.findByStatus(ClientStatus.CONTACTE);
         List<Client> clientsRefus = clientService.findByStatus(ClientStatus.REFUS);
+        List<Client> clientsInjoignables = clientService.findByStatus(ClientStatus.INJOIGNABLE);
+        List<Client> clientsNumeroErrone = clientService.findByStatus(ClientStatus.NUMERO_ERRONE);
 
         // Récupérer tous les rappels
         List<Rappel> rappels = rappelService.getAllActiveRappels();
@@ -273,7 +275,8 @@ public class AdminController {
         stats.put("absents", clientRepository.countByStatus(ClientStatus.ABSENT));
         stats.put("contactes", clientRepository.countByStatus(ClientStatus.CONTACTE));
         stats.put("refus", clientRepository.countByStatus(ClientStatus.REFUS));
-
+        stats.put("injoignables", clientRepository.countByStatus(ClientStatus.INJOIGNABLE));
+        stats.put("numeroErrones", clientRepository.countByStatus(ClientStatus.NUMERO_ERRONE));
         // Ajouter la liste des utilisateurs pour l'assignation
         List<UserDto> users = userService.findAllUsers();
 
@@ -281,6 +284,8 @@ public class AdminController {
         model.addAttribute("clientsAbsents", clientsAbsents);
         model.addAttribute("clientsContactes", clientsContactes);
         model.addAttribute("clientsRefus", clientsRefus);
+        model.addAttribute("clientsInjoignables", clientsInjoignables);
+        model.addAttribute("clientsNumeroErrone", clientsNumeroErrone);
         model.addAttribute("rappels", rappels);
         model.addAttribute("clientRappelMap", clientRappelMap);
         model.addAttribute("todayRappelClientIds", todayRappelClientIds);

@@ -116,6 +116,7 @@ public class ClientController {
         return "clients/update-status";
     }
 
+    // src/main/java/com/example/projetpfe/controller/ClientController.java
     @PostMapping("/{id}/status")
     public String updateStatus(@PathVariable Long id,
                                @RequestParam ClientStatus status,
@@ -129,22 +130,21 @@ public class ClientController {
         try {
             clientService.updateStatus(id, status, userEmail);
 
+            // Programmer un rappel uniquement pour le statut ABSENT
             if (status == ClientStatus.ABSENT && rappelDate != null) {
                 rappelService.createRappel(id, rappelDate, notes, userEmail);
                 redirectAttributes.addFlashAttribute("success", "Statut mis à jour et rappel programmé");
-                return "redirect:/agenda/index";
             } else if (status == ClientStatus.CONTACTE) {
-                redirectAttributes.addFlashAttribute("success", "Statut mis à jour");
                 return "redirect:/clients/" + id + "/questionnaire";
-            } else if (status == ClientStatus.REFUS) {
-                redirectAttributes.addFlashAttribute("success", "Client marqué comme refus");
-                return "redirect:/agenda/index";
             } else {
-                redirectAttributes.addFlashAttribute("success", "Statut mis à jour");
-                return "redirect:/agenda/index";
+                String statusMessage = status == ClientStatus.REFUS ? "refus" :
+                        (status == ClientStatus.INJOIGNABLE ? "injoignable" :
+                                (status == ClientStatus.NUMERO_ERRONE ? "numéro erroné" : "mis à jour"));
+                redirectAttributes.addFlashAttribute("success", "Client marqué comme " + statusMessage);
             }
+            return "redirect:/agenda/index";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur lors de la mise à jour: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
             return "redirect:/clients/" + id + "/status";
         }
     }
