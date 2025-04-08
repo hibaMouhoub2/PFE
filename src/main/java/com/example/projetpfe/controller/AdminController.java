@@ -61,9 +61,10 @@ public class AdminController {
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate rdvDate,
             Model model) {
 
-        // Utiliser la méthode optimisée findByFilters
+        // Conversion du statut en enum
         ClientStatus statusEnum = null;
         if (status != null && !status.isEmpty()) {
             try {
@@ -73,7 +74,18 @@ public class AdminController {
             }
         }
 
+        // Récupérer les clients sans le filtre de date
         List<Client> clients = clientRepository.findByFilters(q, statusEnum, userId);
+
+        // Filtrer manuellement par date si nécessaire
+        if (rdvDate != null) {
+            clients = clients.stream()
+                    .filter(client -> client.getRendezVousAgence() != null &&
+                            client.getRendezVousAgence() &&
+                            client.getDateHeureRendezVous() != null &&
+                            client.getDateHeureRendezVous().toLocalDate().equals(rdvDate))
+                    .collect(Collectors.toList());
+        }
 
         // Ajouter la liste des utilisateurs pour le filtre
         List<UserDto> users = userService.findAllUsers();
@@ -84,6 +96,7 @@ public class AdminController {
         model.addAttribute("clientCount", clients.size());
         model.addAttribute("selectedStatus", status);
         model.addAttribute("selectedUserId", userId);
+        model.addAttribute("rdvDate", rdvDate);
 
         return "admin/clients";
     }
@@ -298,39 +311,33 @@ public class AdminController {
     public ResponseEntity<byte[]> exportClients(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long userId) throws IOException {
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate rdvDate) throws IOException {
 
-        // Utiliser la même logique que dans listAllClients pour appliquer les filtres
-        List<Client> clients = clientService.findAll();
-
-        // Appliquer les filtres
-        if (q != null && !q.isEmpty()) {
-            clients = clients.stream()
-                    .filter(client ->
-                            (client.getNom() != null && client.getNom().toLowerCase().contains(q.toLowerCase())) ||
-                                    (client.getPrenom() != null && client.getPrenom().toLowerCase().contains(q.toLowerCase())) ||
-                                    (client.getCin() != null && client.getCin().toLowerCase().contains(q.toLowerCase()))
-                    )
-                    .collect(Collectors.toList());
-        }
-
+        // Conversion du statut en enum
+        ClientStatus statusEnum = null;
         if (status != null && !status.isEmpty()) {
-            ClientStatus clientStatus = ClientStatus.valueOf(status);
+            try {
+                statusEnum = ClientStatus.valueOf(status);
+            } catch (IllegalArgumentException e) {
+                // Ignorer si le statut n'est pas valide
+            }
+        }
+
+        // Utiliser la méthode du repository sans le filtre de date
+        List<Client> clients = clientRepository.findByFilters(q, statusEnum, userId);
+
+        // Filtrer manuellement par date si nécessaire
+        if (rdvDate != null) {
             clients = clients.stream()
-                    .filter(client -> client.getStatus() == clientStatus)
+                    .filter(client -> client.getRendezVousAgence() != null &&
+                            client.getRendezVousAgence() &&
+                            client.getDateHeureRendezVous() != null &&
+                            client.getDateHeureRendezVous().toLocalDate().equals(rdvDate))
                     .collect(Collectors.toList());
         }
 
-        if (userId != null) {
-            clients = clients.stream()
-                    .filter(client ->
-                            client.getAssignedUser() != null &&
-                                    client.getAssignedUser().getId().equals(userId)
-                    )
-                    .collect(Collectors.toList());
-        }
-
-        // Générer le fichier Excel avec tous les attributs
+        // Générer le fichier Excel
         byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
 
         // Préparer la réponse HTTP

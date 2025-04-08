@@ -9,7 +9,8 @@ public enum Profil {
     COOPERATIVE_ADHERANT("Coopérative ou adhérant"),
     AMBULANT("ambulant"),
     TRAVAIL_A_DOMICILE("Travail à domicile"),
-    EXPLOITANT_EMPLACEMENT_FIXE("Exploitant emplacement fixe");
+    EXPLOITANT_EMPLACEMENT_FIXE("Exploitant emplacement fixe"),
+    SANS("Sans");
 
     private final String displayName;
 

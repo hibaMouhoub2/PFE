@@ -4,7 +4,8 @@ public enum ActiviteClient {
     COMMERCE("Commerce"),
     METIER_MANUEL("Métier manuel"),
     SERVICE("Service"),
-    SALARIE("Salarié");
+    SALARIE("Salarié"),
+    SANS("Sans");
 
     private final String displayName;
 

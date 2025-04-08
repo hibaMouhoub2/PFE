@@ -288,7 +288,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-0">À traiter</h6>
-                            <h2 class="mt-2 mb-0">10</h2>
+                            <h2 class="mt-2 mb-0" th:text="${stats.nonTraites}">0</h2>
                         </div>
                         <div>
                             <i class="fas fa-tasks fa-3x opacity-50"></i>
@@ -302,10 +302,10 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-0">À rappeler</h6>
-                            <h2 class="mt-2 mb-0">0</h2>
+                            <h2 class="mt-2 mb-0" th:text="${stats.absents}">0</h2>
                         </div>
                         <div>
-                            <i class="fas fa-phone-alt fa-3x opacity-50"></i>
+                            <i class="fas fa-phone-alt fa-3x opacity-50" ></i>
                         </div>
                     </div>
                 </div>
@@ -316,7 +316,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-0">Contactés</h6>
-                            <h2 class="mt-2 mb-0">7</h2>
+                            <h2 class="mt-2 mb-0" th:text="${stats.contactes}">0</h2>
                         </div>
                         <div>
                             <i class="fas fa-check-circle fa-3x opacity-50"></i>
@@ -330,7 +330,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-0">Refus</h6>
-                            <h2 class="mt-2 mb-0">0</h2>
+                            <h2 class="mt-2 mb-0" th:text="${stats.refus}">0</h2>
                         </div>
                         <div>
                             <i class="fas fa-times-circle fa-3x opacity-50"></i>
@@ -344,7 +344,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-0">Injoignables</h6>
-                            <h2 class="mt-2 mb-0">1</h2>
+                            <h2 class="mt-2 mb-0" th:text="${stats.injoignables}">0</h2>
                         </div>
                         <div>
                             <i class="fas fa-phone-slash fa-3x opacity-50"></i>
@@ -428,6 +428,7 @@
                                 <th>CIN</th>
                                 <th>Téléphone 1</th>
                                 <th>Téléphone 2</th>
+                                <th>Branche</th>
                                 <th>Date Fin de crédit</th>
                                 <th>Actions</th>
                             </tr>
@@ -439,6 +440,7 @@
                                 <td th:text="${client.cin ?: '-'}">XX111111</td>
                                 <td th:text="${client.telephone2}">+212 600000000</td>
                                 <td th:text="${client.telephone}">+212 600000000</td>
+                                <td th:data-branche="${client.NMBRA}" th:text="${client.NMBRA?.displayName ?: '-'}">Branche</td>
                                 <td th:text="${client.DTFINC}">01/01/2020</td>
                                 <td>
                                     <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">
@@ -645,8 +647,8 @@
                                     <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye me-1"></i>Détails
                                     </a>
-                                    <a th:href="@{'/clients/' + ${client.id} + '/status'}" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-edit me-1"></i>Traiter
+                                    <a th:href="@{'/clients/' + ${client.id} + '/edit'}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit me-1"></i>Modifier
                                     </a>
                                 </td>
                             </tr>
@@ -692,8 +694,8 @@
                                     <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye me-1"></i>Détails
                                     </a>
-                                    <a th:href="@{'/clients/' + ${client.id} + '/status'}" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-edit me-1"></i>Traiter
+                                    <a th:href="@{'/clients/' + ${client.id} + '/edit'}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit me-1"></i>Modifier
                                     </a>
                                 </td>
                             </tr>

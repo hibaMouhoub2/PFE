@@ -161,6 +161,18 @@
             <div class="card-header bg-primary-custom text-white d-flex justify-content-between align-items-center">
                 <span><i class="fas fa-list me-2"></i>Clients à assigner</span>
                 <div id="bulkAssignSection" class="d-flex align-items-center">
+                    <div class="me-2">
+                        <select class="form-select form-select-sm" id="brancheFilter">
+                            <option value="">Toutes les branches</option>
+                            <option th:each="branche : ${T(com.example.projetpfe.entity.Branche).values()}"
+                                    th:value="${branche}"
+                                    th:text="${branche.displayName}">Branche</option>
+                        </select>
+                    </div>
+                    <!-- Bouton pour sélectionner par branche -->
+                    <button type="button" id="selectByBranche" class="btn btn-sm btn-info me-2">
+                        <i class="fas fa-filter me-1"></i>Sélectionner
+                    </button>
                     <select class="form-select form-select-sm d-inline-block me-2" name="userId" id="bulkAssignUserId" style="width: 200px;" required>
                         <option value="">-- Sélectionner un utilisateur --</option>
                         <option th:each="user : ${users}" th:value="${user.id}" th:text="${user.firstName + ' ' + user.lastName}">
@@ -188,6 +200,7 @@
                                 <th>Prénom</th>
                                 <th>Téléphone</th>
                                 <th>CIN</th>
+                                <th>Branche</th>
                                 <th>Date de création</th>
                                 <th>Actions</th>
                             </tr>
@@ -201,6 +214,7 @@
                             <td th:text="${client.prenom}">Prénom</td>
                             <td th:text="${client.telephone2}">+212 600000000</td>
                             <td th:text="${client.cin ?: '-'}">XX111111</td>
+                            <td th:data-branche="${client.NMBRA}" th:text="${client.NMBRA?.displayName ?: '-'}">Branche</td>
                             <td th:text="${#temporals.format(client.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2023 10:00</td>
                             <td>
                                 <div class="btn-group">
@@ -293,6 +307,9 @@
         const clientCheckboxes = document.querySelectorAll('.client-checkbox');
         const bulkAssignButton = document.getElementById('bulkAssignButton');
         const assignMultipleForm = document.getElementById('assignMultipleForm');
+        // Filtrage par branche
+        const brancheFilter = document.getElementById('brancheFilter');
+        const selectByBranche = document.getElementById('selectByBranche');
 
         // Fonction pour mettre à jour l'état du bouton
         function updateBulkAssignButton() {
@@ -310,33 +327,73 @@
         }
 
         // Gérer la sélection de tous les clients
-        selectAll.addEventListener('change', function() {
-            clientCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                clientCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateBulkAssignButton();
             });
-            updateBulkAssignButton();
-        });
+        }
 
         // Gérer les sélections individuelles
         clientCheckboxes.forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 updateBulkAssignButton();
                 // Mettre à jour le selectAll
-                selectAll.checked = Array.from(clientCheckboxes).every(cb => cb.checked);
+                if (selectAll) {
+                    selectAll.checked = Array.from(clientCheckboxes).every(cb => cb.checked);
+                }
             });
         });
 
         // Vérifier que des clients sont sélectionnés avant soumission
-        assignMultipleForm.addEventListener('submit', function(event) {
-            const checkedBoxes = document.querySelectorAll('.client-checkbox:checked');
-            if (checkedBoxes.length === 0) {
-                event.preventDefault();
-                alert('Veuillez sélectionner au moins un client à assigner.');
-            }
-        });
+        if (assignMultipleForm) {
+            assignMultipleForm.addEventListener('submit', function(event) {
+                const checkedBoxes = document.querySelectorAll('.client-checkbox:checked');
+                if (checkedBoxes.length === 0) {
+                    event.preventDefault();
+                    alert('Veuillez sélectionner au moins un client à assigner.');
+                }
+            });
+        }
 
         // Initialiser l'état du bouton
         updateBulkAssignButton();
+
+        // Gestion du filtrage par branche
+        if (selectByBranche && brancheFilter) {
+            selectByBranche.addEventListener('click', function() {
+                const selectedBranche = brancheFilter.value;
+
+                // Si aucune branche n'est sélectionnée, ne rien faire
+                if (!selectedBranche) return;
+
+                // Décocher toutes les cases d'abord
+                clientCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+
+                // Cocher uniquement les clients de la branche sélectionnée
+                clientCheckboxes.forEach(checkbox => {
+                    const row = checkbox.closest('tr');
+                    const brancheCell = row.querySelector('td[data-branche]');
+
+                    if (brancheCell && brancheCell.getAttribute('data-branche') === selectedBranche) {
+                        checkbox.checked = true;
+                    }
+                });
+
+                // Mettre à jour l'état du bouton "Sélectionner tout"
+                if (selectAll) {
+                    selectAll.checked = clientCheckboxes.length > 0 &&
+                        Array.from(clientCheckboxes).every(cb => cb.checked);
+                }
+
+                // Mettre à jour l'état du bouton d'assignation
+                updateBulkAssignButton();
+            });
+        }
     });
 </script>
 </body>

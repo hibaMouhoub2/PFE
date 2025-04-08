@@ -209,6 +209,11 @@
                         </option>
                     </select>
                 </div>
+                <div class="col-md-2">
+                    <label for="rdvDate" class="form-label">Date de RDV</label>
+                    <input type="date" id="rdvDate" name="rdvDate" class="form-control"
+                           th:value="${rdvDate != null ? rdvDate : ''}">
+                </div>
                 <div class="col-md-3">
                     <label for="searchQuery" class="form-label">Recherche</label>
                     <input type="text" id="searchQuery" name="q" class="form-control" placeholder="Nom, prénom, CIN...">
@@ -218,17 +223,26 @@
                         <i class="fas fa-search me-1"></i>Filtrer
                     </button>
                 </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <a th:href="@{/admin/clients/export(q=${searchQuery},status=${selectedStatus},userId=${selectedUserId},rdvDate=${rdvDate})}"
+                       class="btn btn-success">
+                        <i class="fas fa-file-excel me-1"></i>Exporter en Excel
+                    </a>
+                    <!--                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#emailModal">-->
+                    <!--                    <i class="fas fa-envelope me-1"></i>Envoyer par Email-->
+                    <!--                </button>-->
+                </div>
             </form>
             <!-- À ajouter près des filtres dans admin/clients.html -->
-            <div class="col-md-12 mt-3 text-end">
-                <a th:href="@{/admin/clients/export(q=${searchQuery},status=${selectedStatus},userId=${selectedUserId})}"
-                   class="btn btn-success">
-                    <i class="fas fa-file-excel me-1"></i>Exporter en Excel
-                </a>
-                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#emailModal">
-                    <i class="fas fa-envelope me-1"></i>Envoyer par Email
-                </button>
-            </div>
+<!--            <div class="col-md-12 mt-3 text-end">-->
+<!--                <a th:href="@{/admin/clients/export(q=${searchQuery},status=${selectedStatus},userId=${selectedUserId},rdvDate=${rdvDate})}"-->
+<!--                   class="btn btn-success">-->
+<!--                    <i class="fas fa-file-excel me-1"></i>Exporter en Excel-->
+<!--                </a>-->
+<!--&lt;!&ndash;                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#emailModal">&ndash;&gt;-->
+<!--&lt;!&ndash;                    <i class="fas fa-envelope me-1"></i>Envoyer par Email&ndash;&gt;-->
+<!--&lt;!&ndash;                </button>&ndash;&gt;-->
+<!--            </div>-->
         </div>
     </div>
 

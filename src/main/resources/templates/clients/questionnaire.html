@@ -412,6 +412,34 @@
     toggleRendezVous();
     toggleAutresCriteres();
   });
+  // Logique pour lier le profil et l'activité
+  function handleProfilChange() {
+    const profilSelect = document.querySelector('select[name="profil"]');
+    const activiteSelect = document.querySelector('select[name="activiteClient"]');
+
+    if (profilSelect.value === 'SANS') {
+      // Si le profil est SANS, mettre automatiquement l'activité à SANS
+      for (let i = 0; i < activiteSelect.options.length; i++) {
+        if (activiteSelect.options[i].value === 'SANS') {
+          activiteSelect.selectedIndex = i;
+          break;
+        }
+      }
+      activiteSelect.disabled = true; // Désactiver le champ activité
+    } else {
+      activiteSelect.disabled = false; // Réactiver le champ
+    }
+  }
+
+  // Ajouter un écouteur d'événement pour le changement de profil
+  document.addEventListener('DOMContentLoaded', function() {
+    const profilSelect = document.querySelector('select[name="profil"]');
+    if (profilSelect) {
+      profilSelect.addEventListener('change', handleProfilChange);
+      // Appliquer la logique dès le chargement pour gérer l'état initial
+      handleProfilChange();
+    }
+  });
 
 </script>
 </body>

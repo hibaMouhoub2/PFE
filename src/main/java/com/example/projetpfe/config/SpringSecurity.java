@@ -51,8 +51,9 @@ public class SpringSecurity {
                                 .requestMatchers("/users").hasRole("ADMIN")
                                 .requestMatchers("/delete-user/**").hasRole("ADMIN")
                                 .requestMatchers("/edit-user/**").hasRole("ADMIN")
-                                .requestMatchers("admin/reports/**").hasRole("ADMIN")
+                                .requestMatchers("/admin/reports/**").hasRole("ADMIN")
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/admin/reports/api/export/**").hasRole("ADMIN")
                                 .requestMatchers("/clients/*/questionnaire").access(
                                         (authentication, object) -> new AuthorizationDecision(
                                                 authentication.get().getAuthorities().stream()

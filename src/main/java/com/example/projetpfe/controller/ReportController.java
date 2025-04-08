@@ -136,7 +136,7 @@ public class ReportController {
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
     }
 
-    @GetMapping("api/export/facteur/{facteurValue}")
+    @GetMapping("/api/export/facteur/{facteurValue}")
     public ResponseEntity<byte[]> exportClientsByFacteur(@PathVariable String facteurValue) throws IOException {
         FacteurInfluence influence;
         try{
@@ -148,8 +148,8 @@ public class ReportController {
         byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        String filename = "clients_facteur_" + facteurValue.toLowerCase() +"_" +".xlsx";
-        LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String filename = "clients_facteur_" + facteurValue.toLowerCase() + "_" +
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
         headers.setContentDispositionFormData("attachment", filename);
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
     }
@@ -166,11 +166,97 @@ public class ReportController {
         byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        String filename= "clients_interet_" + interetValue.toLowerCase() +"_" +".xlsx";
-        LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String filename = "clients_facteur_" + interetValue.toLowerCase() + "_" +
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
         headers.setContentDispositionFormData("attachment", filename);
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
     }
+    @GetMapping("/api/export/profil/{profilValue}")
+    public ResponseEntity<byte[]> exportClientsByProfil(@PathVariable String profilValue) throws IOException {
+        Profil profil;
+        try{
+            profil = Profil.valueOf(profilValue);
+        }catch(IllegalArgumentException e){
+            return ResponseEntity.badRequest().build();
+        }
+        List<Client> clients = clientRepository.findByProfil(profil);
+        byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        String filename = "clients_facteur_" + profilValue.toLowerCase() + "_" +
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
+        headers.setContentDispositionFormData("attachment", filename);
+        return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/api/export/activite/{activiteValue}")
+    public ResponseEntity<byte[]> exportClientsByActivite(@PathVariable String activiteValue) throws IOException {
+        ActiviteClient activite;
+        try{
+            activite = ActiviteClient.valueOf(activiteValue);
+        }catch(IllegalArgumentException e){
+            return ResponseEntity.badRequest().build();
+        }
+        List<Client> clients = clientRepository.findByActiviteClient(activite);
+        byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        String filename = "clients_facteur_" + activiteValue.toLowerCase() + "_" +
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
+        headers.setContentDispositionFormData("attachment", filename);
+        return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/api/export/branche/{brancheValue}")
+    public ResponseEntity<byte[]> exportClientsByBranche(@PathVariable String brancheValue) throws IOException {
+        Branche branche;
+        try{
+            branche = Branche.valueOf(brancheValue);
+        }catch(IllegalArgumentException e){
+            return ResponseEntity.badRequest().build();
+        }
+        List<Client> clients = clientRepository.findByNMBRA(branche);
+        byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        String filename = "clients_facteur_" + brancheValue.toLowerCase() + "_" +
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
+        headers.setContentDispositionFormData("attachment", filename);
+        return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/api/export/rendez-vous/{value}")
+    public ResponseEntity<byte[]> exportClientsByRendezVous(@PathVariable String value) throws IOException {
+        // Convertir la chaîne en booléen
+        boolean hasRendezVous;
+        if (value.equalsIgnoreCase("OUI")) {
+            hasRendezVous = true;
+        } else if (value.equalsIgnoreCase("NON")) {
+            hasRendezVous = false;
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Récupérer les clients avec ou sans rendez-vous
+        List<Client> clients = clientRepository.findByRendezVousAgence(hasRendezVous);
+
+        // Générer le fichier Excel
+        byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
+
+        // Préparer la réponse HTTP
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+
+        // Nom du fichier avec date
+        String rendezVousText = hasRendezVous ? "avec_rdv" : "sans_rdv";
+        String filename = "clients_" + rendezVousText + "_" +
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
+
+        headers.setContentDispositionFormData("attachment", filename);
+
+        return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
+    }
+
 
 
 

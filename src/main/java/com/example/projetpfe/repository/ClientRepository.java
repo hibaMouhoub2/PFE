@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,15 +26,15 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     long countByStatus(ClientStatus status);
     @Query("SELECT c FROM Client c WHERE c.cin = :query OR c.telephone = :query OR c.telephone2 = :query")
     List<Client> findByCinOrPhone(@Param("query") String query);
-    @Query("SELECT c FROM Client c WHERE " +
-            "(:query IS NULL OR LOWER(c.nom) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-            "LOWER(c.prenom) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-            "LOWER(c.cin) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
-            "(:status IS NULL OR c.status = :status) AND " +
-            "(:userId IS NULL OR c.assignedUser.id = :userId)")
-    List<Client> findByFilters(@Param("query") String query,
-                               @Param("status") ClientStatus status,
-                               @Param("userId") Long userId);
+//    @Query("SELECT c FROM Client c WHERE " +
+//            "(:query IS NULL OR LOWER(c.nom) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+//            "LOWER(c.prenom) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+//            "LOWER(c.cin) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
+//            "(:status IS NULL OR c.status = :status) AND " +
+//            "(:userId IS NULL OR c.assignedUser.id = :userId)")
+//    List<Client> findByFilters(@Param("query") String query,
+//                               @Param("status") ClientStatus status,
+//                               @Param("userId") Long userId);
     boolean existsByCin(String cin);
     long countByRaisonNonRenouvellement(RaisonNonRenouvellement raison);
     long countByQualiteService(QualiteService qualite);
@@ -53,6 +54,16 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     List<Client> findByFacteurInfluence(FacteurInfluence facteur);
     List<Client> findByProfil(Profil profil);
     List<Client> findByActiviteClient(ActiviteClient activite);
+
     List<Client> findByRendezVousAgence(Boolean rendezVous);
-    List<Client> findByNMBRA(Branche branche);
+   List<Client> findByNMBRA(Branche branche);
+    @Query("SELECT c FROM Client c WHERE " +
+            "(:query IS NULL OR LOWER(c.nom) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(c.prenom) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(c.cin) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
+            "(:status IS NULL OR c.status = :status) AND " +
+            "(:userId IS NULL OR c.assignedUser.id = :userId)")
+    List<Client> findByFilters(@Param("query") String query,
+                               @Param("status") ClientStatus status,
+                               @Param("userId") Long userId);
     }
