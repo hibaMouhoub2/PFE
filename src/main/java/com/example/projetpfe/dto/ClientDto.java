@@ -42,6 +42,7 @@ public class ClientDto {
     private Integer NBINC;
     private Integer AgeClient;
     private Integer NBPRETS;
+    private String notes;
 
 
     private ClientStatus status;

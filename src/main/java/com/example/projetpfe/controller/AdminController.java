@@ -61,6 +61,7 @@ public class AdminController {
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String branche,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate rdvDate,
             Model model) {
 
@@ -74,8 +75,18 @@ public class AdminController {
             }
         }
 
+        // Conversion de la branche en enum
+        Branche brancheEnum = null;
+        if (branche != null && !branche.isEmpty()) {
+            try {
+                brancheEnum = Branche.valueOf(branche);
+            } catch (IllegalArgumentException e) {
+                // Ignorer si la branche n'est pas valide
+            }
+        }
+
         // Récupérer les clients sans le filtre de date
-        List<Client> clients = clientRepository.findByFilters(q, statusEnum, userId);
+        List<Client> clients = clientRepository.findByFiltersWithBranche(q, statusEnum, userId, brancheEnum);
 
         // Filtrer manuellement par date si nécessaire
         if (rdvDate != null) {
@@ -97,6 +108,7 @@ public class AdminController {
         model.addAttribute("selectedStatus", status);
         model.addAttribute("selectedUserId", userId);
         model.addAttribute("rdvDate", rdvDate);
+        model.addAttribute("selectedBranche", brancheEnum);
 
         return "admin/clients";
     }
@@ -201,7 +213,7 @@ public class AdminController {
                 count++;
             }
             redirectAttributes.addFlashAttribute("success", count + " client(s) assigné(s) avec succès");
-            return "redirect:/admin/clients";
+            return "redirect:/admin/unassigned-clients";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur lors de l'assignation multiple: " + e.getMessage());
             return "redirect:/admin/unassigned-clients";

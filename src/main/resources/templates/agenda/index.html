@@ -478,6 +478,7 @@
                                 <th>Téléphone 1</th>
                                 <th>Téléphone 2</th>
                                 <th>Date de rappel</th>
+                                <th>Notes</th>
                                 <th>Actions</th>
                             </tr>
                             </thead>
@@ -498,6 +499,15 @@
                                         01/01/2023 10:00
                                     </span>
                                     <span th:unless="${clientRappelMap != null && clientRappelMap.containsKey(client.id)}">-</span>
+                                </td>
+                                <td>
+                                    <div th:if="${client.notes}" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        <span th:text="${#strings.abbreviate(client.notes, 20)}"
+                                              data-bs-toggle="tooltip" th:title="${client.notes}"></span>
+                                        <i class="fas fa-info-circle text-info"
+                                           data-bs-toggle="tooltip" th:title="${client.notes}"></i>
+                                    </div>
+                                    <span th:unless="${client.notes}">-</span>
                                 </td>
                                 <td>
                                     <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">
@@ -583,6 +593,7 @@
                                 <th>Téléphone</th>
                                 <th>Téléphone 2</th>
                                 <th>Date fin de crédit</th>
+                                <th>Notes</th>
                                 <th>Actions</th>
                             </tr>
                             </thead>
@@ -594,6 +605,15 @@
                                 <td th:text="${client.telephone}">+212 600000000</td>
                                 <td th:text="${client.telephone2}">+212 600000000</td>
                                 <td th:text="${client.DTFINC}">01/01/2020</td>
+                                <td>
+                                    <div th:if="${client.notes}" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        <span th:text="${#strings.abbreviate(client.notes, 20)}"
+                                              data-bs-toggle="tooltip" th:title="${client.notes}"></span>
+                                        <i class="fas fa-info-circle text-info"
+                                           data-bs-toggle="tooltip" th:title="${client.notes}"></i>
+                                    </div>
+                                    <span th:unless="${client.notes}">-</span>
+                                </td>
                                 <td>
                                     <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye me-1"></i>Détails
@@ -632,6 +652,7 @@
                                 <th>Téléphone</th>
                                 <th>Téléphone 2</th>
                                 <th>Date fin de crédit</th>
+                                <th>Notes</th>
                                 <th>Actions</th>
                             </tr>
                             </thead>
@@ -643,6 +664,15 @@
                                 <td th:text="${client.telephone}">+212 600000000</td>
                                 <td th:text="${client.telephone2}">+212 600000000</td>
                                 <td th:text="${client.DTFINC}">01/01/2020</td>
+                                <td>
+                                    <div th:if="${client.notes}" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        <span th:text="${#strings.abbreviate(client.notes, 20)}"
+                                              data-bs-toggle="tooltip" th:title="${client.notes}"></span>
+                                        <i class="fas fa-info-circle text-info"
+                                           data-bs-toggle="tooltip" th:title="${client.notes}"></i>
+                                    </div>
+                                    <span th:unless="${client.notes}">-</span>
+                                </td>
                                 <td>
                                     <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye me-1"></i>Détails
@@ -679,6 +709,7 @@
                                 <th>Téléphone</th>
                                 <th>Téléphone 2</th>
                                 <th>Date fin de crédit</th>
+                                <th>Notes</th>
                                 <th>Actions</th>
                             </tr>
                             </thead>
@@ -690,6 +721,15 @@
                                 <td th:text="${client.telephone}">+212 600000000</td>
                                 <td th:text="${client.telephone2}">+212 600000000</td>
                                 <td th:text="${client.DTFINC}">01/01/2020</td>
+                                <td>
+                                    <div th:if="${client.notes}" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        <span th:text="${#strings.abbreviate(client.notes, 20)}"
+                                              data-bs-toggle="tooltip" th:title="${client.notes}"></span>
+                                        <i class="fas fa-info-circle text-info"
+                                           data-bs-toggle="tooltip" th:title="${client.notes}"></i>
+                                    </div>
+                                    <span th:unless="${client.notes}">-</span>
+                                </td>
                                 <td>
                                     <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye me-1"></i>Détails
@@ -815,6 +855,12 @@
                 showTab('numeros-errones');
             });
         }
+    });
+
+    // Initialiser les tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 </script>
 </body>

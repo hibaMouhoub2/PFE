@@ -53,6 +53,7 @@ public class AuthController {
     @PostMapping("/register/save")
     public String registration(@Valid @ModelAttribute("user") UserDto user,
                                BindingResult result,
+                               @RequestParam("role") String role,
                                Model model){
         User existing = userService.findByEmail(user.getEmail());
         if (existing != null) {
@@ -62,7 +63,7 @@ public class AuthController {
             model.addAttribute("user", user);
             return "register";
         }
-        userService.saveUser(user);
+        userService.saveUser(user, role);
         return "redirect:/users";
     }
 

@@ -215,6 +215,18 @@
                            th:value="${rdvDate != null ? rdvDate : ''}">
                 </div>
                 <div class="col-md-3">
+                    <label for="branche" class="form-label">Branche</label>
+                    <select id="branche" name="branche" class="form-select">
+                        <option value="">Toutes les branches</option>
+                        <option th:each="b : ${T(com.example.projetpfe.entity.Branche).values()}"
+                                th:value="${b}"
+                                th:text="${b.displayName}"
+                                th:selected="${b == selectedBranche}">
+                            Branche
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <label for="searchQuery" class="form-label">Recherche</label>
                     <input type="text" id="searchQuery" name="q" class="form-control" placeholder="Nom, prénom, CIN...">
                 </div>

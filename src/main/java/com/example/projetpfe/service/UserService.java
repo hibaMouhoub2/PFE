@@ -6,7 +6,7 @@ import com.example.projetpfe.entity.User;
 import java.util.List;
 
 public interface UserService {
-    void saveUser(UserDto userDto);
+    void saveUser(UserDto userDto, String roleName);
 
     User findByEmail(String email);
     void deleteUser(Long id);

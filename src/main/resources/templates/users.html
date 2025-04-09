@@ -320,8 +320,9 @@
     <div th:if="${errorMessage}" class="alert alert-danger">
         <i class="fas fa-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
     </div>
+<!--    fas fa-check-circle me-2-->
     <div th:if="${successMessage}" class="alert alert-success">
-        <i class="fas fa-check-circle me-2"></i><span th:text="${successMessage}"></span>
+        <i class="fas fa-exclamation-circle me-2"></i><span th:text="${successMessage}"></span>
     </div>
 
     <div class="search-box">

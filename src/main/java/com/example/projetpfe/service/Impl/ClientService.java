@@ -132,12 +132,13 @@ public class ClientService {
     }
 
     @Transactional
-    public Client updateStatus(Long clientId, ClientStatus status, String userEmail) {
+    public Client updateStatus(Long clientId, ClientStatus status,String notes, String userEmail) {
         Client client = getById(clientId);
         User user = userRepository.findByEmail(userEmail);
 
         client.setStatus(status);
         client.setUpdatedBy(user);
+        client.setNotes(notes);
         client.setUpdatedAt(LocalDateTime.now());
 
         // Si le statut est CONTACTE, marquer tous les rappels comme complétés

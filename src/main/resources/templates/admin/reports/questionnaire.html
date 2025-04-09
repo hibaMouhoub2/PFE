@@ -119,7 +119,30 @@
 <div class="container mt-4">
     <h2><i class="fas fa-chart-bar me-2"></i>Rapport du questionnaire client</h2>
     <p class="text-muted">Analyse des réponses collectées auprès des clients</p>
-
+    <!-- src/main/resources/templates/admin/reports/questionnaire.html -->
+    <!-- Ajoutez ce bloc juste après la balise <p class="text-muted">Analyse des réponses... -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-calendar-alt me-2"></i>Filtre par période
+        </div>
+        <div class="card-body">
+            <form id="periodFilterForm" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="startDate" class="form-label">Date de début</label>
+                    <input type="date" id="startDate" name="startDate" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label for="endDate" class="form-label">Date de fin</label>
+                    <input type="date" id="endDate" name="endDate" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <button type="button" id="applyFilter" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i>Appliquer le filtre
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
     <!-- Ligne 1: Indicateurs clés -->
     <div class="row mb-4">
         <div class="col-md-8">
@@ -337,16 +360,26 @@
         ]
     };
 
+
     // Fonction pour charger les données et initialiser les graphiques
-    async function initCharts() {
+    async function initCharts(startDate = null, endDate = null) {
         try {
-            const response = await fetch('/admin/reports/api/data');
+            // Construire l'URL avec les paramètres de date si fournis
+            let url = '/admin/reports/api/data';
+            if (startDate && endDate) {
+                url += `?startDate=${startDate}&endDate=${endDate}`;
+            }
+
+            const response = await fetch(url);
             const data = await response.json();
 
-            // Graphique de progression (pas d'export interactif pour celui-ci)
-            createProgressionChart(data.progression);
+            // Supprimer les anciens graphiques s'ils existent
+            Chart.helpers.each(Chart.instances, function(instance) {
+                instance.destroy();
+            });
 
-            // Graphiques interactifs avec export au clic
+            // Initialiser tous les graphiques avec les nouvelles données
+            createProgressionChart(data.progression);
             createInteractivePieChart('rendezVousChart', data.rendezVous, 'Rendez-vous agence', 'rendez-vous');
             createInteractiveBarChart('raisonsChart', data.raisonsNonRenouvellement, 'Raisons de non-renouvellement', 'raison');
             createInteractivePieChart('qualiteChart', data.qualiteService, 'Évaluation de la qualité', 'qualite');
@@ -360,6 +393,116 @@
             console.error('Erreur lors du chargement des données:', error);
         }
     }
+
+    // Initialiser les événements pour le filtre de période
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialiser les graphiques au chargement
+        initCharts();
+
+        // Configurer le bouton de filtre
+        document.getElementById('applyFilter').addEventListener('click', function() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                alert('Veuillez spécifier une date de début et une date de fin.');
+                return;
+            }
+
+            // Vérifier que la date de début est avant la date de fin
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('La date de début doit être antérieure à la date de fin.');
+                return;
+            }
+
+            // Mettre à jour les graphiques avec le filtre de période
+            initCharts(startDate, endDate);
+
+            // Afficher un message indiquant la période sélectionnée
+            const formattedStartDate = new Date(startDate).toLocaleDateString();
+            const formattedEndDate = new Date(endDate).toLocaleDateString();
+
+            // Créer ou mettre à jour une notification pour l'utilisateur
+            let filterNotice = document.getElementById('filter-notice');
+            if (!filterNotice) {
+                filterNotice = document.createElement('div');
+                filterNotice.id = 'filter-notice';
+                filterNotice.className = 'alert alert-info mt-3';
+                document.getElementById('periodFilterForm').parentNode.appendChild(filterNotice);
+            }
+
+            filterNotice.innerHTML = `
+            <i class="fas fa-info-circle me-2"></i>
+            Affichage des données du <strong>${formattedStartDate}</strong> au <strong>${formattedEndDate}</strong>
+            <button type="button" id="resetFilter" class="btn btn-sm btn-outline-secondary float-end">
+                <i class="fas fa-times me-1"></i>Réinitialiser
+            </button>
+        `;
+
+            // Configurer le bouton de réinitialisation
+            document.getElementById('resetFilter').addEventListener('click', function() {
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
+                initCharts();
+                filterNotice.remove();
+            });
+        });
+    });
+
+    // Initialiser les événements pour le filtre de période
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialiser les graphiques au chargement
+        initCharts();
+
+        // Configurer le bouton de filtre
+        document.getElementById('applyFilter').addEventListener('click', function() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                alert('Veuillez spécifier une date de début et une date de fin.');
+                return;
+            }
+
+            // Vérifier que la date de début est avant la date de fin
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('La date de début doit être antérieure à la date de fin.');
+                return;
+            }
+
+            // Mettre à jour les graphiques avec le filtre de période
+            initCharts(startDate, endDate);
+
+            // Afficher un message indiquant la période sélectionnée
+            const formattedStartDate = new Date(startDate).toLocaleDateString();
+            const formattedEndDate = new Date(endDate).toLocaleDateString();
+
+            // Créer ou mettre à jour une notification pour l'utilisateur
+            let filterNotice = document.getElementById('filter-notice');
+            if (!filterNotice) {
+                filterNotice = document.createElement('div');
+                filterNotice.id = 'filter-notice';
+                filterNotice.className = 'alert alert-info mt-3';
+                document.getElementById('periodFilterForm').parentNode.appendChild(filterNotice);
+            }
+
+            filterNotice.innerHTML = `
+            <i class="fas fa-info-circle me-2"></i>
+            Affichage des données du <strong>${formattedStartDate}</strong> au <strong>${formattedEndDate}</strong>
+            <button type="button" id="resetFilter" class="btn btn-sm btn-outline-secondary float-end">
+                <i class="fas fa-times me-1"></i>Réinitialiser
+            </button>
+        `;
+
+            // Configurer le bouton de réinitialisation
+            document.getElementById('resetFilter').addEventListener('click', function() {
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
+                initCharts();
+                filterNotice.remove();
+            });
+        });
+    });
 
     // Fonction pour créer un graphique en barres
     function createBarChart(canvasId, data, title) {
@@ -561,7 +704,7 @@
         const container = document.getElementById(canvasId).parentNode;
         const tooltip = document.createElement('div');
         tooltip.className = 'text-center text-muted mt-2';
-        tooltip.innerHTML = '<small><i class="fas fa-info-circle me-1"></i>Cliquez sur une barre pour exporter les clients correspondants</small>';
+        //tooltip.innerHTML = '<small><i class="fas fa-info-circle me-1"></i>Cliquez sur une barre pour exporter les clients correspondants</small>';
         container.appendChild(tooltip);
 
         // Créer le graphique
@@ -646,7 +789,7 @@
                 `;
                     document.body.appendChild(loadingToast);
 
-                    // Initier le téléchargement
+
                     // Téléchargement avec Fetch API
                     const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
                     const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
@@ -701,7 +844,7 @@
         const container = document.getElementById(canvasId).parentNode;
         const tooltip = document.createElement('div');
         tooltip.className = 'text-center text-muted mt-2';
-        tooltip.innerHTML = '<small><i class="fas fa-info-circle me-1"></i>Cliquez sur une section pour exporter les clients correspondants</small>';
+        //tooltip.innerHTML = '<small><i class="fas fa-info-circle me-1"></i>Cliquez sur une section pour exporter les clients correspondants</small>';
         container.appendChild(tooltip);
 
         // Créer le graphique

@@ -37,6 +37,8 @@ public class Client {
     private Integer NBINC;
     private Integer AgeClient;
     private Integer NBPRETS;
+    @Column(length = 1000)
+    private String notes;
 
 
 

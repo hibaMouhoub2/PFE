@@ -128,7 +128,7 @@ public class ClientController {
         String userEmail = auth.getName();
 
         try {
-            clientService.updateStatus(id, status, userEmail);
+            clientService.updateStatus(id, status, notes, userEmail);
 
             // Programmer un rappel uniquement pour le statut ABSENT
             if (status == ClientStatus.ABSENT && rappelDate != null) {

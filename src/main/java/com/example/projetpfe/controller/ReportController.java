@@ -1,6 +1,5 @@
 package com.example.projetpfe.controller;
 
-
 import ch.qos.logback.core.model.Model;
 import com.example.projetpfe.entity.*;
 import com.example.projetpfe.repository.ClientRepository;
@@ -8,19 +7,19 @@ import com.example.projetpfe.service.Impl.ClientService;
 import com.example.projetpfe.service.Impl.ReportService;
 import com.example.projetpfe.util.ExcelExportUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -49,38 +48,55 @@ public class ReportController {
 
     @GetMapping("/api/data")
     @ResponseBody
-    public Map<String, Object> getReportData() {
+    public Map<String, Object> getReportData(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        // Si aucune date n'est fournie, utiliser des dates par défaut (tout)
+        if (startDate == null && endDate == null) {
+            // Utiliser la méthode existante sans filtrage par date
+            Map<String, Object> data = new HashMap<>();
+            data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStats());
+            data.put("qualiteService", reportService.getQualiteServiceStats());
+            data.put("interetCredit", reportService.getInteretCreditStats());
+            data.put("facteurInfluence", reportService.getFacteurInfluenceStats());
+            data.put("profil", reportService.getProfilStats());
+            data.put("activiteClient", reportService.getActiviteClientStats());
+            data.put("rendezVous", reportService.getRendezVousStats());
+            data.put("branche", reportService.getBrancheStats());
+            data.put("progression", reportService.getStatusProgressionByMonth());
+            return data;
+        }
+
+        // Initialiser les dates si une seule est fournie
+        if (startDate == null) {
+            startDate = LocalDate.now().minusMonths(6); // Par défaut, 6 mois en arrière
+        }
+        if (endDate == null) {
+            endDate = LocalDate.now();
+        }
+
+        // Convertir en LocalDateTime pour avoir le début et la fin des jours
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime end = endDate.atTime(LocalTime.MAX);
+
+        // Créer de nouvelles méthodes dans le ReportService pour filtrer par date
         Map<String, Object> data = new HashMap<>();
 
-        // Raisons de non-renouvellement
-        data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStats());
-
-        // Qualité du service
-        data.put("qualiteService", reportService.getQualiteServiceStats());
-
-        // Intérêt pour un nouveau crédit
-        data.put("interetCredit", reportService.getInteretCreditStats());
-
-        // Facteur d'influence
-        data.put("facteurInfluence", reportService.getFacteurInfluenceStats());
-
-        // Profil client
-        data.put("profil", reportService.getProfilStats());
-
-        // Activité client
-        data.put("activiteClient", reportService.getActiviteClientStats());
-
-        // Rendez-vous
-        data.put("rendezVous", reportService.getRendezVousStats());
-
-        // Répartition par agence
-        data.put("branche", reportService.getBrancheStats());
-
-        // Progression mensuelle
-        data.put("progression", reportService.getStatusProgressionByMonth());
+        // Utiliser le service avec filtre de date
+        data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStats(start, end));
+        data.put("qualiteService", reportService.getQualiteServiceStats(start, end));
+        data.put("interetCredit", reportService.getInteretCreditStats(start, end));
+        data.put("facteurInfluence", reportService.getFacteurInfluenceStats(start, end));
+        data.put("profil", reportService.getProfilStats(start, end));
+        data.put("activiteClient", reportService.getActiviteClientStats(start, end));
+        data.put("rendezVous", reportService.getRendezVousStats(start, end));
+        data.put("branche", reportService.getBrancheStats(start, end));
+        data.put("progression", reportService.getStatusProgressionByMonth(start, end));
 
         return data;
     }
+
     @GetMapping("/api/export/raison/{raisonValue}")
     public ResponseEntity<byte[]> exportClientsByRaison(
             @PathVariable String raisonValue) throws IOException {
@@ -171,6 +187,7 @@ public class ReportController {
         headers.setContentDispositionFormData("attachment", filename);
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
     }
+
     @GetMapping("/api/export/profil/{profilValue}")
     public ResponseEntity<byte[]> exportClientsByProfil(@PathVariable String profilValue) throws IOException {
         Profil profil;
@@ -256,9 +273,4 @@ public class ReportController {
 
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
     }
-
-
-
-
 }
-

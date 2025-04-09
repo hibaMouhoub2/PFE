@@ -5,6 +5,7 @@ import com.example.projetpfe.entity.User;
 import com.example.projetpfe.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -49,6 +50,12 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmail(email);
 
         if (user != null) {
+            // Vérifier si le compte est activé
+            if (!user.getEnabled()) {
+                logger.warn("Compte désactivé pour l'utilisateur: {}", email);
+                throw new DisabledException("Compte désactivé");
+            }
+
             return new org.springframework.security.core.userdetails.User(user.getEmail(),
                     user.getPassword(),
                     mapRolesToAuthorities(user.getRoles()));

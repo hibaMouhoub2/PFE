@@ -30,11 +30,10 @@ public class AdminInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) throws Exception {
         // Vérifier/créer les rôles
-        Role adminRole = createRoleIfNotFound("ROLE_ADMIN");
-        Role userRole = createRoleIfNotFound("ROLE_USER");
-
-        // Vérifier si un administrateur existe déjà
-        if (userRepository.findByEmail("admin@example.com") == null) {
+        long AdminCount = userRepository.countByRolesName("ROLE_ADMIN");
+        if (AdminCount == 0) {
+            Role adminRole = createRoleIfNotFound("ROLE_ADMIN");
+            Role userRole = createRoleIfNotFound("ROLE_USER");
             User admin = new User();
             admin.setName("Admin User");
             admin.setEmail("admin@example.com");
@@ -45,9 +44,8 @@ public class AdminInitializer implements CommandLineRunner {
             // Utiliser le rôle déjà persisté
             admin.setRoles(Arrays.asList(adminRole));
             userRepository.save(admin);
-
-            System.out.println("Admin par défaut créé - Email: admin@example.com / Mot de passe: admin123");
         }
+
     }
     private Role createRoleIfNotFound(String name) {
         Role role = roleRepository.findByName(name);

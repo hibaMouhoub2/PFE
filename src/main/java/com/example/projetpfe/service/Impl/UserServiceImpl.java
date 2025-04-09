@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void saveUser(UserDto userDto) {
+    public void saveUser(UserDto userDto, String roleName) {
         User user = new User();
         user.setName(userDto.getFirstName() + " " + userDto.getLastName());
         user.setEmail(userDto.getEmail());
@@ -46,10 +46,21 @@ public class UserServiceImpl implements UserService {
         //encrypt the password once we integrate spring security
         //user.setPassword(userDto.getPassword());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        Role role = roleRepository.findByName("ROLE_USER");
-        if(role == null){
-            role = checkUserRoleExist();
+        Role role;
+        if ("ADMIN".equals(roleName)) {
+            role = roleRepository.findByName("ROLE_ADMIN");
+            if(role == null){
+                role = new Role();
+                role.setName("ROLE_ADMIN");
+                role = roleRepository.save(role);
+            }
+        } else {
+            role = roleRepository.findByName("ROLE_USER");
+            if(role == null){
+                role = checkUserRoleExist();
+            }
         }
+
         user.setRoles(Arrays.asList(role));
         userRepository.save(user);
     }
@@ -94,9 +105,9 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'ID: " + id));
 
         // Vérifier que l'utilisateur n'est pas l'admin par défaut
-        if ("admin@example.com".equals(user.getEmail())) {
-            throw new RuntimeException("Impossible de supprimer l'administrateur par défaut");
-        }
+//        if ("admin@example.com".equals(user.getEmail())) {
+//            throw new RuntimeException("Impossible de supprimer l'administrateur par défaut");
+//        }
 
         // Supprimer les associations avec les rôles avant de supprimer l'utilisateur
         user.getRoles().clear();

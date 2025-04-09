@@ -309,7 +309,7 @@
             <div class="col-md-6 mb-3">
               <label for="agence" class="form-label">Agence:</label>
               <select id="agence" th:field="*{NMBRA}" class="form-select" required onchange="toggleAutresCriteres()">
-                <option value="">-- Sélectionnez une branche --</option>
+                <option value="">-- Sélectionnez une option --</option>
                 <option th:each="b : ${branche}"
                         th:value="${b}"
                         th:text="${b.displayName}"></option>
@@ -323,7 +323,7 @@
           <h5><span class="question-number">8</span> Quels sont les facteurs qui influencent votre décision de prendre un crédit? <span class="text-danger">*</span></h5>
           <div class="mb-3">
             <select th:field="*{facteurInfluence}" class="form-select" required onchange="toggleAutresCriteres()">
-              <option value="">-- Sélectionnez un facteur --</option>
+              <option value="">-- Sélectionnez une option --</option>
               <option th:each="facteur : ${facteursInfluence}"
                       th:value="${facteur}"
                       th:text="${facteur.displayName}"></option>
