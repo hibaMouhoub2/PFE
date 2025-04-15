@@ -2,7 +2,7 @@ package com.example.projetpfe.entity;
 
 public enum Branche {
     CASA_AZHAR("Casa Azhar"),
-    CASA_DIAR_ELJADIDA("Casa Diar Eljadida"),
+    CASA_DIAR_EL_JADIDA("Casa Diar El jadida"),
     CASA_HAY_FARAH("Casa Hay Farah"),
     CASA_KOREA("Casa Koréa"),;
 
