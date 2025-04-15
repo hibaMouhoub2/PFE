@@ -233,8 +233,8 @@
                     </a>
                 </li>
                 <li class="nav-item" sec:authorize="hasRole('USER')">
-                    <a class="nav-link" th:href="@{/agenda/search-results}">
-                        <i class="fas fa-calendar-alt me-1"></i>Rechercher
+                    <a class="nav-link active" th:href="@{/agenda/search-results}">
+                        <i class="fas fa-search me-1"></i>Rechercher
                     </a>
                 </li>
                 <li class="nav-item" sec:authorize="hasRole('ADMIN')">

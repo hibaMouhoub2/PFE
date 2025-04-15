@@ -131,6 +131,11 @@
             <i class="fas fa-users-cog me-1"></i>Utilisateurs
           </a>
         </li>
+        <li class="nav-item" sec:authorize="hasRole('USER')">
+          <a class="nav-link active" th:href="@{/agenda/search-results}">
+            <i class="fas fa-search me-1"></i>Rechercher
+          </a>
+        </li>
         <li class="nav-item" sec:authorize="hasRole('ADMIN')">
           <a class="nav-link" th:href="@{/admin/reports/questionnaire}">
             <i class="fas fa-chart-bar me-1"></i>Rapports
@@ -181,7 +186,14 @@
 <!--            <p><strong>Téléphone :</strong> <span th:text="${client.telephone}">+212 600000000</span></p>-->
             <p><strong>Téléphone 2 :</strong> <span th:text="${client.telephone2 ?: '-'}">+212 600000000</span></p>
             <p><strong>CIN:</strong> <span th:text="${client.cin ?: '-'}">XX111111</span></p>
+
           </div>
+          <div class="col-12 text-end mt-2">
+            <a th:href="@{/clients/{id}/details-from-questionnaire(id=${client.id})}" class="btn btn-info btn-sm">
+              <i class="fas fa-info-circle me-1"></i>Voir détails client
+            </a>
+          </div>
+
         </div>
       </div>
 
@@ -440,6 +452,30 @@
       handleProfilChange();
     }
   });
+
+  function saveFormAndRedirect() {
+    // Récupérer le formulaire
+    var form = document.querySelector('form');
+
+    // Sauvegarder l'action et la méthode originales
+    var originalAction = form.action;
+    var originalMethod = form.method;
+
+    // Modifier temporairement l'action et la méthode du formulaire
+    form.action = '/clients/' + clientId + '/details-from-questionnaire';
+    form.method = 'GET';
+
+    // Soumettre le formulaire
+    form.submit();
+
+    // Ces lignes ne seront pas exécutées car la page va changer,
+    // mais on les inclut par bonne pratique
+    form.action = originalAction;
+    form.method = originalMethod;
+
+    return false;
+  }
+
 
 </script>
 </body>

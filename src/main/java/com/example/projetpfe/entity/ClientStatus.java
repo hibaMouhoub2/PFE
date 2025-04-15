@@ -3,7 +3,7 @@ package com.example.projetpfe.entity;
 public enum ClientStatus {
     NON_TRAITE("Non traité"),
     CONTACTE("Contacté"),
-    ABSENT("Absent"),
+    ABSENT("Ne répond pas"),
     REFUS("Refus"),
     INJOIGNABLE("Injoignable"),
     NUMERO_ERRONE("Numéro erroné");

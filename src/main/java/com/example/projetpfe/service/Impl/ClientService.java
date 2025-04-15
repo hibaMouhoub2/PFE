@@ -47,22 +47,37 @@ public class ClientService {
 
     @Transactional
     public Client updateClientAndQuestionnaire(Long clientId, ClientDto dto, String userEmail) {
+        System.out.println("DEBUG: Méthode updateClientAndQuestionnaire appelée");
+        System.out.println("DEBUG: ClientID = " + clientId);
+        System.out.println("DEBUG: DTO = " + dto.toString());
+
         Client client = getById(clientId);
+        System.out.println("DEBUG: Client récupéré = " + client.getId());
+
         User user = userRepository.findByEmail(userEmail);
+        System.out.println("DEBUG: User récupéré = " + user.getName());
 
         // Mise à jour du statut
         if (dto.getStatus() != null) {
+            System.out.println("DEBUG: Mise à jour du statut: " + dto.getStatus());
             client.setStatus(dto.getStatus());
         }
+
+        // Affichez les valeurs avant la mise à jour
+        System.out.println("DEBUG: Avant mise à jour - RaisonNonRenouvellement: " + client.getRaisonNonRenouvellement());
+        System.out.println("DEBUG: DTO RaisonNonRenouvellement: " + dto.getRaisonNonRenouvellement());
 
         // Mise à jour des champs du questionnaire
         client.setRaisonNonRenouvellement(dto.getRaisonNonRenouvellement());
         client.setQualiteService(dto.getQualiteService());
+        client.setActiviteClient(dto.getActiviteClient());
+        client.setProfil(dto.getProfil());
         client.setADifficultesRencontrees(dto.getADifficultesRencontrees());
         client.setPrecisionDifficultes(dto.getPrecisionDifficultes());
         client.setInteretNouveauCredit(dto.getInteretNouveauCredit());
         client.setRendezVousAgence(dto.getRendezVousAgence());
         client.setDateHeureRendezVous(dto.getDateHeureRendezVous());
+        client.setNMBRA(dto.getNMBRA());
         client.setFacteurInfluence(dto.getFacteurInfluence());
         client.setAutresFacteurs(dto.getAutresFacteurs());
         client.setAutresRaisons(dto.getAutresRaisons());
@@ -70,7 +85,11 @@ public class ClientService {
         client.setUpdatedBy(user);
         client.setUpdatedAt(LocalDateTime.now());
 
-        return clientRepository.save(client);
+        System.out.println("DEBUG: Après mise à jour - RaisonNonRenouvellement: " + client.getRaisonNonRenouvellement());
+
+        Client savedClient = clientRepository.save(client);
+        System.out.println("DEBUG: Client sauvegardé, ID: " + savedClient.getId());
+        return savedClient;
     }
 
     public List<Client> findWithRendezVousOnDate(LocalDate date) {

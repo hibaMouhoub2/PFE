@@ -179,6 +179,11 @@
             <i class="fas fa-users-cog me-1"></i>Utilisateurs
           </a>
         </li>
+        <li class="nav-item" sec:authorize="hasRole('USER')">
+          <a class="nav-link active" th:href="@{/agenda/search-results}">
+            <i class="fas fa-search me-1"></i>Rechercher
+          </a>
+        </li>
         <li class="nav-item" sec:authorize="hasRole('ADMIN')">
           <a class="nav-link" th:href="@{/admin/reports/questionnaire}">
             <i class="fas fa-chart-bar me-1"></i>Rapports
@@ -198,14 +203,14 @@
   <div class="page-header">
     <div class="d-flex justify-content-between align-items-center">
       <h2><i class="fas fa-user me-2"></i>Détails du Client</h2>
-      <div>
-        <a th:href="@{/admin/clients}" class="btn btn-light" sec:authorize="hasRole('ADMIN')">
-          <i class="fas fa-arrow-left me-1"></i>Retour à la liste
-        </a>
-        <a th:href="@{/agenda/index}" class="btn btn-light" sec:authorize="hasRole('USER')">
-          <i class="fas fa-arrow-left me-1"></i>Retour à l'agenda
-        </a>
-      </div>
+<!--      <div>-->
+<!--        <a th:href="@{/admin/clients}" class="btn btn-light" sec:authorize="hasRole('ADMIN')">-->
+<!--          <i class="fas fa-arrow-left me-1"></i>Retour à la liste-->
+<!--        </a>-->
+<!--        <a th:href="@{/agenda/index}" class="btn btn-light" sec:authorize="hasRole('USER')">-->
+<!--          <i class="fas fa-arrow-left me-1"></i>Retour à l'agenda-->
+<!--        </a>-->
+<!--      </div>-->
     </div>
   </div>
 
@@ -287,17 +292,42 @@
     </div>
   </div>
 
+  <div class=client-info-section >
+    <h3><i class="fas fa-building me-2"></i>Réponses questionnaire</h3>
+    <div class="row">
+      <div class="col-md-6">
+        <p><span class="info-label">Raisons :</span> <span th:text="${client.raisonNonRenouvellement.getDisplayName() ?: '-'}">-</span></p>
+        <p><span class="info-label">Autres raisons :</span> <span th:text="${client.autresRaisons?: '-'}">-</span></p>
+
+        <p>
+          <span class="info-label">Difficultés rencontrées :</span>
+          <span th:text="${client.ADifficultesRencontrees == null ? '-' : (client.ADifficultesRencontrees ? 'OUI' : 'NON')}">-</span>
+        </p>
+        <p><span class="info-label">Activité :</span> <span th:text="${client.activiteClient.getDisplayName() ?: '-'}">-</span></p>
+        <p><span class="info-label">Profil :</span> <span th:text="${client.profil.getDisplayName() ?: '-'}">-</span></p>
+<!--        <p><span class="info-label">Région:</span> <span th:text="${client.NMREG ?: '-'}">-</span></p>-->
+      </div>
+      <div class="col-md-6">
+        <p><span class="info-label">Qualité du service :</span> <span th:text="${client.qualiteService.getDisplayName() ?: '-'}">-</span></p>
+        <p><span class="info-label">Intérêt par nouveau crédit :</span> <span th:text="${client.interetNouveauCredit.getDisplayName() ?: '-'}">-</span></p>
+        <p><span class="info-label">Rendez-vous :</span> <span th:text="${client.dateHeureRendezVous ?: '-'}">-</span></p>
+        <p><span class="info-label">Facteurs influence :</span> <span th:text="${client.facteurInfluence.getDisplayName() ?: '-'}">-</span></p>
+        <p><span class="info-label">Autres facteurs :</span> <span th:text="${client.autresFacteurs ?: '-'}">-</span></p>
+      </div>
+    </div>
+  </div>
+
 
 <!-- Boutons d'action -->
-<div class="action-buttons">
-  <div class="d-flex justify-content-between">
-    <div sec:authorize="hasRole('USER')">
-      <a th:if="${client.status == T(com.example.projetpfe.entity.ClientStatus).CONTACTE}"
-         th:href="@{/clients/{id}/status(id=${client.id})}"
-         class="btn btn-outline-primary me-2">
-        <i class="fas fa-clipboard-list me-1"></i>Accéder au questionnaire
-      </a>
-    </div>
+<!--<div class="action-buttons">-->
+<!--  <div class="d-flex justify-content-between">-->
+<!--    <div sec:authorize="hasRole('USER')">-->
+<!--      <a th:if="${client.status == T(com.example.projetpfe.entity.ClientStatus).CONTACTE}"-->
+<!--         th:href="@{/clients/{id}/status(id=${client.id})}"-->
+<!--         class="btn btn-outline-primary me-2">-->
+<!--        <i class="fas fa-clipboard-list me-1"></i>Accéder au questionnaire-->
+<!--      </a>-->
+<!--    </div>-->
 <!--    <div sec:authorize="hasRole('ADMIN')">-->
 <!--      <a th:href="@{/admin/clients/{id}/export(id=${client.id})}" class="btn btn-success">-->
 <!--        <i class="fas fa-file-excel me-1"></i>Exporter en Excel-->

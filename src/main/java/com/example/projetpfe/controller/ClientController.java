@@ -6,6 +6,7 @@ import com.example.projetpfe.entity.*;
 import com.example.projetpfe.service.Impl.ClientService;
 import com.example.projetpfe.service.Impl.RappelService;
 import com.example.projetpfe.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -81,7 +82,16 @@ public class ClientController {
                                    Model model,
                                    RedirectAttributes redirectAttributes) {
 
+        System.out.println("DEBUG: Méthode saveEditedClient appelée");
+        System.out.println("DEBUG: ID client = " + id);
+        System.out.println("DEBUG: ClientDto reçu = " + clientDto.toString());
+        System.out.println("DEBUG: Erreurs de validation = " + bindingResult.hasErrors());
+
         if (bindingResult.hasErrors()) {
+            bindingResult.getAllErrors().forEach(error -> {
+                System.out.println("DEBUG: Erreur: " + error.toString());
+            });
+
             model.addAttribute("client", clientService.getById(id));
             model.addAttribute("statuses", ClientStatus.values());
             model.addAttribute("raisonsNonRenouvellement", RaisonNonRenouvellement.values());
@@ -97,12 +107,17 @@ public class ClientController {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = auth.getName();
+        System.out.println("DEBUG: Email utilisateur = " + userEmail);
 
         try {
-            clientService.updateClientAndQuestionnaire(id, clientDto, userEmail);
+            System.out.println("DEBUG: Avant appel à updateClientAndQuestionnaire");
+            Client updatedClient = clientService.updateClientAndQuestionnaire(id, clientDto, userEmail);
+            System.out.println("DEBUG: Après appel à updateClientAndQuestionnaire, client ID = " + updatedClient.getId());
             redirectAttributes.addFlashAttribute("success", "Client modifié avec succès");
             return "redirect:/agenda/index";
         } catch (Exception e) {
+            System.out.println("DEBUG: Exception lors de la mise à jour: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", "Erreur lors de la modification: " + e.getMessage());
             return "redirect:/clients/" + id + "/edit";
         }
@@ -175,10 +190,39 @@ public class ClientController {
         }
     }
 
+    @Autowired
+    private HttpSession session;
+
+    @GetMapping("/{id}/details-from-questionnaire")
+    public String viewClientFromQuestionnaire(@PathVariable Long id,
+                                              @ModelAttribute("clientDto") ClientDto clientDto) {
+        // Stocker directement l'objet DTO dans la session
+        session.setAttribute("questionnaire_" + id, clientDto);
+
+        // Rediriger vers la page de détails
+        return "redirect:/clients/" + id;
+    }
+
     @GetMapping("/{id}/questionnaire")
     public String showQuestionnaire(@PathVariable Long id, Model model) {
         Client client = clientService.getById(id);
-        ClientDto clientDto = clientService.convertToDto(client);
+        ClientDto clientDto ;
+        ClientDto sessionDto = (ClientDto) session.getAttribute("questionnaire_" + id);
+        if(sessionDto != null) {
+            clientDto = sessionDto;
+            clientDto.setId(client.getId());
+            // Ces champs ne doivent pas être modifiés même s'ils sont dans la session
+            clientDto.setNom(client.getNom());
+            clientDto.setPrenom(client.getPrenom());
+            clientDto.setTelephone(client.getTelephone());
+            clientDto.setTelephone2(client.getTelephone2());
+            clientDto.setCin(client.getCin());
+            clientDto.setStatus(client.getStatus());
+            clientDto.setAssignedUserId(client.getAssignedUser() != null ? client.getAssignedUser().getId() : null);
+        }else {
+            // Si pas de données en session, utiliser les données du client
+            clientDto = clientService.convertToDto(client);
+        }
 
         model.addAttribute("client", client);
         model.addAttribute("clientDto", clientDto);
@@ -193,6 +237,8 @@ public class ClientController {
         return "clients/questionnaire";
     }
 
+
+
     @PostMapping("/{id}/questionnaire")
     public String saveQuestionnaire(@PathVariable Long id,
                                     @Valid @ModelAttribute("clientDto") ClientDto clientDto,
@@ -202,14 +248,13 @@ public class ClientController {
         Client client = clientService.getById(id);
 
         try {
-            // 1. Prétraitez les données conditionnelles
+            // Prétraitement des données conditionnelles
             if (Boolean.FALSE.equals(clientDto.getRendezVousAgence())) {
-                // Si pas de rendez-vous agence, nettoyez les champs associés
                 clientDto.setNMBRA(null);
                 clientDto.setDateHeureRendezVous(null);
             }
 
-            // 2. Vérifiez que les champs obligatoires sont présents si rendezVousAgence est true
+            // Validation supplémentaire pour le rendez-vous
             if (Boolean.TRUE.equals(clientDto.getRendezVousAgence())) {
                 if (clientDto.getNMBRA() == null) {
                     bindingResult.rejectValue("NMBRA", "error.clientDto", "L'agence est requise pour un rendez-vous");
@@ -219,9 +264,10 @@ public class ClientController {
                 }
             }
 
-            // 3. Vérifiez les erreurs après notre validation supplémentaire
+            // Vérification des erreurs après validation
             if (bindingResult.hasErrors()) {
                 model.addAttribute("client", client);
+                model.addAttribute("statuses", ClientStatus.values()); // Ajout des statuts
                 model.addAttribute("raisonsNonRenouvellement", RaisonNonRenouvellement.values());
                 model.addAttribute("qualitesService", QualiteService.values());
                 model.addAttribute("activitesClient", ActiviteClient.values());
@@ -232,18 +278,22 @@ public class ClientController {
                 return "clients/questionnaire";
             }
 
+            // Si pas d'erreurs, on sauvegarde
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String userEmail = auth.getName();
 
             clientService.saveQuestionnaire(id, clientDto, userEmail);
+
+            // Nettoyage de la session
+            session.removeAttribute("questionnaire_" + id);
+
             redirectAttributes.addFlashAttribute("success", "Questionnaire sauvegardé avec succès");
             return "redirect:/agenda/index";
         } catch (Exception e) {
-            e.printStackTrace(); // Pour voir l'erreur dans les logs
-            // Message d'erreur plus spécifique selon le type d'exception
+            // Gestion des erreurs
+            e.printStackTrace();
             String errorMessage = "Erreur lors de la sauvegarde: ";
 
-            // Vérifiez les types d'erreurs courants pour donner des messages plus précis
             if (e instanceof NullPointerException) {
                 errorMessage += "Une valeur requise est manquante";
             } else if (e instanceof IllegalArgumentException) {
@@ -254,8 +304,9 @@ public class ClientController {
 
             redirectAttributes.addFlashAttribute("error", errorMessage);
 
-            // Préparez les données pour le formulaire
-            model.addAttribute("client", clientService.getById(id));
+            // Préparation des données pour le formulaire
+            model.addAttribute("client", client);
+            model.addAttribute("statuses", ClientStatus.values()); // Ajout des statuts
             model.addAttribute("raisonsNonRenouvellement", RaisonNonRenouvellement.values());
             model.addAttribute("qualitesService", QualiteService.values());
             model.addAttribute("activitesClient", ActiviteClient.values());
