@@ -12,20 +12,21 @@ import java.util.List;
 
 @Repository
 public interface ClientRepository extends JpaRepository<Client, Long> {
-    List<Client> findByAssignedUser(User user);
-    List<Client> findByAssignedUserAndStatus(User user, ClientStatus status);
-    List<Client> findByAssignedUserIsNull();
-    @Query("SELECT c FROM Client c WHERE LOWER(c.nom) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(c.prenom) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(c.cin) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<Client> findByAssignedUserOrderByUpdatedAtDesc(User user);
+    List<Client> findByAssignedUserAndStatusOrderByUpdatedAtDesc(User user, ClientStatus status);
+    List<Client> findByAssignedUserIsNullOrderByUpdatedAtDesc();
+    @Query("SELECT c FROM Client c WHERE LOWER(c.nom) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(c.prenom) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(c.cin) LIKE LOWER(CONCAT('%', :query, '%')) ORDER BY c.updatedAt DESC")
     List<Client> searchByNomOrPrenomOrCin(@Param("query") String query);
     long countByAssignedUserAndStatus(User user, ClientStatus status);
-    List<Client> findByStatus(ClientStatus status);
-    List<Client> findByStatusAndUpdatedAtBetween(ClientStatus status, LocalDateTime start, LocalDateTime end);
-    List<Client> findByRendezVousAgenceTrueAndDateHeureRendezVousBetween(LocalDateTime start, LocalDateTime end);
-    List<Client> findByRendezVousAgenceTrueAndDateHeureRendezVousBetweenAndNMBRA(
+    List<Client> findByStatusOrderByUpdatedAtDesc(ClientStatus status);
+    List<Client> findByStatusAndUpdatedAtBetweenOrderByUpdatedAtDesc(ClientStatus status, LocalDateTime start, LocalDateTime end);
+    List<Client> findByRendezVousAgenceTrueAndDateHeureRendezVousBetweenOrderByUpdatedAtDesc
+            (LocalDateTime start, LocalDateTime end);
+    List<Client> findByRendezVousAgenceTrueAndDateHeureRendezVousBetweenAndNMBRAOrderByUpdatedAtDesc(
             LocalDateTime start, LocalDateTime end, Branche branche);
     long countByStatus(ClientStatus status);
-    @Query("SELECT c FROM Client c WHERE c.cin = :query OR c.telephone = :query OR c.telephone2 = :query")
-    List<Client> findByCinOrPhone(@Param("query") String query);
+    @Query("SELECT c FROM Client c WHERE c.cin = :query OR c.telephone = :query OR c.telephone2 = :query ORDER BY c.updatedAt DESC")
+    List<Client> findByCinOrPhoneOrderByUpdatedAtDesc(@Param("query") String query);
     boolean existsByCin(String cin);
     long countByRaisonNonRenouvellement(RaisonNonRenouvellement raison);
     long countByQualiteService(QualiteService qualite);
@@ -53,7 +54,9 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
             "LOWER(c.prenom) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
             "LOWER(c.cin) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
             "(:status IS NULL OR c.status = :status) AND " +
-            "(:userId IS NULL OR c.assignedUser.id = :userId)")
+            "(:userId IS NULL OR c.assignedUser.id = :userId)" +
+            "ORDER BY c.updatedAt DESC"
+    )
     List<Client> findByFilters(@Param("query") String query,
                                @Param("status") ClientStatus status,
                                @Param("userId") Long userId);
@@ -64,7 +67,9 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
             "LOWER(c.cin) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
             "(:status IS NULL OR c.status = :status) AND " +
             "(:userId IS NULL OR c.assignedUser.id = :userId) AND " +
-            "(:branche IS NULL OR c.NMBRA = :branche)")
+            "(:branche IS NULL OR c.NMBRA = :branche)" +
+            "ORDER BY c.updatedAt DESC"
+    )
     List<Client> findByFiltersWithBranche(@Param("query") String query,
                                           @Param("status") ClientStatus status,
                                           @Param("userId") Long userId,

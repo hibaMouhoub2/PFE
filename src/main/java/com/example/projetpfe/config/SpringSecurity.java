@@ -49,6 +49,8 @@ public class SpringSecurity {
                                 .requestMatchers("/login-success").permitAll()
                                 .requestMatchers("/users-home").permitAll()
                                 .requestMatchers("/users").hasRole("ADMIN")
+                                .requestMatchers("/clients/**").hasRole("USER")
+                                .requestMatchers("/rappels/{id}/complete").hasAnyRole("USER", "ADMIN")
                                 .requestMatchers("/delete-user/**").hasRole("ADMIN")
                                 .requestMatchers("/edit-user/**").hasRole("ADMIN")
                                 .requestMatchers("/admin/reports/**").hasRole("ADMIN")

@@ -3,10 +3,12 @@ package com.example.projetpfe.controller;
 import com.example.projetpfe.dto.ClientDto;
 import com.example.projetpfe.dto.UserDto;
 import com.example.projetpfe.entity.*;
+import com.example.projetpfe.repository.RappelRepository;
 import com.example.projetpfe.service.Impl.ClientService;
 import com.example.projetpfe.service.Impl.RappelService;
 import com.example.projetpfe.service.UserService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -30,6 +32,8 @@ public class ClientController {
     private final ClientService clientService;
     private final RappelService rappelService;
     private final UserService userService;
+    @Autowired
+    private RappelRepository rappelRepository;
 
     @Autowired
     public ClientController(UserService userService,ClientService clientService, RappelService rappelService) {
@@ -133,6 +137,7 @@ public class ClientController {
 
     // src/main/java/com/example/projetpfe/controller/ClientController.java
     @PostMapping("/{id}/status")
+    @Transactional
     public String updateStatus(@PathVariable Long id,
                                @RequestParam ClientStatus status,
                                @RequestParam(required = false) String notes,
@@ -143,6 +148,8 @@ public class ClientController {
         String userEmail = auth.getName();
 
         try {
+
+            rappelRepository.completeAllRappelsForClient(id);
             clientService.updateStatus(id, status, notes, userEmail);
 
             // Programmer un rappel uniquement pour le statut ABSENT

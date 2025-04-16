@@ -42,7 +42,7 @@ public class ClientService {
     public List<Client> findContactedOnDate(LocalDate date) {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(LocalTime.MAX);
-        return clientRepository.findByStatusAndUpdatedAtBetween(ClientStatus.CONTACTE, start, end);
+        return clientRepository.findByStatusAndUpdatedAtBetweenOrderByUpdatedAtDesc(ClientStatus.CONTACTE, start, end);
     }
 
     @Transactional
@@ -95,7 +95,7 @@ public class ClientService {
     public List<Client> findWithRendezVousOnDate(LocalDate date) {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(LocalTime.MAX);
-        return clientRepository.findByRendezVousAgenceTrueAndDateHeureRendezVousBetween(start, end);
+        return clientRepository.findByRendezVousAgenceTrueAndDateHeureRendezVousBetweenOrderByUpdatedAtDesc(start, end);
     }
 
     public List<Client> findClientsWithRendezVousForDateAndBranche(LocalDate date, Branche branche) {
@@ -103,10 +103,10 @@ public class ClientService {
         LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
 
         if (branche != null) {
-            return clientRepository.findByRendezVousAgenceTrueAndDateHeureRendezVousBetweenAndNMBRA(
+            return clientRepository.findByRendezVousAgenceTrueAndDateHeureRendezVousBetweenAndNMBRAOrderByUpdatedAtDesc(
                     startOfDay, endOfDay, branche);
         } else {
-            return clientRepository.findByRendezVousAgenceTrueAndDateHeureRendezVousBetween(
+            return clientRepository.findByRendezVousAgenceTrueAndDateHeureRendezVousBetweenOrderByUpdatedAtDesc(
                     startOfDay, endOfDay);
         }
     }
@@ -115,7 +115,7 @@ public class ClientService {
         return clientRepository.searchByNomOrPrenomOrCin(query);
     }
     public List<Client> findByStatus(ClientStatus status) {
-        return clientRepository.findByStatus(status);
+        return clientRepository.findByStatusOrderByUpdatedAtDesc(status);
     }
 
     public Client getById(Long id) {
@@ -126,15 +126,15 @@ public class ClientService {
 
 
     public List<Client> findByUser(User user) {
-        return clientRepository.findByAssignedUser(user);
+        return clientRepository.findByAssignedUserOrderByUpdatedAtDesc(user);
     }
 
     public List<Client> findClientsByUserAndStatus(User user, ClientStatus status) {
-        return clientRepository.findByAssignedUserAndStatus(user, status);
+        return clientRepository.findByAssignedUserAndStatusOrderByUpdatedAtDesc(user, status);
     }
 
     public List<Client> findUnassignedClients() {
-        return clientRepository.findByAssignedUserIsNull();
+        return clientRepository.findByAssignedUserIsNullOrderByUpdatedAtDesc();
     }
 
     @Transactional
@@ -427,7 +427,7 @@ public class ClientService {
     }
 
     public List<Client> findByCinOrPhone(String query) {
-        return clientRepository.findByCinOrPhone(query);
+        return clientRepository.findByCinOrPhoneOrderByUpdatedAtDesc(query);
     }
     @Transactional
     public void deleteClient(Long id) {

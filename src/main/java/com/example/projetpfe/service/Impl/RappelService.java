@@ -43,6 +43,7 @@ public class RappelService {
         rappel.setDateRappel(dateRappel);
         rappel.setNotes(notes);
         rappel.setCreatedBy(user);
+        rappel.setCompleted(false);
 
         return rappelRepository.save(rappel);
     }
