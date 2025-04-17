@@ -119,7 +119,7 @@ public class ReportController {
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
 
         // Nom du fichier avec date
-        String filename = "clients_raison_" +
+        String filename = "export_clients_avec_raison" +
                 raison.name().toLowerCase() + "_" +
                 LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) +
                 ".xlsx";
@@ -145,7 +145,7 @@ public class ReportController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        String filename = "clients_qualite_" + qualite.name().toLowerCase() + "_" +
+        String filename = "export_clients_qualité" + qualite.name().toLowerCase() + "_" +
                 LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
         headers.setContentDispositionFormData("attachment", filename);
 
@@ -154,22 +154,50 @@ public class ReportController {
 
     @GetMapping("/api/export/facteur/{facteurValue}")
     public ResponseEntity<byte[]> exportClientsByFacteur(@PathVariable String facteurValue) throws IOException {
-        FacteurInfluence influence;
-        try{
+        System.out.println("Valeur reçue: " + facteurValue);
+
+        FacteurInfluence influence = null;
+        try {
             influence = FacteurInfluence.valueOf(facteurValue);
-        }catch (IllegalArgumentException e){
-            return ResponseEntity.badRequest().build();
+        } catch (IllegalArgumentException e) {
+            // Correspondance plus intelligente
+            for (FacteurInfluence f : FacteurInfluence.values()) {
+                // 1. Vérifier les noms simplifiés
+                String simplifiedEnum = f.name().replaceAll("[^A-Z]", "");
+                String simplifiedInput = facteurValue.replaceAll("[^A-Z]", "");
+
+                // 2. Vérifier si les chaînes simplifiées correspondent partiellement
+                if (simplifiedEnum.contains(simplifiedInput) || simplifiedInput.contains(simplifiedEnum)) {
+                    influence = f;
+                    System.out.println("Correspondance trouvée: " + f.name());
+                    break;
+                }
+
+                // 3. Vérifier avec le displayName aussi
+                String displayName = f.getDisplayName().toUpperCase()
+                        .replaceAll("[^A-Z]", "");
+                if (displayName.contains(simplifiedInput) || simplifiedInput.contains(displayName)) {
+                    influence = f;
+                    System.out.println("Correspondance trouvée via displayName: " + f.name());
+                    break;
+                }
+            }
+
+            if (influence == null) {
+                System.err.println("Impossible de trouver FacteurInfluence pour: " + facteurValue);
+                return ResponseEntity.badRequest().build();
+            }
         }
+
         List<Client> clients = clientRepository.findByFacteurInfluence(influence);
         byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        String filename = "clients_facteur_" + facteurValue.toLowerCase() + "_" +
+        String filename = "export_clients_facteur_" + influence.name().toLowerCase() + "_" +
                 LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
         headers.setContentDispositionFormData("attachment", filename);
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
     }
-
     @GetMapping("/api/export/interet/{interetValue}")
     public ResponseEntity<byte[]> exportClientsByInteret(@PathVariable String interetValue) throws IOException {
         InteretCredit interet ;
@@ -182,7 +210,7 @@ public class ReportController {
         byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        String filename = "clients_facteur_" + interetValue.toLowerCase() + "_" +
+        String filename = "export_clients_interet_" + interetValue.toLowerCase() + "_" +
                 LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
         headers.setContentDispositionFormData("attachment", filename);
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
@@ -200,7 +228,7 @@ public class ReportController {
         byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        String filename = "clients_facteur_" + profilValue.toLowerCase() + "_" +
+        String filename = "export_clients_profil_" + profilValue.toLowerCase() + "_" +
                 LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
         headers.setContentDispositionFormData("attachment", filename);
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
@@ -218,7 +246,7 @@ public class ReportController {
         byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        String filename = "clients_facteur_" + activiteValue.toLowerCase() + "_" +
+        String filename = "export_clients_activite_" + activiteValue.toLowerCase() + "_" +
                 LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
         headers.setContentDispositionFormData("attachment", filename);
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
@@ -236,7 +264,7 @@ public class ReportController {
         byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        String filename = "clients_facteur_" + brancheValue.toLowerCase() + "_" +
+        String filename = "export_clients_branche_" + brancheValue.toLowerCase() + "_" +
                 LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
         headers.setContentDispositionFormData("attachment", filename);
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
@@ -266,7 +294,7 @@ public class ReportController {
 
         // Nom du fichier avec date
         String rendezVousText = hasRendezVous ? "avec_rdv" : "sans_rdv";
-        String filename = "clients_" + rendezVousText + "_" +
+        String filename = "export_clients_" + rendezVousText + "_" +
                 LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
 
         headers.setContentDispositionFormData("attachment", filename);

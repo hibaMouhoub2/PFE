@@ -279,8 +279,8 @@ public class ReportService {
     /**
      * Obtient les actions quotidiennes des agents
      */
-    public Map<String, List<Long>> getDailyAgentActivityStats(LocalDateTime start, LocalDateTime end) {
-        Map<String, List<Long>> result = new HashMap<>();
+    public Map<String, Object> getDailyAgentActivityStats(LocalDateTime start, LocalDateTime end) {
+        Map<String, Object> result = new HashMap<>();
 
         // Récupérer tous les agents
         List<User> agents = userRepository.findByRolesName("ROLE_USER");
@@ -297,7 +297,9 @@ public class ReportService {
         List<String> dateLabels = days.stream()
                 .map(d -> d.format(DateTimeFormatter.ofPattern("dd/MM")))
                 .collect(Collectors.toList());
-        result.put("dates", dateLabels.stream().map(Long::valueOf).collect(Collectors.toList()));
+
+        // Changement ici - retourner les dates comme des chaînes
+        result.put("dates", dateLabels);
 
         // Pour chaque agent, calculer le nombre d'actions par jour
         for (User agent : agents) {

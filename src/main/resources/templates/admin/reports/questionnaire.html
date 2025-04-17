@@ -67,6 +67,48 @@
             background-color: #f8f9fa;
             color: #333;
         }
+        /* Ajouter ce CSS dans votre section <style> */
+        .nav-tabs {
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .nav-tabs .nav-link {
+            margin-bottom: -2px;
+            background: transparent;
+            border: none;
+            color: #555 !important;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 0;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--primary-color) !important;
+            background-color: rgba(255, 140, 0, 0.05);
+        }
+
+        .nav-tabs .nav-link.active {
+            color: white !important;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 5px 5px 0 0;
+        }
+
+        /* Style pour le contenu des onglets */
+        .tab-content {
+            padding: 20px 0;
+        }
+
+        .tab-pane {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -169,6 +211,10 @@
                             <div class="chart-container">
                                 <canvas id="progressionChart"></canvas>
                             </div>
+                            <!-- Note informative ajoutée ici -->
+                            <div class="text-center text-muted mt-3 small">
+                                <i class="fas fa-info-circle me-1"></i> Cliquez sur les points du graphique pour télécharger les données détaillées des clients correspondants
+                            </div>
                         </div>
                         <div class="text-end mt-2">
                             <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="progressionChart">
@@ -186,6 +232,10 @@
                         <div class="card-body">
                             <div class="chart-container">
                                 <canvas id="rendezVousChart"></canvas>
+                            </div>
+                            <!-- Note informative ajoutée ici -->
+                            <div class="text-center text-muted mt-3 small">
+                                <i class="fas fa-info-circle me-1"></i> Cliquez sur les points du graphique pour télécharger les données détaillées des clients correspondants
                             </div>
                         </div>
                         <div class="text-end mt-2">
@@ -209,6 +259,10 @@
                             <div class="chart-container">
                                 <canvas id="raisonsChart"></canvas>
                             </div>
+                            <!-- Note informative ajoutée ici -->
+                            <div class="text-center text-muted mt-3 small">
+                                <i class="fas fa-info-circle me-1"></i> Cliquez sur les points du graphique pour télécharger les données détaillées des clients correspondants
+                            </div>
                         </div>
                         <div class="text-end mt-2">
                             <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="raisonsChart">
@@ -226,6 +280,10 @@
                         <div class="card-body">
                             <div class="chart-container">
                                 <canvas id="qualiteChart"></canvas>
+                            </div>
+                            <!-- Note informative ajoutée ici -->
+                            <div class="text-center text-muted mt-3 small">
+                                <i class="fas fa-info-circle me-1"></i> Cliquez sur les points du graphique pour télécharger les données détaillées des clients correspondants
                             </div>
                         </div>
                         <div class="text-end mt-2">
@@ -249,6 +307,10 @@
                             <div class="chart-container">
                                 <canvas id="interetChart"></canvas>
                             </div>
+                            <!-- Note informative ajoutée ici -->
+                            <div class="text-center text-muted mt-3 small">
+                                <i class="fas fa-info-circle me-1"></i> Cliquez sur les points du graphique pour télécharger les données détaillées des clients correspondants
+                            </div>
                         </div>
                         <div class="text-end mt-2">
                             <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="interetChart">
@@ -266,6 +328,10 @@
                         <div class="card-body">
                             <div class="chart-container">
                                 <canvas id="facteursChart"></canvas>
+                            </div>
+                            <!-- Note informative ajoutée ici -->
+                            <div class="text-center text-muted mt-3 small">
+                                <i class="fas fa-info-circle me-1"></i> Cliquez sur les points du graphique pour télécharger les données détaillées des clients correspondants
                             </div>
                         </div>
                         <div class="text-end mt-2">
@@ -289,6 +355,10 @@
                             <div class="chart-container">
                                 <canvas id="profilChart"></canvas>
                             </div>
+                            <!-- Note informative ajoutée ici -->
+                            <div class="text-center text-muted mt-3 small">
+                                <i class="fas fa-info-circle me-1"></i> Cliquez sur les points du graphique pour télécharger les données détaillées des clients correspondants
+                            </div>
                         </div>
                         <div class="text-end mt-2">
                             <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="profilChart">
@@ -306,6 +376,10 @@
                         <div class="card-body">
                             <div class="chart-container">
                                 <canvas id="activiteChart"></canvas>
+                            </div>
+                            <!-- Note informative ajoutée ici -->
+                            <div class="text-center text-muted mt-3 small">
+                                <i class="fas fa-info-circle me-1"></i> Cliquez sur les points du graphique pour télécharger les données détaillées des clients correspondants
                             </div>
                         </div>
                         <div class="text-end mt-2">
@@ -327,6 +401,10 @@
                         <div class="card-body">
                             <div class="chart-container">
                                 <canvas id="brancheChart"></canvas>
+                            </div>
+                            <!-- Note informative ajoutée ici -->
+                            <div class="text-center text-muted mt-3 small">
+                                <i class="fas fa-info-circle me-1"></i> Cliquez sur les points du graphique pour télécharger les données détaillées des clients correspondants
                             </div>
                         </div>
                         <div class="text-end mt-2">
@@ -446,11 +524,35 @@
     }
 
     // Fonction pour charger les données de performance des agents
+    // Fonction pour charger les données de performance des agents
     function loadAgentPerformanceData() {
-        fetch("/admin/reports/api/data/agent-performance")
-            .then(response => response.json())
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        // Construire l'URL avec paramètres de date si disponibles
+        let url = "/admin/reports/api/data/agent-performance";
+        if (startDate && endDate) {
+            url += `?startDate=${startDate}&endDate=${endDate}`;
+        }
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 console.log("Données de performance des agents chargées:", data);
+
+                // Supprimer les anciens graphiques s'ils existent
+                const performanceChart = Chart.getChart('agentPerformanceChart');
+                if (performanceChart) performanceChart.destroy();
+
+                const activityChart = Chart.getChart('dailyActivityChart');
+                if (activityChart) activityChart.destroy();
+
+                // Créer les nouveaux graphiques
                 createAgentPerformanceChart(data);
                 createDailyActivityChart(data);
             })
@@ -627,10 +729,11 @@
                     const label = labels[index];
 
                     // Convertir l'étiquette en valeur d'enum (majuscules, underscore)
-                    let enumValue = label.toUpperCase().replace(/\s+/g, '_')
-                        .replace(/'/g, '')
-                        .replace(/-/g, '_')
-                        .normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // Enlever les accents
+                    let enumValue = label.toUpperCase()
+                        .replace(/[^A-Z0-9]/g, '_')  // Remplace tout ce qui n'est pas une lettre ou un chiffre par _
+                        .replace(/_+/g, '_')         // Remplace les séquences de plusieurs _ par un seul _
+                        .replace(/^_|_$/g, '')       // Supprime les _ au début et à la fin
+                        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
                     // URL pour télécharger
                     const downloadUrl = `/admin/reports/api/export/${exportType}/${enumValue}`;
@@ -757,9 +860,10 @@
                     const label = labels[index];
 
                     // Même logique que pour le graphique en barres
-                    let enumValue = label.toUpperCase().replace(/\s+/g, '_')
-                        .replace(/'/g, '')
-                        .replace(/-/g, '_')
+                    let enumValue = label.toUpperCase()
+                        .replace(/[^A-Z0-9]/g, '_')  // Remplace tout ce qui n'est pas une lettre ou un chiffre par _
+                        .replace(/_+/g, '_')         // Remplace les séquences de plusieurs _ par un seul _
+                        .replace(/^_|_$/g, '')       // Supprime les _ au début et à la fin
                         .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
                     const downloadUrl = `/admin/reports/api/export/${exportType}/${enumValue}`;
@@ -865,6 +969,7 @@
     });
 
     // Créer un graphique de comparaison des performances des agents
+    // Fonction pour créer un graphique de comparaison des performances des agents
     function createAgentPerformanceChart(data) {
         const ctx = document.getElementById('agentPerformanceChart').getContext('2d');
 
@@ -919,7 +1024,7 @@
         });
     }
 
-    // Créer un graphique d'activité quotidienne
+    // Fonction pour créer un graphique d'activité quotidienne
     function createDailyActivityChart(data) {
         const ctx = document.getElementById('dailyActivityChart').getContext('2d');
 
