@@ -119,8 +119,7 @@
 <div class="container mt-4">
     <h2><i class="fas fa-chart-bar me-2"></i>Rapport du questionnaire client</h2>
     <p class="text-muted">Analyse des réponses collectées auprès des clients</p>
-    <!-- src/main/resources/templates/admin/reports/questionnaire.html -->
-    <!-- Ajoutez ce bloc juste après la balise <p class="text-muted">Analyse des réponses... -->
+
     <div class="card mb-4">
         <div class="card-header">
             <i class="fas fa-calendar-alt me-2"></i>Filtre par période
@@ -143,182 +142,232 @@
             </form>
         </div>
     </div>
-    <!-- Ligne 1: Indicateurs clés -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <!-- Graphique de progression -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-chart-line me-2"></i>Progression des contacts clients
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="progressionChart"></canvas>
-                    </div>
-                </div>
-                <div class="text-end mt-2">
-                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="progressionChart">
-                        <i class="fas fa-download me-1"></i>Exporter
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <!-- Graphique RDV -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-calendar-check me-2"></i>Rendez-vous agence
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="rendezVousChart"></canvas>
-                    </div>
-                </div>
-                <div class="text-end mt-2">
-                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="rendezvousChart">
-                        <i class="fas fa-download me-1"></i>Exporter
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Ligne 2: Raisons et Qualité -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <!-- Graphique raisons non-renouvellement -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-question-circle me-2"></i>Raisons de non-renouvellement
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="raisonsChart"></canvas>
-                    </div>
-                </div>
-                <div class="text-end mt-2">
-                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="raisonsChart">
-                        <i class="fas fa-download me-1"></i>Exporter
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <!-- Graphique qualité service -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-star me-2"></i>Qualité du service
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="qualiteChart"></canvas>
-                    </div>
-                </div>
-                <div class="text-end mt-2">
-                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="qualiteChart">
-                        <i class="fas fa-download me-1"></i>Exporter
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Navigation des onglets -->
+    <ul class="nav nav-tabs mb-3" id="reportTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">Vue d'ensemble</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="agent-performance-tab" data-bs-toggle="tab" data-bs-target="#agent-performance" type="button" role="tab" aria-controls="agent-performance" aria-selected="false">Performance des agents</button>
+        </li>
+    </ul>
 
-    <!-- Ligne 3: Intérêt et Facteurs -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <!-- Graphique intérêt nouveau crédit -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-money-bill-wave me-2"></i>Intérêt pour un nouveau crédit
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="interetChart"></canvas>
+    <!-- Contenu des onglets -->
+    <div class="tab-content" id="reportTabsContent">
+        <!-- Onglet Vue d'ensemble -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+            <!-- Ligne 1: Indicateurs clés -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <!-- Graphique de progression -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-line me-2"></i>Progression des contacts clients
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="progressionChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="progressionChart">
+                                <i class="fas fa-download me-1"></i>Exporter
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="text-end mt-2">
-                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="interetChart">
-                        <i class="fas fa-download me-1"></i>Exporter
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <!-- Graphique facteurs d'influence -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-lightbulb me-2"></i>Facteurs d'influence
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="facteursChart"></canvas>
+                <div class="col-md-4">
+                    <!-- Graphique RDV -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-calendar-check me-2"></i>Rendez-vous agence
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="rendezVousChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="rendezVousChart">
+                                <i class="fas fa-download me-1"></i>Exporter
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="text-end mt-2">
-                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="facteursChart">
-                        <i class="fas fa-download me-1"></i>Exporter
-                    </button>
-                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Ligne 4: Profil et Activité -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <!-- Graphique profil client -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-user-tag me-2"></i>Profil des clients
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="profilChart"></canvas>
+            <!-- Ligne 2: Raisons et Qualité -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <!-- Graphique raisons non-renouvellement -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-question-circle me-2"></i>Raisons de non-renouvellement
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="raisonsChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="raisonsChart">
+                                <i class="fas fa-download me-1"></i>Exporter
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="text-end mt-2">
-                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="profilChart">
-                        <i class="fas fa-download me-1"></i>Exporter
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <!-- Graphique activité client -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-briefcase me-2"></i>Activité des clients
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="activiteChart"></canvas>
+                <div class="col-md-6">
+                    <!-- Graphique qualité service -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-star me-2"></i>Qualité du service
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="qualiteChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="qualiteChart">
+                                <i class="fas fa-download me-1"></i>Exporter
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="text-end mt-2">
-                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="activiteChart">
-                        <i class="fas fa-download me-1"></i>Exporter
-                    </button>
-                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Graphique par agence -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-building me-2"></i>Répartition par agence
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="brancheChart"></canvas>
+            <!-- Ligne 3: Intérêt et Facteurs -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <!-- Graphique intérêt nouveau crédit -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-money-bill-wave me-2"></i>Intérêt pour un nouveau crédit
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="interetChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="interetChart">
+                                <i class="fas fa-download me-1"></i>Exporter
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="text-end mt-2">
-                    <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="brancheChart">
-                        <i class="fas fa-download me-1"></i>Exporter
-                    </button>
+                <div class="col-md-6">
+                    <!-- Graphique facteurs d'influence -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-lightbulb me-2"></i>Facteurs d'influence
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="facteursChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="facteursChart">
+                                <i class="fas fa-download me-1"></i>Exporter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ligne 4: Profil et Activité -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <!-- Graphique profil client -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-user-tag me-2"></i>Profil des clients
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="profilChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="profilChart">
+                                <i class="fas fa-download me-1"></i>Exporter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <!-- Graphique activité client -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-briefcase me-2"></i>Activité des clients
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="activiteChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="activiteChart">
+                                <i class="fas fa-download me-1"></i>Exporter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphique par agence -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-building me-2"></i>Répartition par agence
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="brancheChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary export-chart-btn" data-chart="brancheChart">
+                                <i class="fas fa-download me-1"></i>Exporter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet Performance des agents -->
+        <div class="tab-pane fade" id="agent-performance" role="tabpanel" aria-labelledby="agent-performance-tab">
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-users me-2"></i>Performance des agents
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="height: 400px;">
+                                <canvas id="agentPerformanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-line me-2"></i>Activité quotidienne des agents
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="height: 400px;">
+                                <canvas id="dailyActivityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -360,7 +409,6 @@
         ]
     };
 
-
     // Fonction pour charger les données et initialiser les graphiques
     async function initCharts(startDate = null, endDate = null) {
         try {
@@ -389,11 +437,28 @@
             createInteractiveBarChart('activiteChart', data.activiteClient, 'Activité des clients', 'activite');
             createInteractiveBarChart('brancheChart', data.branche, 'Répartition par agence', 'branche');
 
+            // Charger les données de performance des agents
+            loadAgentPerformanceData();
+
         } catch (error) {
             console.error('Erreur lors du chargement des données:', error);
         }
     }
 
+    // Fonction pour charger les données de performance des agents
+    function loadAgentPerformanceData() {
+        fetch("/admin/reports/api/data/agent-performance")
+            .then(response => response.json())
+            .then(data => {
+                console.log("Données de performance des agents chargées:", data);
+                createAgentPerformanceChart(data);
+                createDailyActivityChart(data);
+            })
+            .catch(error => {
+                console.error("Erreur lors du chargement des données de performance:", error);
+            });
+    }
+
     // Initialiser les événements pour le filtre de période
     document.addEventListener('DOMContentLoaded', function() {
         // Initialiser les graphiques au chargement
@@ -437,7 +502,7 @@
             <button type="button" id="resetFilter" class="btn btn-sm btn-outline-secondary float-end">
                 <i class="fas fa-times me-1"></i>Réinitialiser
             </button>
-        `;
+            `;
 
             // Configurer le bouton de réinitialisation
             document.getElementById('resetFilter').addEventListener('click', function() {
@@ -448,162 +513,6 @@
             });
         });
     });
-
-    // Initialiser les événements pour le filtre de période
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialiser les graphiques au chargement
-        initCharts();
-
-        // Configurer le bouton de filtre
-        document.getElementById('applyFilter').addEventListener('click', function() {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-
-            if (!startDate || !endDate) {
-                alert('Veuillez spécifier une date de début et une date de fin.');
-                return;
-            }
-
-            // Vérifier que la date de début est avant la date de fin
-            if (new Date(startDate) > new Date(endDate)) {
-                alert('La date de début doit être antérieure à la date de fin.');
-                return;
-            }
-
-            // Mettre à jour les graphiques avec le filtre de période
-            initCharts(startDate, endDate);
-
-            // Afficher un message indiquant la période sélectionnée
-            const formattedStartDate = new Date(startDate).toLocaleDateString();
-            const formattedEndDate = new Date(endDate).toLocaleDateString();
-
-            // Créer ou mettre à jour une notification pour l'utilisateur
-            let filterNotice = document.getElementById('filter-notice');
-            if (!filterNotice) {
-                filterNotice = document.createElement('div');
-                filterNotice.id = 'filter-notice';
-                filterNotice.className = 'alert alert-info mt-3';
-                document.getElementById('periodFilterForm').parentNode.appendChild(filterNotice);
-            }
-
-            filterNotice.innerHTML = `
-            <i class="fas fa-info-circle me-2"></i>
-            Affichage des données du <strong>${formattedStartDate}</strong> au <strong>${formattedEndDate}</strong>
-            <button type="button" id="resetFilter" class="btn btn-sm btn-outline-secondary float-end">
-                <i class="fas fa-times me-1"></i>Réinitialiser
-            </button>
-        `;
-
-            // Configurer le bouton de réinitialisation
-            document.getElementById('resetFilter').addEventListener('click', function() {
-                document.getElementById('startDate').value = '';
-                document.getElementById('endDate').value = '';
-                initCharts();
-                filterNotice.remove();
-            });
-        });
-    });
-
-    // Fonction pour créer un graphique en barres
-    function createBarChart(canvasId, data, title) {
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        const labels = Object.keys(data);
-        const values = Object.values(data);
-
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Nombre de clients',
-                    data: values,
-                    backgroundColor: colors.backgrounds.slice(0, labels.length),
-                    borderColor: colors.borders.slice(0, labels.length),
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    title: {
-                        display: true,
-                        text: title,
-                        font: {
-                            size: 16
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const value = context.raw;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                                return `${context.label}: ${value} (${percentage}%)`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // Fonction pour créer un graphique circulaire
-    function createPieChart(canvasId, data, title) {
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        const labels = Object.keys(data);
-        const values = Object.values(data);
-
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: values,
-                    backgroundColor: colors.backgrounds.slice(0, labels.length),
-                    borderColor: colors.borders.slice(0, labels.length),
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right'
-                    },
-                    title: {
-                        display: true,
-                        text: title,
-                        font: {
-                            size: 16
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const value = context.raw;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                                return `${context.label}: ${value} (${percentage}%)`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
 
     // Fonction pour créer un graphique linéaire de progression
     function createProgressionChart(data) {
@@ -652,48 +561,6 @@
         });
     }
 
-    // Initialiser les graphiques au chargement de la page
-    document.addEventListener('DOMContentLoaded', initCharts);
-    // Fonction simplifiée pour l'export
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialiser d'abord les graphiques
-        initCharts();
-
-        // Configurer l'export une fois que les graphiques sont prêts
-        setTimeout(() => {
-            document.querySelectorAll('.export-chart-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const chartId = this.getAttribute('data-chart');
-                    const canvas = document.getElementById(chartId);
-
-                    if (!canvas) {
-                        console.error(`Canvas with ID ${chartId} not found`);
-                        return;
-                    }
-
-                    try {
-                        // Version plus simple qui devrait fonctionner dans la plupart des navigateurs
-                        const imageURL = canvas.toDataURL();
-                        const newTab = window.open();
-                        newTab.document.write(`<img src="${imageURL}" alt="${chartId}">`);
-
-                        // Option: possibilité de télécharger depuis le nouvel onglet
-                        newTab.document.write(`<br><p>Cliquez droit sur l'image et sélectionnez "Enregistrer l'image sous..." pour la télécharger</p>`);
-                    } catch (error) {
-                        console.error('Error exporting chart:', error);
-                        alert('Impossible d\'exporter l\'image. Voir la console pour plus de détails.');
-                    }
-                });
-            });
-        }, 1000); // Attendre 1 seconde pour s'assurer que les graphiques sont rendus
-    });
-
-    // // Appeler cette fonction après que les graphiques sont initialisés
-    // document.addEventListener('DOMContentLoaded', function() {
-    //     initCharts().then(() => {
-    //         setupChartExport();
-    //     });
-    // });
     // Fonction pour créer un graphique en barres avec export au clic
     function createInteractiveBarChart(canvasId, data, title, exportType) {
         const ctx = document.getElementById(canvasId).getContext('2d');
@@ -844,7 +711,6 @@
         const container = document.getElementById(canvasId).parentNode;
         const tooltip = document.createElement('div');
         tooltip.className = 'text-center text-muted mt-2';
-        //tooltip.innerHTML = '<small><i class="fas fa-info-circle me-1"></i>Cliquez sur une section pour exporter les clients correspondants</small>';
         container.appendChild(tooltip);
 
         // Créer le graphique
@@ -959,6 +825,154 @@
                     setTimeout(() => {
                         loadingToast.remove();
                     }, 3000);
+                }
+            }
+        });
+    }
+
+    // Fonction simplifiée pour l'export
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialiser d'abord les graphiques
+        initCharts();
+
+        // Configurer l'export une fois que les graphiques sont prêts
+        setTimeout(() => {
+            document.querySelectorAll('.export-chart-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const chartId = this.getAttribute('data-chart');
+                    const canvas = document.getElementById(chartId);
+
+                    if (!canvas) {
+                        console.error(`Canvas with ID ${chartId} not found`);
+                        return;
+                    }
+
+                    try {
+                        // Version plus simple qui devrait fonctionner dans la plupart des navigateurs
+                        const imageURL = canvas.toDataURL();
+                        const newTab = window.open();
+                        newTab.document.write(`<img src="${imageURL}" alt="${chartId}">`);
+
+                        // Option: possibilité de télécharger depuis le nouvel onglet
+                        newTab.document.write(`<br><p>Cliquez droit sur l'image et sélectionnez "Enregistrer l'image sous..." pour la télécharger</p>`);
+                    } catch (error) {
+                        console.error('Error exporting chart:', error);
+                        alert('Impossible d\'exporter l\'image. Voir la console pour plus de détails.');
+                    }
+                });
+            });
+        }, 1000); // Attendre 1 seconde pour s'assurer que les graphiques sont rendus
+    });
+
+    // Créer un graphique de comparaison des performances des agents
+    function createAgentPerformanceChart(data) {
+        const ctx = document.getElementById('agentPerformanceChart').getContext('2d');
+
+        if (!data || !data.agentPerformance) {
+            console.error('Données de performance des agents manquantes');
+            return;
+        }
+
+        const agents = Object.keys(data.agentPerformance);
+        const datasets = [];
+
+        // Créer un dataset pour chaque type de statistique
+        const metrics = [
+            { key: 'clientsContacted', label: 'Clients contactés', color: '#FF8C00' },
+            { key: 'questionnairesFilled', label: 'Questionnaires remplis', color: '#28a745' },
+            { key: 'rappelsCompleted', label: 'Rappels effectués', color: '#17a2b8' }
+        ];
+
+        for (const metric of metrics) {
+            const metricData = agents.map(agent => data.agentPerformance[agent][metric.key] || 0);
+
+            datasets.push({
+                label: metric.label,
+                data: metricData,
+                backgroundColor: metric.color,
+                borderColor: metric.color,
+                borderWidth: 1
+            });
+        }
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: agents,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Performance des agents'
+                    }
+                }
+            }
+        });
+    }
+
+    // Créer un graphique d'activité quotidienne
+    function createDailyActivityChart(data) {
+        const ctx = document.getElementById('dailyActivityChart').getContext('2d');
+
+        if (!data || !data.dailyActivity) {
+            console.error('Données d\'activité quotidienne manquantes');
+            return;
+        }
+
+        const dates = data.dailyActivity.dates || [];
+        const dailyData = Object.assign({}, data.dailyActivity);
+        delete dailyData.dates;
+
+        const agents = Object.keys(dailyData);
+        const datasets = [];
+
+        // Couleurs pour chaque agent
+        const colors = ['#FF8C00', '#28a745', '#17a2b8', '#6f42c1', '#e83e8c'];
+
+        let colorIndex = 0;
+        for (const agent of agents) {
+            if (agent !== 'dates') {  // Éviter de traiter les dates comme un agent
+                datasets.push({
+                    label: agent,
+                    data: dailyData[agent] || [],
+                    backgroundColor: colors[colorIndex % colors.length],
+                    borderColor: colors[colorIndex % colors.length],
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.3
+                });
+                colorIndex++;
+            }
+        }
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Activité quotidienne des agents'
+                    }
                 }
             }
         });

@@ -129,8 +129,7 @@ public class AgendaController {
             Model model,
             Authentication authentication) {
 
-        // Récupérer les attributs flash d'abord (pour les redirections depuis /clients/search)
-        @SuppressWarnings("unchecked")
+
         List<Long> flashClientIds = (List<Long>) model.asMap().get("searchResults");
         String flashSearchQuery = (String) model.asMap().get("searchQuery");
 
@@ -138,7 +137,7 @@ public class AgendaController {
         List<Client> resultClients;
         String resultQuery;
 
-        // Si on a des résultats en flash (redirection), les utiliser
+        // Si on a des résultats en flash les utiliser
         if (flashClientIds != null && !flashClientIds.isEmpty()) {
             resultClients = flashClientIds.stream()
                     .map(id -> clientService.getById(id))

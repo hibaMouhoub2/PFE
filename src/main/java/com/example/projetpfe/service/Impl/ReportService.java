@@ -1,19 +1,27 @@
 package com.example.projetpfe.service.Impl;
 
 import com.example.projetpfe.entity.*;
+import com.example.projetpfe.repository.AuditRepository;
 import com.example.projetpfe.repository.ClientRepository;
+import com.example.projetpfe.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ReportService {
     private final ClientRepository clientRepository;
+    @Autowired
+    private AuditRepository auditRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     public ReportService(ClientRepository clientRepository) {
@@ -213,5 +221,99 @@ public class ReportService {
         }
 
         return stats;
+    }
+
+    /**
+     * Obtient les statistiques de performance des agents basées sur les logs d'audit
+     */
+    public Map<String, Map<String, Long>> getAgentPerformanceStats(LocalDateTime start, LocalDateTime end) {
+        // Initialiser le résultat
+        Map<String, Map<String, Long>> result = new HashMap<>();
+
+        // Récupérer tous les utilisateurs avec rôle USER
+        List<User> agents = userRepository.findByRolesName("ROLE_USER");
+
+        for (User agent : agents) {
+            Map<String, Long> agentStats = new HashMap<>();
+
+            // Récupérer les actions d'audit pour cet agent
+            List<Audit> agentAudits = auditRepository.findByUserAndTimestampBetween(agent, start, end);
+
+            // Compter les différents types d'actions
+            long clientsContacted = agentAudits.stream()
+                    .filter(a -> a.getType() == AuditType.CLIENT_STATUS_CHANGE &&
+                            a.getDetails().contains("CONTACTE"))
+                    .count();
+
+            long questionnairesFilled = agentAudits.stream()
+                    .filter(a -> a.getType() == AuditType.CLIENT_QUESTIONNAIRE_COMPLETED)
+                    .count();
+
+            long questionnairesUpdated = agentAudits.stream()
+                    .filter(a -> a.getType() == AuditType.CLIENT_QUESTIONNAIRE_UPDATED)
+                    .count();
+
+            long rappelsCreated = agentAudits.stream()
+                    .filter(a -> a.getType() == AuditType.RAPPEL_CREATED)
+                    .count();
+
+            long rappelsCompleted = agentAudits.stream()
+                    .filter(a -> a.getType() == AuditType.RAPPEL_COMPLETED)
+                    .count();
+
+            // Ajouter les statistiques à la map
+            agentStats.put("clientsContacted", clientsContacted);
+            agentStats.put("questionnairesFilled", questionnairesFilled);
+            agentStats.put("questionnairesUpdated", questionnairesUpdated);
+            agentStats.put("rappelsCreated", rappelsCreated);
+            agentStats.put("rappelsCompleted", rappelsCompleted);
+            agentStats.put("totalActions", (long) agentAudits.size());
+
+            // Ajouter les statistiques de l'agent au résultat
+            result.put(agent.getName(), agentStats);
+        }
+
+        return result;
+    }
+
+    /**
+     * Obtient les actions quotidiennes des agents
+     */
+    public Map<String, List<Long>> getDailyAgentActivityStats(LocalDateTime start, LocalDateTime end) {
+        Map<String, List<Long>> result = new HashMap<>();
+
+        // Récupérer tous les agents
+        List<User> agents = userRepository.findByRolesName("ROLE_USER");
+
+        // Pour chaque jour dans la période
+        List<LocalDate> days = new ArrayList<>();
+        LocalDate currentDate = start.toLocalDate();
+        while (!currentDate.isAfter(end.toLocalDate())) {
+            days.add(currentDate);
+            currentDate = currentDate.plusDays(1);
+        }
+
+        // Liste des dates pour l'axe X
+        List<String> dateLabels = days.stream()
+                .map(d -> d.format(DateTimeFormatter.ofPattern("dd/MM")))
+                .collect(Collectors.toList());
+        result.put("dates", dateLabels.stream().map(Long::valueOf).collect(Collectors.toList()));
+
+        // Pour chaque agent, calculer le nombre d'actions par jour
+        for (User agent : agents) {
+            List<Long> dailyCounts = new ArrayList<>();
+
+            for (LocalDate day : days) {
+                LocalDateTime dayStart = day.atStartOfDay();
+                LocalDateTime dayEnd = day.atTime(LocalTime.MAX);
+
+                long count = auditRepository.countByUserAndTimestampBetween(agent, dayStart, dayEnd);
+                dailyCounts.add(count);
+            }
+
+            result.put(agent.getName(), dailyCounts);
+        }
+
+        return result;
     }
 }

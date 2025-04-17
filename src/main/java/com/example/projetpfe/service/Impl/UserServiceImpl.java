@@ -1,11 +1,15 @@
 package com.example.projetpfe.service.Impl;
 
 import com.example.projetpfe.dto.UserDto;
+import com.example.projetpfe.entity.AuditType;
 import com.example.projetpfe.entity.Role;
 import com.example.projetpfe.entity.User;
 import com.example.projetpfe.repository.RoleRepository;
 import com.example.projetpfe.repository.UserRepository;
 import com.example.projetpfe.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +26,11 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private RoleRepository roleRepository;
     private PasswordEncoder passwordEncoder;
+
+    boolean passwordChanged = false;
+
+    @Autowired
+    private AuditService auditService;
 
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
@@ -62,7 +71,18 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setRoles(Arrays.asList(role));
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Récupérer l'admin qui crée l'utilisateur
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String adminEmail = auth.getName();
+
+        // Audit de la création d'utilisateur
+        auditService.auditEvent(AuditType.USER_CREATED,
+                "User",
+                savedUser.getId(),
+                "Utilisateur créé: " + savedUser.getName() + " (" + savedUser.getEmail() + ") avec rôle " + roleName,
+                adminEmail);
     }
     private Role checkUserRoleExist() {
         Role role = new Role();
@@ -115,7 +135,19 @@ public class UserServiceImpl implements UserService {
 
         // Maintenant supprimer l'utilisateur
         userRepository.delete(user);
+
+        // Récupérer l'admin qui supprime l'utilisateur
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String adminEmail = auth.getName();
+
+        // Audit de la suppression d'utilisateur
+        auditService.auditEvent(AuditType.USER_DELETED,
+                "User",
+                id,
+                "Utilisateur supprimé: " + user.getName() + " (" + user.getEmail() + ")",
+                adminEmail);
     }
+
     @Override
     public UserDto findUserById(Long id) {
         User user = userRepository.findById(id)
@@ -128,6 +160,12 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'ID: " + id));
 
+        // Sauvegarder les anciennes valeurs pour l'audit
+        String oldName = user.getName();
+        String oldEmail = user.getEmail();
+        Boolean oldEnabled = user.getEnabled();
+
+        //Mise à jour des informations
         user.setName(userDto.getFirstName() + " " + userDto.getLastName());
         user.setEmail(userDto.getEmail());
         user.setEnabled(userDto.getEnabled());
@@ -138,5 +176,42 @@ public class UserServiceImpl implements UserService {
         }
 
         userRepository.save(user);
+        // Récupérer l'admin qui modifie l'utilisateur
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String adminEmail = auth.getName();
+
+        // Préparer les détails des modifications pour l'audit
+        StringBuilder changes = new StringBuilder();
+        if (!oldName.equals(user.getName())) {
+            changes.append("Nom modifié: ").append(oldName).append(" -> ").append(user.getName()).append(", ");
+        }
+        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+            passwordChanged = true;
+        }
+        if (!oldEmail.equals(user.getEmail())) {
+            changes.append("Email modifié: ").append(oldEmail).append(" -> ").append(user.getEmail()).append(", ");
+        }
+        if (oldEnabled != user.getEnabled()) {
+            changes.append("Statut modifié: ").append(oldEnabled ? "Actif" : "Inactif")
+                    .append(" -> ").append(user.getEnabled() ? "Actif" : "Inactif").append(", ");
+        }
+        if (passwordChanged) {
+            changes.append("Mot de passe modifié, ");
+        }
+
+        // Supprimer la virgule finale s'il y a des changements
+        String changesStr = changes.toString();
+        if (changesStr.endsWith(", ")) {
+            changesStr = changesStr.substring(0, changesStr.length() - 2);
+        }
+
+        // Audit de la mise à jour d'utilisateur
+        auditService.auditEvent(AuditType.USER_UPDATED,
+                "User",
+                id,
+                "Utilisateur modifié: " + user.getName() +
+                        (changesStr.isEmpty() ? "" : " (" + changesStr + ")"),
+                adminEmail);
     }
 }

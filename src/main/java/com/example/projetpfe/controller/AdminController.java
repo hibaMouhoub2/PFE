@@ -5,6 +5,7 @@ import com.example.projetpfe.dto.UserDto;
 import com.example.projetpfe.entity.*;
 import com.example.projetpfe.repository.ClientRepository;
 import com.example.projetpfe.repository.UserRepository;
+import com.example.projetpfe.service.Impl.AuditService;
 import com.example.projetpfe.service.Impl.ClientService;
 import com.example.projetpfe.service.Impl.EmailService;
 import com.example.projetpfe.service.Impl.RappelService;
@@ -17,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -55,6 +58,8 @@ public class AdminController {
         this.userService = userService;
         this.rappelService = rappelService;
     }
+    @Autowired
+    private AuditService auditService;
 
     @GetMapping("/clients")
     public String listAllClients(
@@ -212,6 +217,19 @@ public class AdminController {
                 clientService.assignToUser(clientId, userId);
                 count++;
             }
+            // Récupérer l'utilisateur assigné pour l'audit
+            User assignedUser = userService.findById(userId);
+
+            // Récupérer l'admin qui fait l'assignation
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String adminEmail = auth.getName();
+
+            // Audit de l'assignation multiple
+            auditService.auditEvent(AuditType.CLIENTS_BULK_ASSIGNED,
+                    "User",
+                    userId,
+                    count + " client(s) assigné(s) à " + assignedUser.getName(),
+                    adminEmail);
             redirectAttributes.addFlashAttribute("success", count + " client(s) assigné(s) avec succès");
             return "redirect:/admin/unassigned-clients";
         } catch (Exception e) {
@@ -352,6 +370,24 @@ public class AdminController {
         // Générer le fichier Excel
         byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
 
+        // Audit de l'exportation
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+
+        StringBuilder filters = new StringBuilder();
+        if (q != null && !q.isEmpty()) filters.append("Recherche: ").append(q).append(", ");
+        if (statusEnum != null) filters.append("Statut: ").append(statusEnum).append(", ");
+        if (userId != null) filters.append("Utilisateur: ").append(userId).append(", ");
+        if (rdvDate != null) filters.append("Date RDV: ").append(rdvDate);
+
+        String filterText = filters.length() > 0 ? " avec filtres: " + filters.toString() : "";
+
+        auditService.auditEvent(AuditType.EXCEL_EXPORT,
+                "Client",
+                null,
+                "Export Excel de " + clients.size() + " clients" + filterText,
+                userEmail);
+
         // Préparer la réponse HTTP
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
@@ -415,6 +451,20 @@ public class AdminController {
         // Générer le fichier Excel
         byte[] excelContent = excelExportUtil.exportRendezVousToExcel(clientsWithRdv, exportDate);
 
+        // Audit de l'exportation
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+
+        String brancheInfo = brancheEnum != null ? " pour la branche " + brancheEnum.getDisplayName() : " pour toutes les agences";
+
+        auditService.auditEvent(AuditType.EXCEL_EXPORT,
+                "RendezVous",
+                null,
+                "Export Excel des rendez-vous du " +
+                        exportDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) +
+                        brancheInfo + " (" + clientsWithRdv.size() + " rendez-vous)",
+                userEmail);
+
         // Préparer la réponse HTTP
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
@@ -459,6 +509,21 @@ public class AdminController {
 
             // Envoyer l'email
             emailService.sendRendezVousSummary(emailTo, clientsWithRdv, exportDate, excelContent);
+
+            // Audit de l'envoi par email
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = auth.getName();
+
+            String brancheInfo = brancheEnum != null ? " pour la branche " + brancheEnum.getDisplayName() : " pour toutes les agences";
+
+            auditService.auditEvent(AuditType.EMAIL_EXPORT,
+                    "RendezVous",
+                    null,
+                    "Email d'export des rendez-vous du " +
+                            exportDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) +
+                            brancheInfo + " envoyé à " + emailTo +
+                            " (" + clientsWithRdv.size() + " rendez-vous)",
+                    userEmail);
 
             redirectAttributes.addFlashAttribute("success", "Email envoyé avec succès à " + emailTo);
             return "redirect:/admin/clients";

@@ -1,6 +1,8 @@
 package com.example.projetpfe.service.Impl;
 
 import com.example.projetpfe.dto.RappelDto;
+import java.time.format.DateTimeFormatter;
+import com.example.projetpfe.entity.AuditType;
 import com.example.projetpfe.entity.Client;
 import com.example.projetpfe.entity.Rappel;
 import com.example.projetpfe.entity.User;
@@ -8,6 +10,8 @@ import com.example.projetpfe.repository.ClientRepository;
 import com.example.projetpfe.repository.RappelRepository;
 import com.example.projetpfe.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +26,8 @@ public class RappelService {
     private final RappelRepository rappelRepository;
     private final ClientRepository clientRepository;
     private final UserRepository userRepository;
+    @Autowired
+    private AuditService auditService;
 
     @Autowired
     public RappelService(RappelRepository rappelRepository,
@@ -45,8 +51,19 @@ public class RappelService {
         rappel.setCreatedBy(user);
         rappel.setCompleted(false);
 
-        return rappelRepository.save(rappel);
+        Rappel savedRappel = rappelRepository.save(rappel);
+
+        // Audit de la création du rappel
+        auditService.auditEvent(AuditType.RAPPEL_CREATED,
+                "Rappel",
+                savedRappel.getId(),
+                "Rappel créé pour le client " + client.getNom() + " " + client.getPrenom() +
+                        " prévu le " + dateRappel.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")),
+                userEmail);
+
+        return savedRappel;
     }
+
     public Rappel getById(Long id) {
         return rappelRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Rappel non trouvé avec l'ID: " + id));
@@ -62,7 +79,21 @@ public class RappelService {
                 .orElseThrow(() -> new RuntimeException("Rappel non trouvé"));
 
         rappel.setCompleted(true);
-        return rappelRepository.save(rappel);
+        Rappel savedRappel = rappelRepository.save(rappel);
+
+        // Récupérer l'utilisateur pour l'audit
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+
+        // Audit du rappel complété
+        auditService.auditEvent(AuditType.RAPPEL_COMPLETED,
+                "Rappel",
+                savedRappel.getId(),
+                "Rappel marqué comme terminé pour le client " + rappel.getClient().getNom() + " " +
+                        rappel.getClient().getPrenom(),
+                userEmail);
+
+        return savedRappel;
     }
 
     public long countTodayRappels(User user) {

@@ -1,15 +1,14 @@
 package com.example.projetpfe.service.Impl;
 
 import com.example.projetpfe.dto.ClientDto;
-import com.example.projetpfe.entity.Branche;
-import com.example.projetpfe.entity.Client;
-import com.example.projetpfe.entity.ClientStatus;
-import com.example.projetpfe.entity.User;
+import com.example.projetpfe.entity.*;
 import com.example.projetpfe.repository.ClientRepository;
 import com.example.projetpfe.repository.RappelRepository;
 import com.example.projetpfe.repository.UserRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,6 +28,8 @@ public class ClientService {
     private RappelRepository rappelRepository;
     private final ClientRepository clientRepository;
     private final UserRepository userRepository;
+    @Autowired
+    private AuditService auditService;
 
     @Autowired
     public ClientService(ClientRepository clientRepository, UserRepository userRepository) {
@@ -56,6 +57,9 @@ public class ClientService {
 
         User user = userRepository.findByEmail(userEmail);
         System.out.println("DEBUG: User récupéré = " + user.getName());
+
+        // Conserver l'état avant modification pour l'audit
+        ClientStatus oldStatus = client.getStatus();
 
         // Mise à jour du statut
         if (dto.getStatus() != null) {
@@ -89,6 +93,22 @@ public class ClientService {
 
         Client savedClient = clientRepository.save(client);
         System.out.println("DEBUG: Client sauvegardé, ID: " + savedClient.getId());
+
+        // Audit de la modification
+        auditService.auditEvent(AuditType.CLIENT_QUESTIONNAIRE_UPDATED,
+                "Client",
+                savedClient.getId(),
+                "Questionnaire modifié pour client: " + savedClient.getNom() + " " + savedClient.getPrenom(),
+                userEmail);
+
+        // Si le statut a changé, ajouter une entrée d'audit spécifique
+        if (dto.getStatus() != null && oldStatus != dto.getStatus()) {
+            auditService.auditEvent(AuditType.CLIENT_STATUS_CHANGE,
+                    "Client",
+                    savedClient.getId(),
+                    "Statut modifié: " + oldStatus + " -> " + dto.getStatus(),
+                    userEmail);
+        }
         return savedClient;
     }
 
@@ -147,14 +167,24 @@ public class ClientService {
         client.setCreatedBy(user);
         client.setUpdatedBy(user);
 
-        return clientRepository.save(client);
+        Client savedClient = clientRepository.save(client);
+
+        // Audit de la création du client
+        auditService.auditEvent(AuditType.CLIENT_CREATED,
+                "Client",
+                savedClient.getId(),
+                "Client créé: " + savedClient.getNom() + " " + savedClient.getPrenom(),
+                userEmail);
+
+        return savedClient;
     }
 
     @Transactional
     public Client updateStatus(Long clientId, ClientStatus status,String notes, String userEmail) {
         Client client = getById(clientId);
         User user = userRepository.findByEmail(userEmail);
-
+        // Statut précédent pour l'audit
+        ClientStatus oldStatus = client.getStatus();
         client.setStatus(status);
         client.setUpdatedBy(user);
         client.setNotes(notes);
@@ -165,7 +195,16 @@ public class ClientService {
             rappelRepository.completeAllRappelsForClient(clientId);
         }
 
-        return clientRepository.save(client);
+        Client savedClient = clientRepository.save(client);
+
+        // Audit du changement de statut
+        auditService.auditEvent(AuditType.CLIENT_STATUS_CHANGE,
+                "Client",
+                client.getId(),
+                "Statut modifié: " + oldStatus + " -> " + status + (notes != null && !notes.isEmpty() ? " (Notes: " + notes + ")" : ""),
+                userEmail);
+
+        return savedClient;
     }
     @Transactional
     public Client assignToUser(Long clientId, Long userId) {
@@ -173,11 +212,34 @@ public class ClientService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
+        // Conserver l'utilisateur précédent pour l'audit
+        User previousUser = client.getAssignedUser();
+        boolean isReassignment = previousUser != null;
         client.setAssignedUser(user);
         client.setUpdatedBy(user);
         client.setUpdatedAt(LocalDateTime.now());
 
-        return clientRepository.save(client);
+        Client savedClient = clientRepository.save(client);
+
+        // Audit de l'assignation
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String adminEmail = auth.getName();
+
+        if (isReassignment) {
+            auditService.auditEvent(AuditType.CLIENT_REASSIGNED,
+                    "Client",
+                    client.getId(),
+                    "Client réassigné de " + previousUser.getName() + " à " + user.getName(),
+                    adminEmail);
+        } else {
+            auditService.auditEvent(AuditType.CLIENT_ASSIGNED,
+                    "Client",
+                    client.getId(),
+                    "Client assigné à " + user.getName(),
+                    adminEmail);
+        }
+
+        return savedClient;
     }
 
     @Transactional
@@ -206,7 +268,23 @@ public class ClientService {
         // Marquer tous les rappels associés à ce client comme complétés
         rappelRepository.completeAllRappelsForClient(client.getId());
 
-        return clientRepository.save(client);
+        Client savedClient = clientRepository.save(client);
+
+        // Audit du questionnaire complété
+        auditService.auditEvent(AuditType.CLIENT_QUESTIONNAIRE_COMPLETED,
+                "Client",
+                client.getId(),
+                "Questionnaire complété pour client: " + client.getNom() + " " + client.getPrenom(),
+                userEmail);
+
+        // Audit du changement de statut
+        auditService.auditEvent(AuditType.CLIENT_STATUS_CHANGE,
+                "Client",
+                client.getId(),
+                "Statut modifié à CONTACTE suite au questionnaire",
+                userEmail);
+
+        return savedClient;
     }
 
     private void updateClientFromDto(Client client, ClientDto dto) {
@@ -369,6 +447,15 @@ public class ClientService {
                 clientRepository.save(client);
                 importedCount++;
             }
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = auth.getName();
+
+            // Audit de l'importation
+            auditService.auditEvent(AuditType.EXCEL_IMPORT,
+                    "System",
+                    null,
+                    "Importation Excel: " + importedCount + " clients importés, " + skippedCount + " ignorés",
+                    userEmail);
         }
         return new ImportResult(importedCount, skippedCount, skippedCins);
     }
@@ -433,11 +520,25 @@ public class ClientService {
     public void deleteClient(Long id) {
         Client client = getById(id);
 
+        // Récupérer les informations pour l'audit avant la suppression
+        String clientName = client.getNom() + " " + client.getPrenom();
+        String clientCin = client.getCin();
+
         // D'abord supprimer les rappels associés au client (pour éviter les violations de contraintes FK)
         rappelRepository.deleteByClient(client);
 
         // Supprimer le client
         clientRepository.delete(client);
+
+        // Audit de la suppression
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+
+        auditService.auditEvent(AuditType.CLIENT_DELETED,
+                "Client",
+                id,
+                "Client supprimé: " + clientName + " (CIN: " + (clientCin != null ? clientCin : "N/A") + ")",
+                userEmail);
     }
 
 }

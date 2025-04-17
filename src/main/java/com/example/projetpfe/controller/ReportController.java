@@ -273,4 +273,23 @@ public class ReportController {
 
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
     }
+
+    @GetMapping("/api/data/agent-performance")
+    @ResponseBody
+    public Map<String, Object> getAgentPerformanceData(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        // Définir des dates par défaut si non fournies
+        LocalDateTime start = startDate != null ?
+                startDate.atStartOfDay() : LocalDateTime.now().minusMonths(1);
+        LocalDateTime end = endDate != null ?
+                endDate.atTime(LocalTime.MAX) : LocalDateTime.now();
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("agentPerformance", reportService.getAgentPerformanceStats(start, end));
+        data.put("dailyActivity", reportService.getDailyAgentActivityStats(start, end));
+
+        return data;
+    }
 }
