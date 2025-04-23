@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -27,4 +29,15 @@ public class UserDto
     private String password;
     private LocalDateTime createdAt;
     private Boolean enabled;
+
+    // Région unique pour les utilisateurs standard
+    private Long regionId;
+    private String regionName;
+
+    // Liste de régions pour les administrateurs régionaux
+    private List<Long> regionIds = new ArrayList<>();
+
+    // ID de l'administrateur qui a créé cet utilisateur
+    private Long createdByAdminId;
+    private String createdByAdminName;
 }

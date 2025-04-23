@@ -22,6 +22,16 @@ public enum AuditType {
     USER_CREATED("Création d'utilisateur"),
     USER_UPDATED("Mise à jour d'utilisateur"),
     USER_DELETED("Suppression d'utilisateur"),
+    ADMIN_CREATED("Création d'administrateur régional"),
+    ADMIN_UPDATED("Mise à jour d'administrateur régional"),
+    ADMIN_DELETED("Suppression d'administrateur régional"),
+    ADMIN_ASSIGNED_REGION("Association admin-région"),
+    ADMIN_REMOVED_REGION("Dissociation admin-région"),
+
+    // Actions sur les régions
+    REGION_CREATED("Création de région"),
+    REGION_UPDATED("Mise à jour de région"),
+    REGION_DELETED("Suppression de région"),
 
     // Actions de rappel
     RAPPEL_CREATED("Rappel créé"),

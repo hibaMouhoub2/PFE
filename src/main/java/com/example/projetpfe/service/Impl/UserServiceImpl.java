@@ -2,8 +2,10 @@ package com.example.projetpfe.service.Impl;
 
 import com.example.projetpfe.dto.UserDto;
 import com.example.projetpfe.entity.AuditType;
+import com.example.projetpfe.entity.Region;
 import com.example.projetpfe.entity.Role;
 import com.example.projetpfe.entity.User;
+import com.example.projetpfe.repository.RegionRepository;
 import com.example.projetpfe.repository.RoleRepository;
 import com.example.projetpfe.repository.UserRepository;
 import com.example.projetpfe.service.UserService;
@@ -12,13 +14,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -27,7 +29,10 @@ public class UserServiceImpl implements UserService {
     private RoleRepository roleRepository;
     private PasswordEncoder passwordEncoder;
 
-    boolean passwordChanged = false;
+    @Autowired
+    private RegionRepository regionRepository;
+
+    private boolean passwordChanged = false;
 
     @Autowired
     private AuditService auditService;
@@ -45,32 +50,46 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'ID: " + id));
     }
 
+    /**
+     * Méthode générique pour maintenir la compatibilité
+     */
     @Override
+    @Transactional
     public void saveUser(UserDto userDto, String roleName) {
         User user = new User();
         user.setName(userDto.getFirstName() + " " + userDto.getLastName());
         user.setEmail(userDto.getEmail());
         user.setEnabled(true);
         user.setCreatedAt(LocalDateTime.now());
-        //encrypt the password once we integrate spring security
-        //user.setPassword(userDto.getPassword());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+
         Role role;
-        if ("ADMIN".equals(roleName)) {
-            role = roleRepository.findByName("ROLE_ADMIN");
-            if(role == null){
-                role = new Role();
-                role.setName("ROLE_ADMIN");
-                role = roleRepository.save(role);
-            }
-        } else {
-            role = roleRepository.findByName("ROLE_USER");
-            if(role == null){
-                role = checkUserRoleExist();
-            }
+        switch(roleName) {
+            case "SUPER_ADMIN":
+                role = checkRoleExist("ROLE_SUPER_ADMIN");
+                break;
+            case "ADMIN":
+                role = checkRoleExist("ROLE_ADMIN");
+                break;
+            default:
+                role = checkRoleExist("ROLE_USER");
         }
 
         user.setRoles(Arrays.asList(role));
+
+        // Si un ID de région est spécifié et que ce n'est pas un admin
+        if (userDto.getRegionId() != null && !roleName.equals("ADMIN") && !roleName.equals("SUPER_ADMIN")) {
+            Region region = regionRepository.findById(userDto.getRegionId())
+                    .orElseThrow(() -> new RuntimeException("Région non trouvée avec l'ID: " + userDto.getRegionId()));
+            user.setRegion(region);
+        }
+
+        // Si des IDs de régions sont spécifiés et que c'est un admin
+        if (!userDto.getRegionIds().isEmpty() && roleName.equals("ADMIN")) {
+            List<Region> regions = regionRepository.findAllById(userDto.getRegionIds());
+            user.setRegions(regions);
+        }
+
         User savedUser = userRepository.save(user);
 
         // Récupérer l'admin qui crée l'utilisateur
@@ -78,16 +97,154 @@ public class UserServiceImpl implements UserService {
         String adminEmail = auth.getName();
 
         // Audit de la création d'utilisateur
-        auditService.auditEvent(AuditType.USER_CREATED,
+        AuditType auditType;
+        if (roleName.equals("SUPER_ADMIN")) {
+            auditType = AuditType.ADMIN_CREATED;
+        } else if (roleName.equals("ADMIN")) {
+            auditType = AuditType.ADMIN_CREATED;
+        } else {
+            auditType = AuditType.USER_CREATED;
+        }
+
+        auditService.auditEvent(auditType,
                 "User",
                 savedUser.getId(),
                 "Utilisateur créé: " + savedUser.getName() + " (" + savedUser.getEmail() + ") avec rôle " + roleName,
                 adminEmail);
     }
-    private Role checkUserRoleExist() {
-        Role role = new Role();
-        role.setName("ROLE_USER");
-        return roleRepository.save(role);
+
+    /**
+     * Création d'un utilisateur par un admin régional
+     */
+    @Override
+    @Transactional
+    public void saveUserByAdmin(UserDto userDto, String adminEmail) {
+        User admin = userRepository.findByEmail(adminEmail);
+        if (admin == null) {
+            throw new RuntimeException("Administrateur non trouvé");
+        }
+
+        if (!isRegionalAdmin(admin)) {
+            throw new RuntimeException("Seuls les administrateurs régionaux peuvent créer des utilisateurs");
+        }
+
+        // Créer l'utilisateur
+        User user = new User();
+        user.setName(userDto.getFirstName() + " " + userDto.getLastName());
+        user.setEmail(userDto.getEmail());
+        user.setEnabled(true);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+
+        // Attribuer le rôle USER
+        Role userRole = checkRoleExist("ROLE_USER");
+        user.setRoles(Arrays.asList(userRole));
+
+        // Si l'admin a une région par défaut, l'attribuer à l'utilisateur
+        if (!admin.getRegions().isEmpty()) {
+            user.setRegion(admin.getRegions().get(0));
+        }
+
+        // Définir l'admin comme créateur
+        user.setCreatedByAdmin(admin);
+
+        User savedUser = userRepository.save(user);
+
+        // Audit
+        auditService.auditEvent(
+                AuditType.USER_CREATED,
+                "User",
+                savedUser.getId(),
+                "Utilisateur créé: " + savedUser.getName() + " (" + savedUser.getEmail() + ") par l'admin " + admin.getName(),
+                adminEmail
+        );
+    }
+
+    /**
+     * Création d'un admin régional par un super admin
+     */
+    @Override
+    @Transactional
+    public void saveAdminBySuper(UserDto adminDto, List<Long> regionIds) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User superAdmin = userRepository.findByEmail(auth.getName());
+
+        if (superAdmin == null || !isSuperAdmin(superAdmin)) {
+            throw new RuntimeException("Seuls les super administrateurs peuvent créer des admins régionaux");
+        }
+
+        // Créer l'admin
+        User admin = new User();
+        admin.setName(adminDto.getFirstName() + " " + adminDto.getLastName());
+        admin.setEmail(adminDto.getEmail());
+        admin.setEnabled(true);
+        admin.setCreatedAt(LocalDateTime.now());
+        admin.setPassword(passwordEncoder.encode(adminDto.getPassword()));
+
+        // Attribuer le rôle ADMIN
+        Role adminRole = checkRoleExist("ROLE_ADMIN");
+        admin.setRoles(Arrays.asList(adminRole));
+
+        // Définir le super admin comme créateur
+        admin.setCreatedByAdmin(superAdmin);
+
+        // Ajouter les régions
+        if (regionIds != null && !regionIds.isEmpty()) {
+            List<Region> regions = regionRepository.findAllById(regionIds);
+            admin.setRegions(regions);
+        }
+
+        User savedAdmin = userRepository.save(admin);
+
+        // Audit
+        auditService.auditEvent(
+                AuditType.ADMIN_CREATED,
+                "User",
+                savedAdmin.getId(),
+                "Admin régional créé: " + savedAdmin.getName() + " (" + savedAdmin.getEmail() + ") par le super admin " + superAdmin.getName(),
+                auth.getName()
+        );
+    }
+
+    /**
+     * Création d'un super admin (uniquement pour l'initialisation ou par un autre super admin)
+     */
+    @Override
+    @Transactional
+    public void saveSuperAdmin(UserDto superAdminDto) {
+        // Vérifier si l'action est réalisée par un super admin existant
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && !auth.getName().equals("anonymousUser")) {
+            User currentUser = userRepository.findByEmail(auth.getName());
+            if (currentUser != null && !isSuperAdmin(currentUser)) {
+                throw new RuntimeException("Seul un super administrateur peut créer un autre super administrateur");
+            }
+        }
+
+        // Créer le super admin
+        User superAdmin = new User();
+        superAdmin.setName(superAdminDto.getFirstName() + " " + superAdminDto.getLastName());
+        superAdmin.setEmail(superAdminDto.getEmail());
+        superAdmin.setEnabled(true);
+        superAdmin.setCreatedAt(LocalDateTime.now());
+        superAdmin.setPassword(passwordEncoder.encode(superAdminDto.getPassword()));
+
+        // Attribuer le rôle SUPER_ADMIN
+        Role superAdminRole = checkRoleExist("ROLE_SUPER_ADMIN");
+        superAdmin.setRoles(Arrays.asList(superAdminRole));
+
+        User savedSuperAdmin = userRepository.save(superAdmin);
+
+        // Audit
+        String creatorEmail = auth != null && !auth.getName().equals("anonymousUser") ? auth.getName() : "System";
+
+        auditService.auditEvent(
+                AuditType.ADMIN_CREATED,
+                "User",
+                savedSuperAdmin.getId(),
+                "Super Admin créé: " + savedSuperAdmin.getName() + " (" + savedSuperAdmin.getEmail() + ")",
+                creatorEmail
+        );
     }
 
     @Override
@@ -98,39 +255,97 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> findAllUsers() {
         List<User> users = userRepository.findAll();
-        return users.stream().map((user) -> convertEntityToDto(user))
+        return users.stream().map(this::convertEntityToDto)
                 .collect(Collectors.toList());
     }
 
-    private UserDto convertEntityToDto(User user){
+    @Override
+    public List<UserDto> findUsersByRegion(Long regionId) {
+        Region region = regionRepository.findById(regionId)
+                .orElseThrow(() -> new RuntimeException("Région non trouvée avec l'ID: " + regionId));
+
+        List<User> users = userRepository.findByRegion(region);
+        return users.stream().map(this::convertEntityToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserDto> findAllRegionalAdmins() {
+        List<User> admins = userRepository.findByRolesName("ROLE_ADMIN");
+        return admins.stream().map(this::convertEntityToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserDto> findAllSuperAdmins() {
+        List<User> superAdmins = userRepository.findByRolesName("ROLE_SUPER_ADMIN");
+        return superAdmins.stream().map(this::convertEntityToDto)
+                .collect(Collectors.toList());
+    }
+
+    private UserDto convertEntityToDto(User user) {
         UserDto userDto = new UserDto();
         String[] name = user.getName().split(" ");
-        userDto.setFirstName(name[0]);
-        userDto.setLastName(name[1]);
+        userDto.setFirstName(name.length > 0 ? name[0] : "");
+        userDto.setLastName(name.length > 1 ? name[1] : "");
         userDto.setEmail(user.getEmail());
         userDto.setCreatedAt(user.getCreatedAt());
         userDto.setEnabled(user.getEnabled());
         userDto.setId(user.getId());
+
+        // Ajouter les informations de région
+        if (user.getRegion() != null) {
+            userDto.setRegionId(user.getRegion().getId());
+            userDto.setRegionName(user.getRegion().getName());
+        }
+
+        // Ajouter les informations d'administrateur créateur
+        if (user.getCreatedByAdmin() != null) {
+            userDto.setCreatedByAdminId(user.getCreatedByAdmin().getId());
+            userDto.setCreatedByAdminName(user.getCreatedByAdmin().getName());
+        }
+
+        // Pour les administrateurs, ajouter les régions gérées
+        if (isRegionalAdmin(user) && user.getRegions() != null) {
+            userDto.setRegionIds(user.getRegions().stream()
+                    .map(Region::getId)
+                    .collect(Collectors.toList()));
+        }
+
         return userDto;
     }
 
-    //private Role checkRoleExist() {
-      //  Role role = new Role();
-        //role.setName("ROLE_ADMIN");
-        //return roleRepository.save(role);
-    //}
+    private Role checkRoleExist(String roleName) {
+        Role role = roleRepository.findByName(roleName);
+        if (role == null) {
+            role = new Role();
+            role.setName(roleName);
+            role = roleRepository.save(role);
+        }
+        return role;
+    }
+
     @Override
+    @Transactional
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'ID: " + id));
 
-        // Vérifier que l'utilisateur n'est pas l'admin par défaut
-//        if ("admin@example.com".equals(user.getEmail())) {
-//            throw new RuntimeException("Impossible de supprimer l'administrateur par défaut");
-//        }
+        // Vérifier le rôle de l'utilisateur pour déterminer le type d'audit
+        boolean isSuperAdmin = isSuperAdmin(user);
+        boolean isAdmin = isRegionalAdmin(user);
+
+        // Vérifier si l'utilisateur a des utilisateurs créés
+        if (!user.getCreatedUsers().isEmpty()) {
+            throw new RuntimeException("Impossible de supprimer cet utilisateur car il a créé d'autres utilisateurs");
+        }
 
         // Supprimer les associations avec les rôles avant de supprimer l'utilisateur
         user.getRoles().clear();
+
+        // Supprimer les associations avec les régions
+        user.getRegions().clear();
+
         userRepository.save(user); // Enregistrer les changements
 
         // Maintenant supprimer l'utilisateur
@@ -141,7 +356,16 @@ public class UserServiceImpl implements UserService {
         String adminEmail = auth.getName();
 
         // Audit de la suppression d'utilisateur
-        auditService.auditEvent(AuditType.USER_DELETED,
+        AuditType auditType;
+        if (isSuperAdmin) {
+            auditType = AuditType.ADMIN_DELETED;
+        } else if (isAdmin) {
+            auditType = AuditType.ADMIN_DELETED;
+        } else {
+            auditType = AuditType.USER_DELETED;
+        }
+
+        auditService.auditEvent(auditType,
                 "User",
                 id,
                 "Utilisateur supprimé: " + user.getName() + " (" + user.getEmail() + ")",
@@ -156,6 +380,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void updateUser(Long id, UserDto userDto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'ID: " + id));
@@ -164,18 +389,29 @@ public class UserServiceImpl implements UserService {
         String oldName = user.getName();
         String oldEmail = user.getEmail();
         Boolean oldEnabled = user.getEnabled();
+        Region oldRegion = user.getRegion();
+        List<Region> oldRegions = new ArrayList<>(user.getRegions());
 
         //Mise à jour des informations
         user.setName(userDto.getFirstName() + " " + userDto.getLastName());
         user.setEmail(userDto.getEmail());
         user.setEnabled(userDto.getEnabled());
 
+        // Mise à jour de la région pour les utilisateurs normaux
+        if (userDto.getRegionId() != null && !isRegionalAdmin(user) && !isSuperAdmin(user)) {
+            Region region = regionRepository.findById(userDto.getRegionId())
+                    .orElseThrow(() -> new RuntimeException("Région non trouvée avec l'ID: " + userDto.getRegionId()));
+            user.setRegion(region);
+        }
+
         // Ne mettre à jour le mot de passe que s'il est fourni
         if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+            passwordChanged = true;
         }
 
         userRepository.save(user);
+
         // Récupérer l'admin qui modifie l'utilisateur
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String adminEmail = auth.getName();
@@ -184,10 +420,6 @@ public class UserServiceImpl implements UserService {
         StringBuilder changes = new StringBuilder();
         if (!oldName.equals(user.getName())) {
             changes.append("Nom modifié: ").append(oldName).append(" -> ").append(user.getName()).append(", ");
-        }
-        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-            passwordChanged = true;
         }
         if (!oldEmail.equals(user.getEmail())) {
             changes.append("Email modifié: ").append(oldEmail).append(" -> ").append(user.getEmail()).append(", ");
@@ -199,6 +431,11 @@ public class UserServiceImpl implements UserService {
         if (passwordChanged) {
             changes.append("Mot de passe modifié, ");
         }
+        if (oldRegion != user.getRegion()) {
+            String oldRegionName = oldRegion != null ? oldRegion.getName() : "aucune";
+            String newRegionName = user.getRegion() != null ? user.getRegion().getName() : "aucune";
+            changes.append("Région modifiée: ").append(oldRegionName).append(" -> ").append(newRegionName).append(", ");
+        }
 
         // Supprimer la virgule finale s'il y a des changements
         String changesStr = changes.toString();
@@ -206,12 +443,109 @@ public class UserServiceImpl implements UserService {
             changesStr = changesStr.substring(0, changesStr.length() - 2);
         }
 
+        // Déterminer le type d'audit en fonction du rôle de l'utilisateur
+        AuditType auditType;
+        if (isSuperAdmin(user)) {
+            auditType = AuditType.ADMIN_UPDATED;
+        } else if (isRegionalAdmin(user)) {
+            auditType = AuditType.ADMIN_UPDATED;
+        } else {
+            auditType = AuditType.USER_UPDATED;
+        }
+
         // Audit de la mise à jour d'utilisateur
-        auditService.auditEvent(AuditType.USER_UPDATED,
+        auditService.auditEvent(auditType,
                 "User",
                 id,
                 "Utilisateur modifié: " + user.getName() +
                         (changesStr.isEmpty() ? "" : " (" + changesStr + ")"),
                 adminEmail);
+    }
+
+    @Override
+    @Transactional
+    public void assignRegionToAdmin(Long adminId, Long regionId) {
+        User admin = userRepository.findById(adminId)
+                .orElseThrow(() -> new RuntimeException("Administrateur non trouvé avec l'ID: " + adminId));
+
+        if (!isRegionalAdmin(admin)) {
+            throw new RuntimeException("L'utilisateur n'est pas un administrateur régional");
+        }
+
+        Region region = regionRepository.findById(regionId)
+                .orElseThrow(() -> new RuntimeException("Région non trouvée avec l'ID: " + regionId));
+
+        // Vérifier si la région est déjà associée à l'admin
+        if (admin.getRegions().contains(region)) {
+            throw new RuntimeException("Cette région est déjà associée à cet administrateur");
+        }
+
+        // Ajouter la région à l'administrateur
+        admin.getRegions().add(region);
+        userRepository.save(admin);
+
+        // Audit
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+
+        auditService.auditEvent(
+                AuditType.ADMIN_ASSIGNED_REGION,
+                "User",
+                admin.getId(),
+                "Région " + region.getName() + " assignée à l'administrateur " + admin.getName(),
+                userEmail
+        );
+    }
+
+    @Override
+    @Transactional
+    public void removeRegionFromAdmin(Long adminId, Long regionId) {
+        User admin = userRepository.findById(adminId)
+                .orElseThrow(() -> new RuntimeException("Administrateur non trouvé avec l'ID: " + adminId));
+
+        if (!isRegionalAdmin(admin)) {
+            throw new RuntimeException("L'utilisateur n'est pas un administrateur régional");
+        }
+
+        Region region = regionRepository.findById(regionId)
+                .orElseThrow(() -> new RuntimeException("Région non trouvée avec l'ID: " + regionId));
+
+        // Vérifier si la région est associée à l'admin
+        if (!admin.getRegions().contains(region)) {
+            throw new RuntimeException("Cette région n'est pas associée à cet administrateur");
+        }
+
+        // Vérifier si c'est la seule région de l'admin
+        if (admin.getRegions().size() == 1) {
+            throw new RuntimeException("Impossible de retirer la seule région d'un administrateur");
+        }
+
+        // Retirer la région de l'administrateur
+        admin.getRegions().remove(region);
+        userRepository.save(admin);
+
+        // Audit
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+
+        auditService.auditEvent(
+                AuditType.ADMIN_REMOVED_REGION,
+                "User",
+                admin.getId(),
+                "Région " + region.getName() + " retirée de l'administrateur " + admin.getName(),
+                userEmail
+        );
+    }
+
+    @Override
+    public boolean isSuperAdmin(User user) {
+        return user.getRoles().stream()
+                .anyMatch(role -> role.getName().equals("ROLE_SUPER_ADMIN"));
+    }
+
+    @Override
+    public boolean isRegionalAdmin(User user) {
+        return user.getRoles().stream()
+                .anyMatch(role -> role.getName().equals("ROLE_ADMIN"));
     }
 }

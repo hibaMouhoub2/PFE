@@ -33,11 +33,32 @@ public class User
     @Column(nullable=false)
     private String password;
 
-
     private LocalDateTime createdAt;
 
-
     private Boolean enabled;
+
+    // Pour les administrateurs régionaux, ils peuvent être responsables de plusieurs régions
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "admin_regions",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "region_id")
+    )
+    private List<Region> regions = new ArrayList<>();
+
+    // Pour les utilisateurs normaux, ils appartiennent à une seule région
+    @ManyToOne
+    @JoinColumn(name = "region_id")
+    private Region region;
+
+    // L'administrateur qui a créé cet utilisateur
+    @ManyToOne
+    @JoinColumn(name = "created_by_admin_id")
+    private User createdByAdmin;
+
+    // Les utilisateurs créés par cet administrateur
+    @OneToMany(mappedBy = "createdByAdmin")
+    private List<User> createdUsers = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.EAGER, cascade=CascadeType.ALL)
     @JoinTable(
@@ -47,4 +68,3 @@ public class User
     private List<Role> roles = new ArrayList<>();
 
 }
-
