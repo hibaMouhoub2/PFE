@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -22,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,11 +55,13 @@ public class AuthController {
     public String showRegistrationForm(Model model){
         UserDto user = new UserDto();
         model.addAttribute("user", user);
-        // Récupérer les régions gérées par l'admin connecté
-        Authentication auth = Authentication.class.cast(model.getAttribute("authentication"));
+
+        // Récupérer l'authentification correctement
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User admin = userService.findByEmail(auth.getName());
         List<Region> adminRegions = admin.getRegions();
         model.addAttribute("regions", adminRegions);
+
         return "register";
     }
 
@@ -113,7 +117,7 @@ public class AuthController {
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public String registerAdmin(@Valid @ModelAttribute("admin") UserDto admin,
                                 BindingResult result,
-                                @RequestParam List<Long> selectedRegions,
+                                @RequestParam Long selectedRegion,
                                 Model model) {
 
         User existing = userService.findByEmail(admin.getEmail());
@@ -121,7 +125,7 @@ public class AuthController {
             result.rejectValue("email", null, "Il existe déjà un compte avec cet email");
         }
 
-        if (selectedRegions == null || selectedRegions.isEmpty()) {
+        if (selectedRegion == null ) {
             model.addAttribute("regionError", "Veuillez sélectionner au moins une région");
             model.addAttribute("regions", regionService.findAll());
             return "register-admin";
@@ -131,9 +135,9 @@ public class AuthController {
             model.addAttribute("regions", regionService.findAll());
             return "register-admin";
         }
-
+        List<Long> regionIds = Collections.singletonList(selectedRegion);
         // Enregistrer l'admin régional
-        userService.saveAdminBySuper(admin, selectedRegions);
+        userService.saveAdminBySuper(admin, regionIds);
         return "redirect:/users";
     }
 
@@ -169,15 +173,24 @@ public class AuthController {
             // Le super admin voit tous les utilisateurs
             List<UserDto> users = userService.findAllUsers();
             model.addAttribute("users", users);
-            model.addAttribute("isSuperAdmin", true);
         } else {
-            // L'admin régional ne voit que ses utilisateurs
+            // L'admin régional voit ses utilisateurs créés
             User admin = userService.findByEmail(authentication.getName());
-            List<UserDto> users = admin.getRegions().stream()
-                    .flatMap(region -> userService.findUsersByRegion(region.getId()).stream())
+            List<User> createdUsers = admin.getCreatedUsers();
+            List<UserDto> userDtos = createdUsers.stream()
+                    .map(user -> {
+                        UserDto dto = new UserDto();
+                        String[] name = user.getName().split(" ");
+                        dto.setFirstName(name.length > 0 ? name[0] : "");
+                        dto.setLastName(name.length > 1 ? name[1] : "");
+                        dto.setEmail(user.getEmail());
+                        dto.setCreatedAt(user.getCreatedAt());
+                        dto.setEnabled(user.getEnabled());
+                        dto.setId(user.getId());
+                        return dto;
+                    })
                     .collect(Collectors.toList());
-            model.addAttribute("users", users);
-            model.addAttribute("isSuperAdmin", false);
+            model.addAttribute("users", userDtos);
         }
 
         return "users";

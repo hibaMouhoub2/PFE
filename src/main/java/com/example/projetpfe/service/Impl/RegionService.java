@@ -141,20 +141,11 @@ public class RegionService {
      */
     @Transactional
     public void initializeRegions() {
-        // Liste des régions à initialiser
+        // Liste des régions à initialiser avec les nouveaux noms
         String[][] regionsData = {
-                {"Casablanca-Settat", "CASA_SETTAT"},
-                {"Rabat-Salé-Kénitra", "RABAT_SALE"},
-                {"Fès-Meknès", "FES_MEKNES"},
-                {"Tanger-Tétouan-Al Hoceima", "TANGER_TETOUAN"},
-                {"Marrakech-Safi", "MARRAKECH_SAFI"},
-                {"Souss-Massa", "SOUSS_MASSA"},
-                {"Oriental", "ORIENTAL"},
-                {"Béni Mellal-Khénifra", "BENI_MELLAL"},
-                {"Drâa-Tafilalet", "DRAA_TAFILALET"},
-                {"Guelmim-Oued Noun", "GUELMIM"},
-                {"Laâyoune-Sakia El Hamra", "LAAYOUNE"},
-                {"Dakhla-Oued Ed-Dahab", "DAKHLA"}
+                {"SUP FIDAA SIDI BELYOUT", "SUP_FIDAA_SIDI_BELYOUT"},
+                {"SUP BERNOUSSI ZENATA", "SUP_BERNOUSSI_ZENATA"},
+                {"SUP BENMSIK SIDI OTHMANE", "SUP_BENMSIK_SIDI_OTHMANE"}
         };
 
         for (String[] regionData : regionsData) {

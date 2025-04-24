@@ -43,12 +43,13 @@ public class SpringSecurity {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .authorizeHttpRequests((authorize) ->
-                        authorize.requestMatchers("/register/**").permitAll()
+                        authorize.requestMatchers("/register/**").hasAnyRole("ADMIN","SUPER_ADMIN")
                                 .requestMatchers("/index").permitAll()
                                 .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                                 .requestMatchers("/login-success").permitAll()
                                 .requestMatchers("/users-home").permitAll()
                                 .requestMatchers("/users").hasAnyRole("ADMIN","SUPER_ADMIN")
+                                .requestMatchers("/register-admin/**").hasAnyRole("SUPER_ADMIN")
                                 .requestMatchers("/clients/**").hasRole("USER")
                                 .requestMatchers("/rappels/{id}/complete").hasAnyRole("USER", "ADMIN","SUPER_ADMIN")
                                 .requestMatchers("/delete-user/**").hasAnyRole("ADMIN", "SUPER_ADMIN")

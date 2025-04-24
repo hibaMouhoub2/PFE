@@ -140,7 +140,7 @@ public class UserServiceImpl implements UserService {
         Role userRole = checkRoleExist("ROLE_USER");
         user.setRoles(Arrays.asList(userRole));
 
-        // Si l'admin a une région par défaut, l'attribuer à l'utilisateur
+        // Associer l'utilisateur à la même région que l'admin
         if (!admin.getRegions().isEmpty()) {
             user.setRegion(admin.getRegions().get(0));
         }
@@ -148,14 +148,14 @@ public class UserServiceImpl implements UserService {
         // Définir l'admin comme créateur
         user.setCreatedByAdmin(admin);
 
-        User savedUser = userRepository.save(user);
+        userRepository.save(user);
 
         // Audit
         auditService.auditEvent(
                 AuditType.USER_CREATED,
                 "User",
-                savedUser.getId(),
-                "Utilisateur créé: " + savedUser.getName() + " (" + savedUser.getEmail() + ") par l'admin " + admin.getName(),
+                user.getId(),
+                "Utilisateur créé: " + user.getName() + " (" + user.getEmail() + ") par l'admin " + admin.getName(),
                 adminEmail
         );
     }

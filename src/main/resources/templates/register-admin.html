@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATTAWFIQ MICRO-FINANCE - Ajout Directeur Régional</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+        crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #FF8C00;
+      --secondary-color: #222;
+      --accent-color: #FF6B00;
+      --light-color: #f8f9fa;
+      --dark-color: #111;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f5f5;
+      color: var(--secondary-color);
+      padding-top: 80px;
+    }
+
+    .navbar {
+      background-color: var(--secondary-color) !important;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--primary-color) !important;
+    }
+
+    .nav-link {
+      color: #fff !important;
+      font-weight: 500;
+      margin: 0 10px;
+      position: relative;
+      transition: color 0.3s;
+    }
+
+    .nav-link:hover {
+      color: var(--primary-color) !important;
+    }
+
+    .nav-link.active {
+      color: var(--primary-color) !important;
+    }
+
+    .card {
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, var(--secondary-color) 0%, #333 100%);
+      color: white;
+      padding: 1.5rem;
+      border-bottom: none;
+    }
+
+    .card-body {
+      padding: 2rem;
+    }
+
+    .form-control {
+      border-radius: 8px;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      transition: all 0.3s;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.25rem rgba(255, 140, 0, 0.25);
+    }
+
+    label.form-label {
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 8px;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      padding: 12px 30px;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-color);
+      border-color: var(--accent-color);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(255, 140, 0, 0.2);
+    }
+
+    .alert {
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      border: none;
+      font-weight: 500;
+    }
+
+    .alert-info {
+      background-color: #e3f2fd;
+      color: #0d47a1;
+      border-left: 5px solid #0d47a1;
+    }
+
+    .text-danger {
+      color: #d32f2f !important;
+      font-size: 0.85rem;
+      margin-top: 5px;
+      display: block;
+    }
+
+    .registration-steps {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      max-width: 120px;
+    }
+
+    .step-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .step-title {
+      font-size: 0.85rem;
+      text-align: center;
+      color: #555;
+    }
+
+    .step-line {
+      position: absolute;
+      top: 20px;
+      height: 2px;
+      background-color: #ddd;
+      width: 100%;
+      left: 50%;
+      z-index: -1;
+    }
+
+    .step:first-child .step-line {
+      display: none;
+    }
+
+    .card-footer {
+      background-color: #f8f9fa;
+      border-top: none;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .input-group-text {
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+      color: #777;
+    }
+
+    /* Animation for the form */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animated-form {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+  </style>
+</head>
+<body>
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <div class="container">
+    <a class="navbar-brand" th:href="@{/}">
+      <i class="fas fa-landmark me-2"></i>ATTAWFIQ MICRO-FINANCE
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+          <a class="nav-link" th:href="@{/admin/agenda}">
+            <i class="fas fa-chart-pie me-1"></i>Tableau de bord
+          </a>
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('USER')">
+          <a class="nav-link" th:href="@{/agenda/index}">
+            <i class="fas fa-calendar-alt me-1"></i>Agenda
+          </a>
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+          <a class="nav-link" th:href="@{/admin/clients}">
+            <i class="fas fa-users me-1"></i>Clients
+          </a>
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+          <a class="nav-link" th:href="@{/admin/unassigned-clients}">
+            <i class="fas fa-user-plus me-1"></i>A assigner
+          </a>
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+          <a class="nav-link" th:href="@{/users}">
+            <i class="fas fa-users-cog me-1"></i>Utilisateurs
+          </a>
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+          <a class="nav-link" th:href="@{/admin/reports/questionnaire}">
+            <i class="fas fa-chart-bar me-1"></i>Rapports
+          </a>
+        </li>
+        <li class="nav-item" sec:authorize="isAuthenticated()">
+          <a class="nav-link" th:href="@{/logout}">
+            <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="row col-md-8 offset-md-2">
+    <!--<div th:if="${param.success}" class="alert alert-info">
+        <i class="fas fa-check-circle me-2"></i>Votre compte a été créé avec succès! Vous pouvez maintenant vous connecter.
+    </div> -->
+
+    <div class="card animated-form">
+      <div class="card-header">
+        <h2 class="text-center">Enregistrement d'un directeur régional</h2>
+      </div>
+
+      <!-- <div class="card-body">
+          <div class="registration-steps mb-4">
+              <div class="step">
+                  <div class="step-number">1</div>
+                  <div class="step-title">Informations personnelles</div>
+                  <div class="step-line"></div>
+              </div>
+              <div class="step">
+                  <div class="step-number">2</div>
+                  <div class="step-title">Création du compte</div>
+                  <div class="step-line"></div>
+              </div>
+              <div class="step">
+                  <div class="step-number">3</div>
+                  <div class="step-title">Confirmation</div>
+              </div>
+          </div> -->
+
+      <form method="post" role="form" th:action="@{/register-admin/save}" th:object="${admin}" class="needs-validation">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group mb-3">
+              <label class="form-label">Prénom</label>
+              <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                <input class="form-control"
+                       id="firstName"
+                       name="firstName"
+                       placeholder="Entrez le prénom"
+                       th:field="*{firstName}"
+                       type="text"
+                       required
+                />
+              </div>
+              <p th:errors="*{firstName}" class="text-danger"
+                 th:if="${#fields.hasErrors('firstName')}">
+              </p>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group mb-3">
+              <label class="form-label">Nom</label>
+              <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                <input class="form-control"
+                       id="lastName"
+                       name="lastName"
+                       placeholder="Entrez le nom"
+                       th:field="*{lastName}"
+                       type="text"
+                       required
+                />
+              </div>
+              <p th:errors="*{lastName}" class="text-danger"
+                 th:if="${#fields.hasErrors('lastName')}">
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">Email</label>
+          <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+            <input class="form-control"
+                   id="email"
+                   name="email"
+                   placeholder="Entrez une adresse email"
+                   th:field="*{email}"
+                   type="email"
+                   required
+            />
+          </div>
+          <p th:errors="*{email}" class="text-danger"
+             th:if="${#fields.hasErrors('email')}">
+          </p>
+        </div>
+
+        <div class="form-group mb-4">
+          <label class="form-label">Mot de passe</label>
+          <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+            <input class="form-control"
+                   id="password"
+                   name="password"
+                   placeholder="Créez un mot de passe sécurisé"
+                   th:field="*{password}"
+                   type="password"
+                   required
+            />
+          </div>
+          <p th:errors="*{password}" class="text-danger"
+             th:if="${#fields.hasErrors('password')}">
+          </p>
+          <small class="text-muted">Le mot de passe doit contenir au moins 8 caractères, incluant lettres, chiffres et caractères spéciaux</small>
+        </div>
+        <div class="form-group mb-3">
+          <label class="form-label">Région assignée</label>
+          <select name="selectedRegion" class="form-select" required>
+            <option value="">-- Sélectionner une région --</option>
+            <option th:each="region : ${regions}"
+                    th:value="${region.id}"
+                    th:text="${region.name}">Nom de la région</option>
+          </select>
+        </div>
+
+        <div class="form-group d-grid">
+          <button class="btn btn-primary" type="submit">
+            <i class="fas fa-user-plus me-2"></i>Ajouter
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+</body>
+</html>
