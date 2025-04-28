@@ -548,4 +548,16 @@ public class UserServiceImpl implements UserService {
         return user.getRoles().stream()
                 .anyMatch(role -> role.getName().equals("ROLE_ADMIN"));
     }
+
+    @Override
+    public List<UserDto> findUsersByCreator(Long creatorId) {
+        User creator = userRepository.findById(creatorId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur créateur non trouvé avec l'ID: " + creatorId));
+
+        List<User> users = userRepository.findByCreatedByAdmin(creator);
+        return users.stream()
+                .map(this::convertEntityToDto)
+                .collect(Collectors.toList());
+    }
+
 }

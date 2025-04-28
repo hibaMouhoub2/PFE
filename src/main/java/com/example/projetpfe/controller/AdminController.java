@@ -153,14 +153,15 @@ public class AdminController {
         boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
 
         List<Client> unassignedClients = clientService.findUnassignedClients();
-
+        List<UserDto> users;
         // Filtrer manuellement si ce n'est pas un super admin
         if (!isSuperAdmin) {
+            users = userService.findAllUsers();
             List<String> regionNames = currentUser.getRegions().stream()
                     .map(Region::getName)
                     .collect(Collectors.toList());
 
-            System.out.println("DEBUG: Régions de l'utilisateur: " + regionNames);
+
 
             // Filtrer par correspondance partielle
             unassignedClients = unassignedClients.stream()
@@ -174,9 +175,11 @@ public class AdminController {
                                         regionName.contains(nmreg));
                     })
                     .collect(Collectors.toList());
+        }else{
+            users = userService.findUsersByCreator(currentUser.getId());
         }
 
-        List<UserDto> users = userService.findAllUsers();
+
         model.addAttribute("clients", unassignedClients);
         model.addAttribute("users", users);
 
@@ -222,6 +225,21 @@ public class AdminController {
                                @RequestParam Long userId,
                                RedirectAttributes redirectAttributes) {
         try {
+            // Vérifier que l'admin a le droit d'assigner à cet utilisateur
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            User currentAdmin = userRepository.findByEmail(auth.getName());
+            User targetUser = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("Utilisateur cible non trouvé"));
+
+            boolean isSuperAdmin = userService.isSuperAdmin(currentAdmin);
+
+            // Vérifier si l'admin a le droit d'assigner
+            if (!isSuperAdmin && (targetUser.getCreatedByAdmin() == null ||
+                    !targetUser.getCreatedByAdmin().getId().equals(currentAdmin.getId()))) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Vous ne pouvez assigner des clients qu'aux utilisateurs que vous avez créés");
+                return "redirect:/admin/clients";
+            }
             clientService.assignToUser(id, userId);
             redirectAttributes.addFlashAttribute("success", "Client assigné avec succès");
             return "redirect:/admin/clients";
@@ -234,30 +252,47 @@ public class AdminController {
     public String assignMultipleClients(@RequestParam(required = false) List<Long> clientIds,
                                         @RequestParam Long userId,
                                         RedirectAttributes redirectAttributes) {
+
         if (clientIds == null || clientIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Aucun client sélectionné");
             return "redirect:/admin/unassigned-clients";
         }
 
         try {
+            // Récupérer l'authentification
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+            User currentAdmin = userRepository.findByEmail(auth.getName());
+            User targetUser = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("Utilisateur cible non trouvé"));
+
+            boolean isSuperAdmin = userService.isSuperAdmin(currentAdmin);
+
+            // Vérifier si l'admin a le droit d'assigner
+            if (!isSuperAdmin && (targetUser.getCreatedByAdmin() == null ||
+                    !targetUser.getCreatedByAdmin().getId().equals(currentAdmin.getId()))) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Vous ne pouvez assigner des clients qu'aux utilisateurs que vous avez créés");
+                return "redirect:/admin/clients";
+            }
+
             int count = 0;
             for (Long clientId : clientIds) {
                 clientService.assignToUser(clientId, userId);
                 count++;
             }
+
             // Récupérer l'utilisateur assigné pour l'audit
             User assignedUser = userService.findById(userId);
 
-            // Récupérer l'admin qui fait l'assignation
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String adminEmail = auth.getName();
-
             // Audit de l'assignation multiple
+            String adminEmail = auth.getName();
             auditService.auditEvent(AuditType.CLIENTS_BULK_ASSIGNED,
                     "User",
                     userId,
                     count + " client(s) assigné(s) à " + assignedUser.getName(),
                     adminEmail);
+
             redirectAttributes.addFlashAttribute("success", count + " client(s) assigné(s) avec succès");
             return "redirect:/admin/unassigned-clients";
         } catch (Exception e) {

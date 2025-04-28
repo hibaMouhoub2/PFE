@@ -44,4 +44,6 @@ public interface UserService {
 
     // Vérifier si l'utilisateur est un admin régional
     boolean isRegionalAdmin(User user);
+
+    List<UserDto> findUsersByCreator(Long creatorId);
 }
