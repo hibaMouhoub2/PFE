@@ -27,4 +27,7 @@ public interface RappelRepository extends JpaRepository<Rappel, Long> {
             User user, LocalDateTime start, LocalDateTime end);
 
     void deleteByClient(Client client);
+
+    List<Rappel> findByCompletedFalseAndClientNMREGInOrderByDateRappel(List<String> regionCodes);
+
 }

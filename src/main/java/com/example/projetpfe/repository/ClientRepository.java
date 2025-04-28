@@ -85,4 +85,10 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     long countByActiviteClientAndUpdatedAtBetween(ActiviteClient activite, LocalDateTime start, LocalDateTime end);
     long countByRendezVousAgenceAndUpdatedAtBetween(Boolean rendezVous, LocalDateTime start, LocalDateTime end);
     long countByNMBRAAndUpdatedAtBetween(Branche branche, LocalDateTime start, LocalDateTime end);
+
+    List<Client> findByStatusAndNMREGInOrderByUpdatedAtDesc(ClientStatus status, List<String> regionCodes);
+
+    long countByStatusAndNMREGIn(ClientStatus status, List<String> regionCodes);
+
+    List<Client> findByAssignedUserIsNullAndNMREGInOrderByUpdatedAtDesc(List<String> regionCodes);
     }

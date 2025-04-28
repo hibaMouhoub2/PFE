@@ -5,6 +5,7 @@ import com.example.projetpfe.entity.*;
 import com.example.projetpfe.repository.ClientRepository;
 import com.example.projetpfe.repository.RappelRepository;
 import com.example.projetpfe.repository.UserRepository;
+import com.example.projetpfe.service.UserService;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -30,6 +31,8 @@ public class ClientService {
     private final UserRepository userRepository;
     @Autowired
     private AuditService auditService;
+    @Autowired
+    private UserService userService;
 
     @Autowired
     public ClientService(ClientRepository clientRepository, UserRepository userRepository) {
@@ -343,10 +346,29 @@ public class ClientService {
     }
 
     @Transactional
-    public ImportResult importClientsFromExcel(MultipartFile file) throws IOException {
+    public ImportResult importClientsFromExcel(MultipartFile file, String userEmail) throws IOException {
         int importedCount = 0;
-        int skippedCount =0 ;
+        int skippedCount = 0;
         List<String> skippedCins = new ArrayList<>();
+        List<String> skippedForRegion = new ArrayList<>();
+
+        System.out.println("Starting import for user: " + userEmail);
+
+        // Récupérer l'utilisateur connecté et sa région
+        User currentUser = userRepository.findByEmail(userEmail);
+        boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
+
+        List<String> userRegionCodes = new ArrayList<>();
+        if (!isSuperAdmin && currentUser.getRegions() != null) {
+            userRegionCodes = currentUser.getRegions().stream()
+                    .filter(region -> region != null && region.getCode() != null)
+                    .map(Region::getCode)
+                    .collect(Collectors.toList());
+        }
+
+        System.out.println("User region codes: " + userRegionCodes);
+        System.out.println("Is super admin: " + isSuperAdmin);
+
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
 
@@ -363,12 +385,47 @@ public class ClientService {
                 if (isEmptyRow(row)) continue;
                 // Récupérer le CIN avant de créer le client
                 String cin = getCellValueAsString(row.getCell(3));  // Indice 3 pour la colonne CIN
+                String nmreg = getCellValueAsString(row.getCell(1));
+
+                System.out.println("Processing row - CIN: " + cin + ", NMREG: " + nmreg);
 
                 // Vérifier si le CIN existe déjà
                 if (cin != null && !cin.isEmpty() && clientRepository.existsByCin(cin)) {
                     skippedCount++;
                     skippedCins.add(cin);
+                    System.out.println("Skipping existing CIN: " + cin);
                     continue; // Passer à la ligne suivante sans traiter ce client
+                }
+
+                // Vérifier si le client appartient à la région de l'utilisateur avec une comparaison plus souple
+                boolean regionMatches = false;
+
+                if (isSuperAdmin) {
+                    regionMatches = true;
+                } else {
+                    // Vérifier si l'un des codes de région de l'utilisateur correspond
+                    for (String userRegion : userRegionCodes) {
+                        // Normaliser les deux côtés pour la comparaison (supprimer les tirets bas et les espaces)
+                        String normalizedUserRegion = userRegion.replace("_", "").replace(" ", "");
+                        String normalizedNmreg = nmreg != null ? nmreg.replace("_", "").replace(" ", "") : "";
+
+                        if (normalizedUserRegion.equalsIgnoreCase(normalizedNmreg)) {
+                            regionMatches = true;
+                            System.out.println("Region match found: " + userRegion + " matches " + nmreg);
+                            break;
+                        }
+                    }
+                }
+
+                System.out.println("Region match for " + cin + ": " + regionMatches);
+
+                if (!regionMatches) {
+                    skippedCount++;
+                    if (cin != null && !cin.isEmpty()) {
+                        skippedForRegion.add(cin);
+                    }
+                    System.out.println("Skipping client " + cin + " - region mismatch");
+                    continue;
                 }
 
                 Client client = new Client();
@@ -446,9 +503,12 @@ public class ClientService {
 
                 clientRepository.save(client);
                 importedCount++;
+                System.out.println("Imported client: " + cin);
             }
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String userEmail = auth.getName();
+
+            System.out.println("Import summary - Imported: " + importedCount + ", Skipped: " + skippedCount);
+            System.out.println("Skipped CINs: " + skippedCins);
+            System.out.println("Skipped for region: " + skippedForRegion);
 
             // Audit de l'importation
             auditService.auditEvent(AuditType.EXCEL_IMPORT,
@@ -457,18 +517,44 @@ public class ClientService {
                     "Importation Excel: " + importedCount + " clients importés, " + skippedCount + " ignorés",
                     userEmail);
         }
-        return new ImportResult(importedCount, skippedCount, skippedCins);
+
+        return new ImportResult(importedCount, skippedCount, skippedCins, skippedForRegion);
     }
+
+    // Méthode auxiliaire pour parser NMBRA
+    private Branche parseNMBRA(String value) {
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+
+        // Essayer de convertir directement
+        try {
+            return Branche.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            // Essayer de trouver par displayName
+            for (Branche branche : Branche.values()) {
+                if (branche.getDisplayName().equalsIgnoreCase(value)) {
+                    return branche;
+                }
+            }
+        }
+
+        System.out.println("Could not parse branch: " + value);
+        return null;
+    }
+
     // Classe pour retourner les résultats de l'importation
     public static class ImportResult {
         private final int importedCount;
         private final int skippedCount;
         private final List<String> skippedCins;
+        private final List<String> skippedForRegion;
 
-        public ImportResult(int importedCount, int skippedCount, List<String> skippedCins) {
+        public ImportResult(int importedCount, int skippedCount, List<String> skippedCins, List<String> skippedForRegion) {
             this.importedCount = importedCount;
             this.skippedCount = skippedCount;
             this.skippedCins = skippedCins;
+            this.skippedForRegion = skippedForRegion;
         }
 
         public int getImportedCount() {
@@ -482,6 +568,7 @@ public class ClientService {
         public List<String> getSkippedCins() {
             return skippedCins;
         }
+         public List<String> getSkippedForRegion() {return skippedForRegion;}
     }
 
     private boolean isEmptyRow(Row row) {
@@ -539,6 +626,14 @@ public class ClientService {
                 id,
                 "Client supprimé: " + clientName + " (CIN: " + (clientCin != null ? clientCin : "N/A") + ")",
                 userEmail);
+    }
+
+    public List<Client> findByStatusAndRegions(ClientStatus status, List<String> regionCodes) {
+        return clientRepository.findByStatusAndNMREGInOrderByUpdatedAtDesc(status, regionCodes);
+    }
+
+    public List<Client> findUnassignedClientsByRegions(List<String> regionCodes) {
+        return clientRepository.findByAssignedUserIsNullAndNMREGInOrderByUpdatedAtDesc(regionCodes);
     }
 
 }

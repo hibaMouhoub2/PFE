@@ -73,6 +73,10 @@ public class RappelService {
         return rappelRepository.findByClientAssignedUserAndCompletedFalseOrderByDateRappel(user);
     }
 
+    public List<Rappel> getAllActiveRappelsByRegions(List<String> regionCodes) {
+        return rappelRepository.findByCompletedFalseAndClientNMREGInOrderByDateRappel(regionCodes);
+    }
+
     @Transactional
     public Rappel completeRappel(Long rappelId) {
         Rappel rappel = rappelRepository.findById(rappelId)

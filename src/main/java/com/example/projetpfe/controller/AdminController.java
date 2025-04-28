@@ -31,10 +31,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Controller
@@ -45,6 +42,9 @@ public class AdminController {
     private ExcelExportUtil excelExportUtil;
     @Autowired
     private ClientRepository clientRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private final ClientService clientService;
     private final UserService userService;
@@ -147,14 +147,42 @@ public class AdminController {
 
     @GetMapping("/unassigned-clients")
     public String listUnassignedClients(Model model) {
-        List<Client> unassignedClients = clientService.findUnassignedClients();
-        List<UserDto> users = userService.findAllUsers();
+        // Récupérer l'utilisateur connecté
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(auth.getName());
+        boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
 
+        List<Client> unassignedClients = clientService.findUnassignedClients();
+
+        // Filtrer manuellement si ce n'est pas un super admin
+        if (!isSuperAdmin) {
+            List<String> regionNames = currentUser.getRegions().stream()
+                    .map(Region::getName)
+                    .collect(Collectors.toList());
+
+            System.out.println("DEBUG: Régions de l'utilisateur: " + regionNames);
+
+            // Filtrer par correspondance partielle
+            unassignedClients = unassignedClients.stream()
+                    .filter(client -> {
+                        String nmreg = client.getNMREG();
+                        if (nmreg == null) return false;
+
+                        // Vérifier si une des régions de l'utilisateur correspond partiellement
+                        return regionNames.stream()
+                                .anyMatch(regionName -> nmreg.contains(regionName) ||
+                                        regionName.contains(nmreg));
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        List<UserDto> users = userService.findAllUsers();
         model.addAttribute("clients", unassignedClients);
         model.addAttribute("users", users);
 
         return "admin/unassigned-clients";
     }
+
 //    @GetMapping("/agenda")
 //    public String viewGlobalAgenda(Model model) {
 //        // Statistiques globales
@@ -276,16 +304,64 @@ public class AdminController {
 //    }
     @GetMapping("/agenda")
     public String viewAdminAgenda(Model model) {
-        // Récupération de tous les clients par statut
-        List<Client> clientsNonTraites = clientService.findByStatus(ClientStatus.NON_TRAITE);
-        List<Client> clientsAbsents = clientService.findByStatus(ClientStatus.ABSENT);
-        List<Client> clientsContactes = clientService.findByStatus(ClientStatus.CONTACTE);
-        List<Client> clientsRefus = clientService.findByStatus(ClientStatus.REFUS);
-        List<Client> clientsInjoignables = clientService.findByStatus(ClientStatus.INJOIGNABLE);
-        List<Client> clientsNumeroErrone = clientService.findByStatus(ClientStatus.NUMERO_ERRONE);
+        // Récupérer l'utilisateur connecté
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+        User currentUser = userRepository.findByEmail(userEmail);
 
-        // Récupérer tous les rappels
-        List<Rappel> rappels = rappelService.getAllActiveRappels();
+        // Vérifier si l'utilisateur est un super admin ou un admin régional
+        boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
+
+        // Déclarer la variable regionCodes en dehors du bloc if/else
+        List<String> regionCodes = new ArrayList<>();
+
+        // Si ce n'est pas un super admin, récupérer les codes de région
+        if (!isSuperAdmin) {
+            regionCodes = currentUser.getRegions() != null ?
+                    currentUser.getRegions().stream()
+                            .filter(region -> region != null && region.getCode() != null)
+                            .map(Region::getCode)
+                            .collect(Collectors.toList()) :
+                    new ArrayList<>();
+        }
+        System.out.println("User: " + currentUser.getName());
+        System.out.println("Regions: " + (currentUser.getRegions() != null ? currentUser.getRegions().size() : "null"));
+        if (currentUser.getRegions() != null) {
+            for (Region region : currentUser.getRegions()) {
+                System.out.println("Region: " + region.getName() + ", Code: " + region.getCode());
+            }
+        }
+        System.out.println("Region codes: " + regionCodes);
+
+        List<Client> clientsNonTraites;
+        List<Client> clientsAbsents;
+        List<Client> clientsContactes;
+        List<Client> clientsRefus;
+        List<Client> clientsInjoignables;
+        List<Client> clientsNumeroErrone;
+
+        // Pour un super admin, récupérer tous les clients
+        if (isSuperAdmin) {
+            clientsNonTraites = clientService.findByStatus(ClientStatus.NON_TRAITE);
+            clientsAbsents = clientService.findByStatus(ClientStatus.ABSENT);
+            clientsContactes = clientService.findByStatus(ClientStatus.CONTACTE);
+            clientsRefus = clientService.findByStatus(ClientStatus.REFUS);
+            clientsInjoignables = clientService.findByStatus(ClientStatus.INJOIGNABLE);
+            clientsNumeroErrone = clientService.findByStatus(ClientStatus.NUMERO_ERRONE);
+        }
+        // Pour un admin régional, filtrer par région
+        else {
+            clientsNonTraites = clientService.findByStatusAndRegions(ClientStatus.NON_TRAITE, regionCodes);
+            clientsAbsents = clientService.findByStatusAndRegions(ClientStatus.ABSENT, regionCodes);
+            clientsContactes = clientService.findByStatusAndRegions(ClientStatus.CONTACTE, regionCodes);
+            clientsRefus = clientService.findByStatusAndRegions(ClientStatus.REFUS, regionCodes);
+            clientsInjoignables = clientService.findByStatusAndRegions(ClientStatus.INJOIGNABLE, regionCodes);
+            clientsNumeroErrone = clientService.findByStatusAndRegions(ClientStatus.NUMERO_ERRONE, regionCodes);
+        }
+
+        // Récupérer les rappels (filtrer également par région si nécessaire)
+        List<Rappel> rappels = isSuperAdmin ? rappelService.getAllActiveRappels() :
+                rappelService.getAllActiveRappelsByRegions(regionCodes);
 
         // Créer une map client_id -> rappel pour afficher les dates de rappel
         Map<Long, Rappel> clientRappelMap = new HashMap<>();
@@ -312,14 +388,22 @@ public class AdminController {
                 .map(r -> r.getClient().getId())
                 .collect(Collectors.toSet());
 
-        // Statistiques
         Map<String, Object> stats = new HashMap<>();
-        stats.put("nonTraites", clientRepository.countByStatus(ClientStatus.NON_TRAITE));
-        stats.put("absents", clientRepository.countByStatus(ClientStatus.ABSENT));
-        stats.put("contactes", clientRepository.countByStatus(ClientStatus.CONTACTE));
-        stats.put("refus", clientRepository.countByStatus(ClientStatus.REFUS));
-        stats.put("injoignables", clientRepository.countByStatus(ClientStatus.INJOIGNABLE));
-        stats.put("numeroErrones", clientRepository.countByStatus(ClientStatus.NUMERO_ERRONE));
+        if (isSuperAdmin) {
+            stats.put("nonTraites", clientRepository.countByStatus(ClientStatus.NON_TRAITE));
+            stats.put("absents", clientRepository.countByStatus(ClientStatus.ABSENT));
+            stats.put("contactes", clientRepository.countByStatus(ClientStatus.CONTACTE));
+            stats.put("refus", clientRepository.countByStatus(ClientStatus.REFUS));
+            stats.put("injoignables", clientRepository.countByStatus(ClientStatus.INJOIGNABLE));
+            stats.put("numeroErrones", clientRepository.countByStatus(ClientStatus.NUMERO_ERRONE));
+        } else {
+            stats.put("nonTraites", clientRepository.countByStatusAndNMREGIn(ClientStatus.NON_TRAITE, regionCodes));
+            stats.put("absents", clientRepository.countByStatusAndNMREGIn(ClientStatus.ABSENT, regionCodes));
+            stats.put("contactes", clientRepository.countByStatusAndNMREGIn(ClientStatus.CONTACTE, regionCodes));
+            stats.put("refus", clientRepository.countByStatusAndNMREGIn(ClientStatus.REFUS, regionCodes));
+            stats.put("injoignables", clientRepository.countByStatusAndNMREGIn(ClientStatus.INJOIGNABLE, regionCodes));
+            stats.put("numeroErrones", clientRepository.countByStatusAndNMREGIn(ClientStatus.NUMERO_ERRONE, regionCodes));
+        }
         // Ajouter la liste des utilisateurs pour l'assignation
         List<UserDto> users = userService.findAllUsers();
 
@@ -407,21 +491,31 @@ public class AdminController {
         }
 
         try {
-            ClientService.ImportResult result = clientService.importClientsFromExcel(file);
+            // Récupérer l'email de l'utilisateur connecté
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = auth.getName();
+
+            ClientService.ImportResult result = clientService.importClientsFromExcel(file, userEmail);
 
             String message = result.getImportedCount() + " client(s) importé(s) avec succès";
 
             if (result.getSkippedCount() > 0) {
-                message += ". " + result.getSkippedCount() + " client(s) ignoré(s) car leur CIN existe déjà dans la base de données";
+                int skippedForRegion = result.getSkippedForRegion().size();
+                int skippedForDuplicate = result.getSkippedCins().size();
 
-                if (result.getSkippedCount() <= 5) {
-                    message += " (CINs ignorés : " + String.join(", ", result.getSkippedCins()) + ")";
+                if (skippedForDuplicate > 0) {
+                    message += ". " + skippedForDuplicate + " client(s) ignoré(s) car leur CIN existe déjà dans la base de données";
+                }
+
+                if (skippedForRegion > 0) {
+                    message += ". " + skippedForRegion + " client(s) ignoré(s) car ils n'appartiennent pas à votre région";
                 }
             }
 
             redirectAttributes.addFlashAttribute("success", message);
             return "redirect:/admin/clients";
         } catch (Exception e) {
+            e.printStackTrace(); // Ajouter pour le débogage
             redirectAttributes.addFlashAttribute("error", "Erreur lors de l'importation: " + e.getMessage());
             return "redirect:/admin/unassigned-clients";
         }
