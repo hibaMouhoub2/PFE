@@ -91,4 +91,5 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     long countByStatusAndNMREGIn(ClientStatus status, List<String> regionCodes);
 
     List<Client> findByAssignedUserIsNullAndNMREGInOrderByUpdatedAtDesc(List<String> regionCodes);
+    List<Client> findByNMREGIn(List<String> regionCodes);
     }

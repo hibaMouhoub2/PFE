@@ -70,41 +70,81 @@ public class AdminController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate rdvDate,
             Model model) {
 
+        System.out.println("DEBUG - Entrée dans listAllClients");
+
+        // Récupérer l'utilisateur connecté
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(auth.getName());
+        boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
+
+        System.out.println("DEBUG - Utilisateur: " + currentUser.getName() + ", est super admin: " + isSuperAdmin);
+
         // Conversion du statut en enum
         ClientStatus statusEnum = null;
-        if (status != null && !status.isEmpty()) {
-            try {
+        try {
+            if (status != null && !status.isEmpty()) {
                 statusEnum = ClientStatus.valueOf(status);
-            } catch (IllegalArgumentException e) {
-                // Ignorer si le statut n'est pas valide
+                System.out.println("DEBUG - Statut: " + statusEnum);
             }
+        } catch (IllegalArgumentException e) {
+            System.out.println("DEBUG - Statut invalide: " + status);
         }
 
         // Conversion de la branche en enum
         Branche brancheEnum = null;
-        if (branche != null && !branche.isEmpty()) {
-            try {
+        try {
+            if (branche != null && !branche.isEmpty()) {
                 brancheEnum = Branche.valueOf(branche);
-            } catch (IllegalArgumentException e) {
-                // Ignorer si la branche n'est pas valide
+                System.out.println("DEBUG - Branche: " + brancheEnum);
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("DEBUG - Branche invalide: " + branche);
+        }
+
+        List<Client> clients;
+
+        // Si c'est un super admin, afficher tous les clients
+        if (isSuperAdmin) {
+            System.out.println("DEBUG - Mode super admin: récupération de tous les clients");
+            // Récupérer les clients sans le filtre de date
+            clients = clientRepository.findByFiltersWithBranche(q, statusEnum, userId, brancheEnum);
+        } else {
+            System.out.println("DEBUG - Mode directeur régional: filtrage par région");
+            // Utiliser la méthode auxiliaire pour le filtrage
+            clients = filterClientsByRegion(currentUser, statusEnum, userId, q);
+
+            // Filtre de branche en dehors de la méthode auxiliaire
+            // Lorsque vous utilisez brancheEnum dans la lambda:
+            if (brancheEnum != null) {
+                final Branche finalBrancheEnum = brancheEnum;
+                clients = clients.stream()
+                        .filter(client -> client.getNMBRA() == finalBrancheEnum)
+                        .collect(Collectors.toList());
             }
         }
 
-        // Récupérer les clients sans le filtre de date
-        List<Client> clients = clientRepository.findByFiltersWithBranche(q, statusEnum, userId, brancheEnum);
-
         // Filtrer manuellement par date si nécessaire
         if (rdvDate != null) {
+            System.out.println("DEBUG - Application du filtre de date: " + rdvDate);
+            final LocalDate finalRdvDate = rdvDate; // Cette variable est effectivement finale
             clients = clients.stream()
                     .filter(client -> client.getRendezVousAgence() != null &&
                             client.getRendezVousAgence() &&
                             client.getDateHeureRendezVous() != null &&
-                            client.getDateHeureRendezVous().toLocalDate().equals(rdvDate))
+                            client.getDateHeureRendezVous().toLocalDate().equals(finalRdvDate))
                     .collect(Collectors.toList());
+            System.out.println("DEBUG - Après filtre date: " + clients.size() + " clients");
         }
 
         // Ajouter la liste des utilisateurs pour le filtre
-        List<UserDto> users = userService.findAllUsers();
+        List<UserDto> users;
+        if (isSuperAdmin) {
+            users = userService.findAllUsers();
+        } else {
+            // Pour un directeur régional, seulement ses utilisateurs créés
+            users = userService.findUsersByCreator(currentUser.getId());
+        }
+        System.out.println("DEBUG - Nombre d'utilisateurs disponibles: " + users.size());
 
         model.addAttribute("clients", clients);
         model.addAttribute("users", users);
@@ -115,9 +155,9 @@ public class AdminController {
         model.addAttribute("rdvDate", rdvDate);
         model.addAttribute("selectedBranche", brancheEnum);
 
+        System.out.println("DEBUG - Nombre final de clients affichés: " + clients.size());
         return "admin/clients";
     }
-
     @GetMapping("/search-results")
     public String showAdminSearchResults(Model model) {
         // Récupérer les résultats de recherche depuis l'attribut flash
@@ -463,36 +503,57 @@ public class AdminController {
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate rdvDate) throws IOException {
 
+        System.out.println("DEBUG - Entrée dans exportClients");
+
+        // Récupérer l'utilisateur connecté
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+        User currentUser = userRepository.findByEmail(userEmail);
+        boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
+
+        System.out.println("DEBUG - Utilisateur: " + currentUser.getName() + ", est super admin: " + isSuperAdmin);
+
         // Conversion du statut en enum
         ClientStatus statusEnum = null;
-        if (status != null && !status.isEmpty()) {
-            try {
+        try {
+            if (status != null && !status.isEmpty()) {
                 statusEnum = ClientStatus.valueOf(status);
-            } catch (IllegalArgumentException e) {
-                // Ignorer si le statut n'est pas valide
+                System.out.println("DEBUG - Statut: " + statusEnum);
             }
+        } catch (IllegalArgumentException e) {
+            System.out.println("DEBUG - Statut invalide: " + status);
         }
 
-        // Utiliser la méthode du repository sans le filtre de date
-        List<Client> clients = clientRepository.findByFilters(q, statusEnum, userId);
+        List<Client> clients;
+
+        // Si c'est un super admin, afficher tous les clients
+        if (isSuperAdmin) {
+            System.out.println("DEBUG - Mode super admin: récupération de tous les clients");
+            clients = clientRepository.findByFilters(q, statusEnum, userId);
+        } else {
+            System.out.println("DEBUG - Mode directeur régional: filtrage par région");
+            // Utiliser la méthode auxiliaire pour le filtrage
+            clients = filterClientsByRegion(currentUser, statusEnum, userId, q);
+        }
 
         // Filtrer manuellement par date si nécessaire
         if (rdvDate != null) {
+            System.out.println("DEBUG - Application du filtre de date: " + rdvDate);
+            final LocalDate finalRdvDate = rdvDate; // Cette variable est effectivement finale
             clients = clients.stream()
                     .filter(client -> client.getRendezVousAgence() != null &&
                             client.getRendezVousAgence() &&
                             client.getDateHeureRendezVous() != null &&
-                            client.getDateHeureRendezVous().toLocalDate().equals(rdvDate))
+                            client.getDateHeureRendezVous().toLocalDate().equals(finalRdvDate))
                     .collect(Collectors.toList());
+            System.out.println("DEBUG - Après filtre date: " + clients.size() + " clients");
         }
 
         // Générer le fichier Excel
         byte[] excelContent = excelExportUtil.exportClientsToExcel(clients);
+        System.out.println("DEBUG - Fichier Excel généré pour " + clients.size() + " clients");
 
         // Audit de l'exportation
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = auth.getName();
-
         StringBuilder filters = new StringBuilder();
         if (q != null && !q.isEmpty()) filters.append("Recherche: ").append(q).append(", ");
         if (statusEnum != null) filters.append("Statut: ").append(statusEnum).append(", ");
@@ -515,9 +576,9 @@ public class AdminController {
         String filename = "clients_export_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
         headers.setContentDispositionFormData("attachment", filename);
 
+        System.out.println("DEBUG - Exportation terminée avec succès");
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
     }
-
     @PostMapping("/clients/import")
     public String importClientsFromExcel(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
         if (file.isEmpty()) {
@@ -672,5 +733,93 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "Erreur lors de la suppression: " + e.getMessage());
         }
         return "redirect:/admin/clients";
+    }
+
+    private List<Client> filterClientsByRegion(User currentUser, ClientStatus status, Long userId, String searchQuery) {
+        // Pour un directeur régional, filtrer par région
+        List<String> regionCodes = currentUser.getRegions().stream()
+                .filter(region -> region != null && region.getCode() != null)
+                .map(Region::getCode)
+                .collect(Collectors.toList());
+
+        System.out.println("DEBUG - Filtrage par régions: " + regionCodes);
+
+        // Récupérer tous les clients d'abord
+        List<Client> allClients = clientRepository.findAll();
+        System.out.println("DEBUG - Nombre total de clients: " + allClients.size());
+
+        // Filtrer manuellement avec une comparaison plus souple
+        List<Client> filteredClients = new ArrayList<>();
+
+        for (Client client : allClients) {
+            // Vérifier si le client appartient à une des régions du directeur
+            boolean regionMatch = false;
+            String clientRegion = client.getNMREG();
+
+            if (clientRegion != null) {
+                // Convertir en majuscules et supprimer les espaces pour une comparaison plus souple
+                String normalizedClientRegion = clientRegion.toUpperCase().replace(" ", "");
+
+                for (String regionCode : regionCodes) {
+                    String normalizedRegionCode = regionCode.toUpperCase().replace("_", "");
+
+                    // Loguer pour comprendre les comparaisons
+                    System.out.println("DEBUG - Comparaison région: Client [" + normalizedClientRegion + "] vs Directeur [" + normalizedRegionCode + "]");
+
+                    // Vérifier si l'une contient l'autre (comparaison partielle)
+                    if (normalizedClientRegion.contains(normalizedRegionCode) ||
+                            normalizedRegionCode.contains(normalizedClientRegion) ||
+                            // Essayer aussi avec SIDI/SEDY qui peuvent être des variantes orthographiques
+                            (normalizedClientRegion.contains("SIDI") && normalizedRegionCode.contains("SEDY")) ||
+                            (normalizedClientRegion.contains("SEDY") && normalizedRegionCode.contains("SIDI")) ||
+                            // Essayer aussi avec FIDAA/FIDA qui peuvent être des variantes orthographiques
+                            (normalizedClientRegion.contains("FIDAA") && normalizedRegionCode.contains("FIDA")) ||
+                            (normalizedClientRegion.contains("FIDA") && normalizedRegionCode.contains("FIDAA"))) {
+
+                        regionMatch = true;
+                        System.out.println("DEBUG - Correspondance trouvée pour le client: " + client.getNom() + " " + client.getPrenom());
+                        break;
+                    }
+                }
+            }
+
+            if (!regionMatch) {
+                continue; // Passer au client suivant si pas de correspondance de région
+            }
+
+            // Vérifier le statut
+            if (status != null && client.getStatus() != status) {
+                continue;
+            }
+
+            // Vérifier l'utilisateur assigné
+            if (userId != null && (client.getAssignedUser() == null || !client.getAssignedUser().getId().equals(userId))) {
+                continue;
+            }
+
+            // Vérifier la recherche textuelle
+            if (searchQuery != null && !searchQuery.isEmpty()) {
+                boolean textMatch = false;
+                String query = searchQuery.toLowerCase();
+
+                if (client.getNom() != null && client.getNom().toLowerCase().contains(query)) {
+                    textMatch = true;
+                } else if (client.getPrenom() != null && client.getPrenom().toLowerCase().contains(query)) {
+                    textMatch = true;
+                } else if (client.getCin() != null && client.getCin().toLowerCase().contains(query)) {
+                    textMatch = true;
+                }
+
+                if (!textMatch) {
+                    continue;
+                }
+            }
+
+            // Si on arrive ici, le client a passé tous les filtres
+            filteredClients.add(client);
+        }
+
+        System.out.println("DEBUG - Nombre de clients après filtrage: " + filteredClients.size());
+        return filteredClients;
     }
 }
