@@ -377,125 +377,149 @@ public class AdminController {
 //        model.addAttribute("message", "Fonction d'export en cours de développement");
 //        return "admin/export";
 //    }
-    @GetMapping("/agenda")
-    public String viewAdminAgenda(Model model) {
-        // Récupérer l'utilisateur connecté
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = auth.getName();
-        User currentUser = userRepository.findByEmail(userEmail);
+@GetMapping("/agenda")
+public String viewAdminAgenda(Model model) {
+    // Récupérer l'utilisateur connecté
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    String userEmail = auth.getName();
+    User currentUser = userRepository.findByEmail(userEmail);
 
-        // Vérifier si l'utilisateur est un super admin ou un admin régional
-        boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
+    // Vérifier si l'utilisateur est un super admin ou un admin régional
+    boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
 
-        // Déclarer la variable regionCodes en dehors du bloc if/else
-        List<String> regionCodes = new ArrayList<>();
-
-        // Si ce n'est pas un super admin, récupérer les codes de région
-        if (!isSuperAdmin) {
-            regionCodes = currentUser.getRegions() != null ?
-                    currentUser.getRegions().stream()
-                            .filter(region -> region != null && region.getCode() != null)
-                            .map(Region::getCode)
-                            .collect(Collectors.toList()) :
-                    new ArrayList<>();
-        }
-        System.out.println("User: " + currentUser.getName());
-        System.out.println("Regions: " + (currentUser.getRegions() != null ? currentUser.getRegions().size() : "null"));
-        if (currentUser.getRegions() != null) {
-            for (Region region : currentUser.getRegions()) {
-                System.out.println("Region: " + region.getName() + ", Code: " + region.getCode());
-            }
-        }
-        System.out.println("Region codes: " + regionCodes);
-
-        List<Client> clientsNonTraites;
-        List<Client> clientsAbsents;
-        List<Client> clientsContactes;
-        List<Client> clientsRefus;
-        List<Client> clientsInjoignables;
-        List<Client> clientsNumeroErrone;
-
-        // Pour un super admin, récupérer tous les clients
-        if (isSuperAdmin) {
-            clientsNonTraites = clientService.findByStatus(ClientStatus.NON_TRAITE);
-            clientsAbsents = clientService.findByStatus(ClientStatus.ABSENT);
-            clientsContactes = clientService.findByStatus(ClientStatus.CONTACTE);
-            clientsRefus = clientService.findByStatus(ClientStatus.REFUS);
-            clientsInjoignables = clientService.findByStatus(ClientStatus.INJOIGNABLE);
-            clientsNumeroErrone = clientService.findByStatus(ClientStatus.NUMERO_ERRONE);
-        }
-        // Pour un admin régional, filtrer par région
-        else {
-            clientsNonTraites = clientService.findByStatusAndRegions(ClientStatus.NON_TRAITE, regionCodes);
-            clientsAbsents = clientService.findByStatusAndRegions(ClientStatus.ABSENT, regionCodes);
-            clientsContactes = clientService.findByStatusAndRegions(ClientStatus.CONTACTE, regionCodes);
-            clientsRefus = clientService.findByStatusAndRegions(ClientStatus.REFUS, regionCodes);
-            clientsInjoignables = clientService.findByStatusAndRegions(ClientStatus.INJOIGNABLE, regionCodes);
-            clientsNumeroErrone = clientService.findByStatusAndRegions(ClientStatus.NUMERO_ERRONE, regionCodes);
-        }
-
-        // Récupérer les rappels (filtrer également par région si nécessaire)
-        List<Rappel> rappels = isSuperAdmin ? rappelService.getAllActiveRappels() :
-                rappelService.getAllActiveRappelsByRegions(regionCodes);
-
-        // Créer une map client_id -> rappel pour afficher les dates de rappel
-        Map<Long, Rappel> clientRappelMap = new HashMap<>();
-        for (Rappel rappel : rappels) {
-            if (!rappel.getCompleted()) {
-                Long clientId = rappel.getClient().getId();
-                // Si plusieurs rappels existent pour un client, prendre le plus récent
-                if (!clientRappelMap.containsKey(clientId) ||
-                        rappel.getDateRappel().isAfter(clientRappelMap.get(clientId).getDateRappel())) {
-                    clientRappelMap.put(clientId, rappel);
-                }
-            }
-        }
-
-        // Récupérer les rappels pour aujourd'hui
-        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
-        List<Rappel> todayRappels = rappels.stream()
-                .filter(r -> !r.getCompleted() && r.getDateRappel().isAfter(startOfDay) && r.getDateRappel().isBefore(endOfDay))
-                .collect(Collectors.toList());
-
-        // Extraire les IDs des clients ayant un rappel aujourd'hui
-        Set<Long> todayRappelClientIds = todayRappels.stream()
-                .map(r -> r.getClient().getId())
-                .collect(Collectors.toSet());
-
-        Map<String, Object> stats = new HashMap<>();
-        if (isSuperAdmin) {
-            stats.put("nonTraites", clientRepository.countByStatus(ClientStatus.NON_TRAITE));
-            stats.put("absents", clientRepository.countByStatus(ClientStatus.ABSENT));
-            stats.put("contactes", clientRepository.countByStatus(ClientStatus.CONTACTE));
-            stats.put("refus", clientRepository.countByStatus(ClientStatus.REFUS));
-            stats.put("injoignables", clientRepository.countByStatus(ClientStatus.INJOIGNABLE));
-            stats.put("numeroErrones", clientRepository.countByStatus(ClientStatus.NUMERO_ERRONE));
-        } else {
-            stats.put("nonTraites", clientRepository.countByStatusAndNMREGIn(ClientStatus.NON_TRAITE, regionCodes));
-            stats.put("absents", clientRepository.countByStatusAndNMREGIn(ClientStatus.ABSENT, regionCodes));
-            stats.put("contactes", clientRepository.countByStatusAndNMREGIn(ClientStatus.CONTACTE, regionCodes));
-            stats.put("refus", clientRepository.countByStatusAndNMREGIn(ClientStatus.REFUS, regionCodes));
-            stats.put("injoignables", clientRepository.countByStatusAndNMREGIn(ClientStatus.INJOIGNABLE, regionCodes));
-            stats.put("numeroErrones", clientRepository.countByStatusAndNMREGIn(ClientStatus.NUMERO_ERRONE, regionCodes));
-        }
-        // Ajouter la liste des utilisateurs pour l'assignation
-        List<UserDto> users = userService.findAllUsers();
-
-        model.addAttribute("clientsNonTraites", clientsNonTraites);
-        model.addAttribute("clientsAbsents", clientsAbsents);
-        model.addAttribute("clientsContactes", clientsContactes);
-        model.addAttribute("clientsRefus", clientsRefus);
-        model.addAttribute("clientsInjoignables", clientsInjoignables);
-        model.addAttribute("clientsNumeroErrone", clientsNumeroErrone);
-        model.addAttribute("rappels", rappels);
-        model.addAttribute("clientRappelMap", clientRappelMap);
-        model.addAttribute("todayRappelClientIds", todayRappelClientIds);
-        model.addAttribute("stats", stats);
-        model.addAttribute("users", users);
-
-        return "admin/agenda";
+    // Obtenir les codes de région pour l'affichage des logs
+    final List<String> regionCodes = new ArrayList<>();
+    if (!isSuperAdmin && currentUser.getRegions() != null) {
+        regionCodes.addAll(currentUser.getRegions().stream()
+                .filter(region -> region != null && region.getCode() != null)
+                .map(Region::getCode)
+                .collect(Collectors.toList()));
     }
+
+    System.out.println("User: " + currentUser.getName());
+    System.out.println("Regions: " + (currentUser.getRegions() != null ? currentUser.getRegions().size() : "null"));
+    if (currentUser.getRegions() != null) {
+        for (Region region : currentUser.getRegions()) {
+            System.out.println("Region: " + region.getName() + ", Code: " + region.getCode());
+        }
+    }
+    System.out.println("Region codes: " + regionCodes);
+
+    List<Client> clientsNonTraites;
+    List<Client> clientsAbsents;
+    List<Client> clientsContactes;
+    List<Client> clientsRefus;
+    List<Client> clientsInjoignables;
+    List<Client> clientsNumeroErrone;
+
+    // Pour un super admin, récupérer tous les clients
+    if (isSuperAdmin) {
+        clientsNonTraites = clientService.findByStatus(ClientStatus.NON_TRAITE);
+        clientsAbsents = clientService.findByStatus(ClientStatus.ABSENT);
+        clientsContactes = clientService.findByStatus(ClientStatus.CONTACTE);
+        clientsRefus = clientService.findByStatus(ClientStatus.REFUS);
+        clientsInjoignables = clientService.findByStatus(ClientStatus.INJOIGNABLE);
+        clientsNumeroErrone = clientService.findByStatus(ClientStatus.NUMERO_ERRONE);
+    }
+    // Pour un admin régional, utiliser la méthode de filtrage souple
+    else {
+        clientsNonTraites = filterClientsByRegion(currentUser, ClientStatus.NON_TRAITE, null, null);
+        clientsAbsents = filterClientsByRegion(currentUser, ClientStatus.ABSENT, null, null);
+        clientsContactes = filterClientsByRegion(currentUser, ClientStatus.CONTACTE, null, null);
+        clientsRefus = filterClientsByRegion(currentUser, ClientStatus.REFUS, null, null);
+        clientsInjoignables = filterClientsByRegion(currentUser, ClientStatus.INJOIGNABLE, null, null);
+        clientsNumeroErrone = filterClientsByRegion(currentUser, ClientStatus.NUMERO_ERRONE, null, null);
+    }
+
+    // Ajouter des logs pour déboguer
+    System.out.println("Clients non traités: " + clientsNonTraites.size());
+    System.out.println("Clients absents: " + clientsAbsents.size());
+    System.out.println("Clients contactés: " + clientsContactes.size());
+    System.out.println("Clients refus: " + clientsRefus.size());
+    System.out.println("Clients injoignables: " + clientsInjoignables.size());
+    System.out.println("Clients numéro erroné: " + clientsNumeroErrone.size());
+
+    // Récupérer les rappels
+    List<Rappel> rappels;
+    if (isSuperAdmin) {
+        rappels = rappelService.getAllActiveRappels();
+    } else {
+        // Pour un admin régional, filtrer les rappels manuellement
+        // La liste regionCodes est maintenant finale
+        rappels = rappelService.getAllActiveRappels().stream()
+                .filter(rappel -> {
+                    Client client = rappel.getClient();
+                    if (client == null || client.getNMREG() == null) return false;
+
+                    String clientRegion = client.getNMREG().toUpperCase().replace(" ", "");
+
+                    return regionCodes.stream().anyMatch(regionCode -> {
+                        String normalizedRegionCode = regionCode.toUpperCase().replace("_", "");
+                        return clientRegion.contains(normalizedRegionCode) ||
+                                normalizedRegionCode.contains(clientRegion) ||
+                                (clientRegion.contains("SIDI") && normalizedRegionCode.contains("SEDY")) ||
+                                (clientRegion.contains("SEDY") && normalizedRegionCode.contains("SIDI")) ||
+                                (clientRegion.contains("FIDAA") && normalizedRegionCode.contains("FIDA")) ||
+                                (clientRegion.contains("FIDA") && normalizedRegionCode.contains("FIDAA"));
+                    });
+                })
+                .collect(Collectors.toList());
+    }
+
+    System.out.println("Rappels actifs: " + rappels.size());
+
+    // Créer une map client_id -> rappel pour afficher les dates de rappel
+    Map<Long, Rappel> clientRappelMap = new HashMap<>();
+    for (Rappel rappel : rappels) {
+        if (!rappel.getCompleted()) {
+            Long clientId = rappel.getClient().getId();
+            // Si plusieurs rappels existent pour un client, prendre le plus récent
+            if (!clientRappelMap.containsKey(clientId) ||
+                    rappel.getDateRappel().isAfter(clientRappelMap.get(clientId).getDateRappel())) {
+                clientRappelMap.put(clientId, rappel);
+            }
+        }
+    }
+
+    // Récupérer les rappels pour aujourd'hui
+    LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+    LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+    List<Rappel> todayRappels = rappels.stream()
+            .filter(r -> !r.getCompleted() && r.getDateRappel().isAfter(startOfDay) && r.getDateRappel().isBefore(endOfDay))
+            .collect(Collectors.toList());
+
+    // Extraire les IDs des clients ayant un rappel aujourd'hui
+    Set<Long> todayRappelClientIds = todayRappels.stream()
+            .map(r -> r.getClient().getId())
+            .collect(Collectors.toSet());
+
+    Map<String, Object> stats = new HashMap<>();
+
+    // Utiliser les tailles des listes filtrées pour les statistiques
+    stats.put("nonTraites", clientsNonTraites.size());
+    stats.put("absents", clientsAbsents.size());
+    stats.put("contactes", clientsContactes.size());
+    stats.put("refus", clientsRefus.size());
+    stats.put("injoignables", clientsInjoignables.size());
+    stats.put("numeroErrones", clientsNumeroErrone.size());
+
+    // Ajouter la liste des utilisateurs pour l'assignation
+    List<UserDto> users = userService.findAllUsers();
+
+    model.addAttribute("clientsNonTraites", clientsNonTraites);
+    model.addAttribute("clientsAbsents", clientsAbsents);
+    model.addAttribute("clientsContactes", clientsContactes);
+    model.addAttribute("clientsRefus", clientsRefus);
+    model.addAttribute("clientsInjoignables", clientsInjoignables);
+    model.addAttribute("clientsNumeroErrone", clientsNumeroErrone);
+    model.addAttribute("rappels", rappels);
+    model.addAttribute("clientRappelMap", clientRappelMap);
+    model.addAttribute("todayRappelClientIds", todayRappelClientIds);
+    model.addAttribute("stats", stats);
+    model.addAttribute("users", users);
+
+    return "admin/agenda";
+}
     @GetMapping("/clients/export")
     public ResponseEntity<byte[]> exportClients(
             @RequestParam(required = false) String q,

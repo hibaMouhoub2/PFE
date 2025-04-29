@@ -3,8 +3,10 @@ package com.example.projetpfe.controller;
 import ch.qos.logback.core.model.Model;
 import com.example.projetpfe.entity.*;
 import com.example.projetpfe.repository.ClientRepository;
+import com.example.projetpfe.repository.UserRepository;
 import com.example.projetpfe.service.Impl.ClientService;
 import com.example.projetpfe.service.Impl.ReportService;
+import com.example.projetpfe.service.UserService;
 import com.example.projetpfe.util.ExcelExportUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,9 +25,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
+
+
 
 @Controller
 @RequestMapping("/admin/reports")
@@ -35,6 +41,14 @@ public class ReportController {
     private final ReportService reportService;
     @Autowired
     private ClientRepository clientRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ClientService clientService;
+    @Autowired
+    private UserService userService;
 
     @Autowired
     public ReportController(ReportService reportService) {
@@ -52,19 +66,51 @@ public class ReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
+        // Récupérer l'utilisateur connecté
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(auth.getName());
+        boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
+
+        // Obtenir les codes de région pour un admin régional
+        final List<String> regionCodes = new ArrayList<>();
+        if (!isSuperAdmin && currentUser.getRegions() != null) {
+            regionCodes.addAll(currentUser.getRegions().stream()
+                    .filter(region -> region != null && region.getCode() != null)
+                    .map(Region::getCode)
+                    .collect(Collectors.toList()));
+
+        }
+
         // Si aucune date n'est fournie, utiliser des dates par défaut (tout)
         if (startDate == null && endDate == null) {
-            // Utiliser la méthode existante sans filtrage par date
             Map<String, Object> data = new HashMap<>();
-            data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStats());
-            data.put("qualiteService", reportService.getQualiteServiceStats());
-            data.put("interetCredit", reportService.getInteretCreditStats());
-            data.put("facteurInfluence", reportService.getFacteurInfluenceStats());
-            data.put("profil", reportService.getProfilStats());
-            data.put("activiteClient", reportService.getActiviteClientStats());
-            data.put("rendezVous", reportService.getRendezVousStats());
-            data.put("branche", reportService.getBrancheStats());
-            data.put("progression", reportService.getStatusProgressionByMonth());
+
+            // Pour un super admin, utiliser les méthodes existantes
+            if (isSuperAdmin) {
+                data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStats());
+                data.put("qualiteService", reportService.getQualiteServiceStats());
+                data.put("interetCredit", reportService.getInteretCreditStats());
+                data.put("facteurInfluence", reportService.getFacteurInfluenceStats());
+                data.put("profil", reportService.getProfilStats());
+                data.put("activiteClient", reportService.getActiviteClientStats());
+                data.put("rendezVous", reportService.getRendezVousStats());
+                data.put("branche", reportService.getBrancheStats());
+                data.put("progression", reportService.getStatusProgressionByMonth());
+            } else {
+                // Pour un admin régional, filtrer les clients et calculer les statistiques
+                List<Client> filteredClients = filterClientsByRegionForStats(regionCodes);
+
+                data.put("raisonsNonRenouvellement", calculateRaisonsStats(filteredClients));
+                data.put("qualiteService", calculateQualiteStats(filteredClients));
+                data.put("interetCredit", calculateInteretCreditStats(filteredClients));
+                data.put("facteurInfluence", calculateFacteurInfluenceStats(filteredClients));
+                data.put("profil", calculateProfilStats(filteredClients));
+                data.put("activiteClient", calculateActiviteClientStats(filteredClients));
+                data.put("rendezVous", calculateRendezVousStats(filteredClients));
+                data.put("branche", calculateBrancheStats(filteredClients));
+                data.put("progression", calculateProgressionStats(filteredClients));
+            }
+
             return data;
         }
 
@@ -80,21 +126,243 @@ public class ReportController {
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = endDate.atTime(LocalTime.MAX);
 
-        // Créer de nouvelles méthodes dans le ReportService pour filtrer par date
         Map<String, Object> data = new HashMap<>();
 
-        // Utiliser le service avec filtre de date
-        data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStats(start, end));
-        data.put("qualiteService", reportService.getQualiteServiceStats(start, end));
-        data.put("interetCredit", reportService.getInteretCreditStats(start, end));
-        data.put("facteurInfluence", reportService.getFacteurInfluenceStats(start, end));
-        data.put("profil", reportService.getProfilStats(start, end));
-        data.put("activiteClient", reportService.getActiviteClientStats(start, end));
-        data.put("rendezVous", reportService.getRendezVousStats(start, end));
-        data.put("branche", reportService.getBrancheStats(start, end));
-        data.put("progression", reportService.getStatusProgressionByMonth(start, end));
+        // Pour un super admin, utiliser les méthodes existantes avec dates
+        if (isSuperAdmin) {
+            data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStats(start, end));
+            data.put("qualiteService", reportService.getQualiteServiceStats(start, end));
+            data.put("interetCredit", reportService.getInteretCreditStats(start, end));
+            data.put("facteurInfluence", reportService.getFacteurInfluenceStats(start, end));
+            data.put("profil", reportService.getProfilStats(start, end));
+            data.put("activiteClient", reportService.getActiviteClientStats(start, end));
+            data.put("rendezVous", reportService.getRendezVousStats(start, end));
+            data.put("branche", reportService.getBrancheStats(start, end));
+            data.put("progression", reportService.getStatusProgressionByMonth(start, end));
+        } else {
+            // Pour un admin régional, filtrer par région et dates
+            List<Client> filteredClients = filterClientsByRegionAndDateForStats(regionCodes, start, end);
+
+            data.put("raisonsNonRenouvellement", calculateRaisonsStats(filteredClients));
+            data.put("qualiteService", calculateQualiteStats(filteredClients));
+            data.put("interetCredit", calculateInteretCreditStats(filteredClients));
+            data.put("facteurInfluence", calculateFacteurInfluenceStats(filteredClients));
+            data.put("profil", calculateProfilStats(filteredClients));
+            data.put("activiteClient", calculateActiviteClientStats(filteredClients));
+            data.put("rendezVous", calculateRendezVousStats(filteredClients));
+            data.put("branche", calculateBrancheStats(filteredClients));
+            data.put("progression", calculateProgressionByMonthForFilteredClients(filteredClients, start, end));
+        }
 
         return data;
+    }
+    // Filtre les clients par région avec correspondance souple
+    private List<Client> filterClientsByRegionForStats(List<String> regionCodes) {
+        List<Client> allClients = clientRepository.findAll();
+        return allClients.stream()
+                .filter(client -> {
+                    if (client.getNMREG() == null) return false;
+                    String normalizedClientRegion = client.getNMREG().toUpperCase().replace(" ", "");
+
+                    return regionCodes.stream().anyMatch(regionCode -> {
+                        String normalizedRegionCode = regionCode.toUpperCase().replace("_", "");
+                        return normalizedClientRegion.contains(normalizedRegionCode) ||
+                                normalizedRegionCode.contains(normalizedClientRegion) ||
+                                (normalizedClientRegion.contains("SIDI") && normalizedRegionCode.contains("SEDY")) ||
+                                (normalizedClientRegion.contains("SEDY") && normalizedRegionCode.contains("SIDI")) ||
+                                (normalizedClientRegion.contains("FIDAA") && normalizedRegionCode.contains("FIDA")) ||
+                                (normalizedClientRegion.contains("FIDA") && normalizedRegionCode.contains("FIDAA"));
+                    });
+                })
+                .collect(Collectors.toList());
+    }
+
+    // Filtre les clients par région et date avec correspondance souple
+    private List<Client> filterClientsByRegionAndDateForStats(List<String> regionCodes, LocalDateTime start, LocalDateTime end) {
+        List<Client> allClients = clientRepository.findAll();
+        return allClients.stream()
+                .filter(client -> {
+                    if (client.getNMREG() == null) return false;
+                    if (client.getUpdatedAt() == null || client.getUpdatedAt().isBefore(start) || client.getUpdatedAt().isAfter(end)) return false;
+
+                    String normalizedClientRegion = client.getNMREG().toUpperCase().replace(" ", "");
+
+                    return regionCodes.stream().anyMatch(regionCode -> {
+                        String normalizedRegionCode = regionCode.toUpperCase().replace("_", "");
+                        return normalizedClientRegion.contains(normalizedRegionCode) ||
+                                normalizedRegionCode.contains(normalizedClientRegion) ||
+                                (normalizedClientRegion.contains("SIDI") && normalizedRegionCode.contains("SEDY")) ||
+                                (normalizedClientRegion.contains("SEDY") && normalizedRegionCode.contains("SIDI")) ||
+                                (normalizedClientRegion.contains("FIDAA") && normalizedRegionCode.contains("FIDA")) ||
+                                (normalizedClientRegion.contains("FIDA") && normalizedRegionCode.contains("FIDAA"));
+                    });
+                })
+                .collect(Collectors.toList());
+    }
+
+    // Calcule les statistiques pour les raisons de non renouvellement
+    private Map<String, Long> calculateRaisonsStats(List<Client> clients) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        for (RaisonNonRenouvellement raison : RaisonNonRenouvellement.values()) {
+            long count = clients.stream()
+                    .filter(client -> raison.equals(client.getRaisonNonRenouvellement()))
+                    .count();
+            stats.put(raison.getDisplayName(), count);
+        }
+        return stats;
+    }
+
+    // Calcule les statistiques pour la qualité de service
+    private Map<String, Long> calculateQualiteStats(List<Client> clients) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        for (QualiteService qualite : QualiteService.values()) {
+            long count = clients.stream()
+                    .filter(client -> qualite.equals(client.getQualiteService()))
+                    .count();
+            stats.put(qualite.getDisplayName(), count);
+        }
+        return stats;
+    }
+
+    // Calcule les statistiques pour l'intérêt au crédit
+    private Map<String, Long> calculateInteretCreditStats(List<Client> clients) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        for (InteretCredit interet : InteretCredit.values()) {
+            long count = clients.stream()
+                    .filter(client -> interet.equals(client.getInteretNouveauCredit()))
+                    .count();
+            stats.put(interet.getDisplayName(), count);
+        }
+        return stats;
+    }
+
+    // Calcule les statistiques pour les facteurs d'influence
+    private Map<String, Long> calculateFacteurInfluenceStats(List<Client> clients) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        for (FacteurInfluence facteur : FacteurInfluence.values()) {
+            long count = clients.stream()
+                    .filter(client -> facteur.equals(client.getFacteurInfluence()))
+                    .count();
+            stats.put(facteur.getDisplayName(), count);
+        }
+        return stats;
+    }
+
+    // Calcule les statistiques pour les profils
+    private Map<String, Long> calculateProfilStats(List<Client> clients) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        for (Profil profil : Profil.values()) {
+            long count = clients.stream()
+                    .filter(client -> profil.equals(client.getProfil()))
+                    .count();
+            stats.put(profil.getDisplayName(), count);
+        }
+        return stats;
+    }
+
+    // Calcule les statistiques pour les activités client
+    private Map<String, Long> calculateActiviteClientStats(List<Client> clients) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        for (ActiviteClient activite : ActiviteClient.values()) {
+            long count = clients.stream()
+                    .filter(client -> activite.equals(client.getActiviteClient()))
+                    .count();
+            stats.put(activite.getDisplayName(), count);
+        }
+        return stats;
+    }
+
+    // Calcule les statistiques pour les rendez-vous
+    private Map<String, Long> calculateRendezVousStats(List<Client> clients) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        long countYes = clients.stream()
+                .filter(client -> Boolean.TRUE.equals(client.getRendezVousAgence()))
+                .count();
+        long countNo = clients.stream()
+                .filter(client -> Boolean.FALSE.equals(client.getRendezVousAgence()))
+                .count();
+        stats.put("Oui", countYes);
+        stats.put("Non", countNo);
+        return stats;
+    }
+
+    // Calcule les statistiques par branche
+    private Map<String, Long> calculateBrancheStats(List<Client> clients) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        for (Branche branche : Branche.values()) {
+            long count = clients.stream()
+                    .filter(client -> branche.equals(client.getNMBRA()))
+                    .count();
+            stats.put(branche.getDisplayName(), count);
+        }
+        return stats;
+    }
+
+    // Calcule les statistiques de progression par mois
+    private Map<String, Long> calculateProgressionStats(List<Client> clients) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        LocalDateTime now = LocalDateTime.now();
+
+        // Pour les 6 derniers mois
+        for (int i = 5; i >= 0; i--) {
+            LocalDateTime start = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime end = start.plusMonths(1).minusSeconds(1);
+            String monthYear = start.format(DateTimeFormatter.ofPattern("MM/yyyy"));
+
+            long contactedCount = clients.stream()
+                    .filter(client -> client.getStatus() == ClientStatus.CONTACTE &&
+                            client.getUpdatedAt() != null &&
+                            client.getUpdatedAt().isAfter(start) &&
+                            client.getUpdatedAt().isBefore(end))
+                    .count();
+
+            stats.put(monthYear, contactedCount);
+        }
+
+        return stats;
+    }
+
+    // Calcule les statistiques de progression pour une période spécifique
+    private Map<String, Long> calculateProgressionByMonthForFilteredClients(List<Client> clients, LocalDateTime start, LocalDateTime end) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+
+        // Calculer le nombre de mois entre start et end
+        long monthsBetween = ChronoUnit.MONTHS.between(
+                start.toLocalDate().withDayOfMonth(1),
+                end.toLocalDate().withDayOfMonth(1)
+        ) + 1;
+
+        // Limiter à 6 mois maximum pour l'affichage
+        int monthsToShow = (int) Math.min(monthsBetween, 6);
+
+        LocalDateTime currentEnd = end;
+        for (int i = 0; i < monthsToShow; i++) {
+            LocalDateTime monthStart = currentEnd.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime monthEnd = monthStart.plusMonths(1).minusSeconds(1);
+
+            // Si le mois dépasse la date de début, ajuster
+            if (monthStart.isBefore(start)) {
+                monthStart = start;
+            }
+
+            String monthYear = monthStart.format(DateTimeFormatter.ofPattern("MM/yyyy"));
+            final LocalDateTime finalMonthStart = monthStart;
+            final LocalDateTime finalMonthEnd = monthEnd;
+
+            long contactedCount = clients.stream()
+                    .filter(client -> client.getStatus() == ClientStatus.CONTACTE &&
+                            client.getUpdatedAt() != null &&
+                            client.getUpdatedAt().isAfter(finalMonthStart) &&
+                            client.getUpdatedAt().isBefore(finalMonthEnd))
+                    .count();
+
+            stats.put(monthYear, contactedCount);
+
+            // Passer au mois précédent
+            currentEnd = monthStart.minusDays(1);
+        }
+
+        return stats;
     }
 
     @GetMapping("/api/export/raison/{raisonValue}")

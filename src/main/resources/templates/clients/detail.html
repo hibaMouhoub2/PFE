@@ -296,7 +296,7 @@
     <h3><i class="fas fa-building me-2"></i>Réponses questionnaire</h3>
     <div class="row">
       <div class="col-md-6">
-        <p><span class="info-label">Raisons :</span> <span th:text="${client.raisonNonRenouvellement.getDisplayName() ?: '-'}">-</span></p>
+        <p><span class="info-label">Raisons :</span> <span th:text="${client.raisonNonRenouvellement?.getDisplayName() ?: '-'}">-</span></p>
         <p><span class="info-label">Autres raisons :</span> <span th:text="${client.autresRaisons?: '-'}">-</span></p>
 
         <p>
