@@ -1,10 +1,11 @@
 package com.example.projetpfe.controller;
 
-import ch.qos.logback.core.model.Model;
+
 import com.example.projetpfe.entity.*;
 import com.example.projetpfe.repository.ClientRepository;
 import com.example.projetpfe.repository.UserRepository;
 import com.example.projetpfe.service.Impl.ClientService;
+import com.example.projetpfe.service.Impl.RegionService;
 import com.example.projetpfe.service.Impl.ReportService;
 import com.example.projetpfe.service.UserService;
 import com.example.projetpfe.util.ExcelExportUtil;
@@ -18,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -46,7 +48,7 @@ public class ReportController {
     private UserRepository userRepository;
 
     @Autowired
-    private ClientService clientService;
+    private RegionService regionService;
     @Autowired
     private UserService userService;
 
@@ -55,38 +57,59 @@ public class ReportController {
         this.reportService = reportService;
     }
 
+    // Dans la méthode showQuestionnaireReport de ReportController.java
     @GetMapping("/questionnaire")
-    public String showQuestionnaireReport() {
+    public String showQuestionnaireReport(Model model) {
+        // Récupérer l'utilisateur connecté
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(auth.getName());
+        boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
+
+        // Si c'est un super admin, récupérer toutes les régions
+        if (isSuperAdmin) {
+            List<Region> regions = regionService.findAll();
+            model.addAttribute("regions", regions);
+            model.addAttribute("isSuperAdmin", true);
+        }
+
         return "admin/reports/questionnaire";
     }
-
     @GetMapping("/api/data")
     @ResponseBody
     public Map<String, Object> getReportData(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) Long regionId) {
 
         // Récupérer l'utilisateur connecté
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = userRepository.findByEmail(auth.getName());
         boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
 
-        // Obtenir les codes de région pour un admin régional
-        final List<String> regionCodes = new ArrayList<>();
-        if (!isSuperAdmin && currentUser.getRegions() != null) {
-            regionCodes.addAll(currentUser.getRegions().stream()
-                    .filter(region -> region != null && region.getCode() != null)
-                    .map(Region::getCode)
-                    .collect(Collectors.toList()));
-
+        // Obtenir la région si un ID est fourni et si l'utilisateur est super admin
+        Region selectedRegion = null;
+        if (isSuperAdmin && regionId != null) {
+            selectedRegion = regionService.findById(regionId).orElse(null);
         }
+
+        // Utiliser le reste du code existant pour traiter les données
+        Map<String, Object> data = new HashMap<>();
 
         // Si aucune date n'est fournie, utiliser des dates par défaut (tout)
         if (startDate == null && endDate == null) {
-            Map<String, Object> data = new HashMap<>();
-
-            // Pour un super admin, utiliser les méthodes existantes
-            if (isSuperAdmin) {
+            // Si une région est sélectionnée et que l'utilisateur est super admin
+            if (isSuperAdmin && selectedRegion != null) {
+                data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStatsByRegion(selectedRegion));
+                data.put("qualiteService", reportService.getQualiteServiceStatsByRegion(selectedRegion));
+                data.put("interetCredit", reportService.getInteretCreditStatsByRegion(selectedRegion));
+                data.put("facteurInfluence", reportService.getFacteurInfluenceStatsByRegion(selectedRegion));
+                data.put("profil", reportService.getProfilStatsByRegion(selectedRegion));
+                data.put("activiteClient", reportService.getActiviteClientStatsByRegion(selectedRegion));
+                data.put("rendezVous", reportService.getRendezVousStatsByRegion(selectedRegion));
+                data.put("branche", reportService.getBrancheStatsByRegion(selectedRegion));
+                data.put("progression", reportService.getStatusProgressionByMonthAndRegion(selectedRegion));
+            } else {
+                // Code existant pour obtenir toutes les données
                 data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStats());
                 data.put("qualiteService", reportService.getQualiteServiceStats());
                 data.put("interetCredit", reportService.getInteretCreditStats());
@@ -96,62 +119,38 @@ public class ReportController {
                 data.put("rendezVous", reportService.getRendezVousStats());
                 data.put("branche", reportService.getBrancheStats());
                 data.put("progression", reportService.getStatusProgressionByMonth());
-            } else {
-                // Pour un admin régional, filtrer les clients et calculer les statistiques
-                List<Client> filteredClients = filterClientsByRegionForStats(regionCodes);
-
-                data.put("raisonsNonRenouvellement", calculateRaisonsStats(filteredClients));
-                data.put("qualiteService", calculateQualiteStats(filteredClients));
-                data.put("interetCredit", calculateInteretCreditStats(filteredClients));
-                data.put("facteurInfluence", calculateFacteurInfluenceStats(filteredClients));
-                data.put("profil", calculateProfilStats(filteredClients));
-                data.put("activiteClient", calculateActiviteClientStats(filteredClients));
-                data.put("rendezVous", calculateRendezVousStats(filteredClients));
-                data.put("branche", calculateBrancheStats(filteredClients));
-                data.put("progression", calculateProgressionStats(filteredClients));
             }
-
-            return data;
-        }
-
-        // Initialiser les dates si une seule est fournie
-        if (startDate == null) {
-            startDate = LocalDate.now().minusMonths(6); // Par défaut, 6 mois en arrière
-        }
-        if (endDate == null) {
-            endDate = LocalDate.now();
-        }
-
-        // Convertir en LocalDateTime pour avoir le début et la fin des jours
-        LocalDateTime start = startDate.atStartOfDay();
-        LocalDateTime end = endDate.atTime(LocalTime.MAX);
-
-        Map<String, Object> data = new HashMap<>();
-
-        // Pour un super admin, utiliser les méthodes existantes avec dates
-        if (isSuperAdmin) {
-            data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStats(start, end));
-            data.put("qualiteService", reportService.getQualiteServiceStats(start, end));
-            data.put("interetCredit", reportService.getInteretCreditStats(start, end));
-            data.put("facteurInfluence", reportService.getFacteurInfluenceStats(start, end));
-            data.put("profil", reportService.getProfilStats(start, end));
-            data.put("activiteClient", reportService.getActiviteClientStats(start, end));
-            data.put("rendezVous", reportService.getRendezVousStats(start, end));
-            data.put("branche", reportService.getBrancheStats(start, end));
-            data.put("progression", reportService.getStatusProgressionByMonth(start, end));
         } else {
-            // Pour un admin régional, filtrer par région et dates
-            List<Client> filteredClients = filterClientsByRegionAndDateForStats(regionCodes, start, end);
+            // Initialiser les dates si une seule est fournie
+            LocalDateTime start = startDate != null ?
+                    startDate.atStartOfDay() : LocalDateTime.now().minusMonths(1);
+            LocalDateTime end = endDate != null ?
+                    endDate.atTime(LocalTime.MAX) : LocalDateTime.now();
 
-            data.put("raisonsNonRenouvellement", calculateRaisonsStats(filteredClients));
-            data.put("qualiteService", calculateQualiteStats(filteredClients));
-            data.put("interetCredit", calculateInteretCreditStats(filteredClients));
-            data.put("facteurInfluence", calculateFacteurInfluenceStats(filteredClients));
-            data.put("profil", calculateProfilStats(filteredClients));
-            data.put("activiteClient", calculateActiviteClientStats(filteredClients));
-            data.put("rendezVous", calculateRendezVousStats(filteredClients));
-            data.put("branche", calculateBrancheStats(filteredClients));
-            data.put("progression", calculateProgressionByMonthForFilteredClients(filteredClients, start, end));
+            // Même logique pour le filtrage par région avec dates
+            if (isSuperAdmin && selectedRegion != null) {
+                // Filtrer les données par région et dates
+                data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("qualiteService", reportService.getQualiteServiceStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("interetCredit", reportService.getInteretCreditStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("facteurInfluence", reportService.getFacteurInfluenceStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("profil", reportService.getProfilStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("activiteClient", reportService.getActiviteClientStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("rendezVous", reportService.getRendezVousStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("branche", reportService.getBrancheStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("progression", reportService.getStatusProgressionByMonthAndRegionAndDate(selectedRegion, start, end));
+            } else {
+                // Code existant pour le filtrage par dates
+                data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStats(start, end));
+                data.put("qualiteService", reportService.getQualiteServiceStats(start, end));
+                data.put("interetCredit", reportService.getInteretCreditStats(start, end));
+                data.put("facteurInfluence", reportService.getFacteurInfluenceStats(start, end));
+                data.put("profil", reportService.getProfilStats(start, end));
+                data.put("activiteClient", reportService.getActiviteClientStats(start, end));
+                data.put("rendezVous", reportService.getRendezVousStats(start, end));
+                data.put("branche", reportService.getBrancheStats(start, end));
+                data.put("progression", reportService.getStatusProgressionByMonth(start, end));
+            }
         }
 
         return data;
@@ -587,5 +586,31 @@ public class ReportController {
         data.put("dailyActivity", reportService.getDailyAgentActivityStats(start, end));
 
         return data;
+    }
+
+    // Ajouter dans ReportController.java
+    @GetMapping("/api/regions")
+    @ResponseBody
+    public List<Map<String, Object>> getRegions() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(auth.getName());
+        boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
+
+        if (!isSuperAdmin) {
+            return Collections.emptyList();
+        }
+
+        // Récupérer toutes les régions
+        List<Region> regions = regionService.findAll();
+
+        // Convertir en format approprié pour JSON
+        return regions.stream()
+                .map(region -> {
+                    Map<String, Object> regionMap = new HashMap<>();
+                    regionMap.put("id", region.getId());
+                    regionMap.put("name", region.getName());
+                    return regionMap;
+                })
+                .collect(Collectors.toList());
     }
 }

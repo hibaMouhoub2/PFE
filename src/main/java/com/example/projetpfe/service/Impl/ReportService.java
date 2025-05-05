@@ -318,4 +318,443 @@ public class ReportService {
 
         return result;
     }
+
+    /**
+     * Obtient les statistiques des raisons de non-renouvellement filtrées par région
+     */
+    public Map<String, Long> getRaisonsNonRenouvellementStatsByRegion(Region region) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (RaisonNonRenouvellement raison : RaisonNonRenouvellement.values()) {
+            // Compter les clients qui correspondent à cette raison et cette région
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> raison.equals(client.getRaisonNonRenouvellement())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode))
+                    .count();
+
+            stats.put(raison.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    /**
+     * Obtient les statistiques de qualité de service filtrées par région
+     */
+    public Map<String, Long> getQualiteServiceStatsByRegion(Region region) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (QualiteService qualite : QualiteService.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> qualite.equals(client.getQualiteService())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode))
+                    .count();
+
+            stats.put(qualite.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    /**
+     * Obtient les statistiques d'intérêt pour le crédit filtrées par région
+     */
+    public Map<String, Long> getInteretCreditStatsByRegion(Region region) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (InteretCredit interet : InteretCredit.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> interet.equals(client.getInteretNouveauCredit())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode))
+                    .count();
+
+            stats.put(interet.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    /**
+     * Obtient les statistiques des facteurs d'influence filtrées par région
+     */
+    public Map<String, Long> getFacteurInfluenceStatsByRegion(Region region) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (FacteurInfluence facteur : FacteurInfluence.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> facteur.equals(client.getFacteurInfluence())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode))
+                    .count();
+
+            stats.put(facteur.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    /**
+     * Obtient les statistiques de profil client filtrées par région
+     */
+    public Map<String, Long> getProfilStatsByRegion(Region region) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (Profil profil : Profil.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> profil.equals(client.getProfil())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode))
+                    .count();
+
+            stats.put(profil.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    /**
+     * Obtient les statistiques d'activité client filtrées par région
+     */
+    public Map<String, Long> getActiviteClientStatsByRegion(Region region) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (ActiviteClient activite : ActiviteClient.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> activite.equals(client.getActiviteClient())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode))
+                    .count();
+
+            stats.put(activite.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    /**
+     * Obtient les statistiques de rendez-vous filtrées par région
+     */
+    public Map<String, Long> getRendezVousStatsByRegion(Region region) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        // Pour les clients avec rendez-vous
+        long countOui = clientRepository.findAll().stream()
+                .filter(client -> Boolean.TRUE.equals(client.getRendezVousAgence())
+                        && client.getNMREG() != null
+                        && matchesRegion(client.getNMREG(), regionCode))
+                .count();
+
+        // Pour les clients sans rendez-vous
+        long countNon = clientRepository.findAll().stream()
+                .filter(client -> Boolean.FALSE.equals(client.getRendezVousAgence())
+                        && client.getNMREG() != null
+                        && matchesRegion(client.getNMREG(), regionCode))
+                .count();
+
+        stats.put("Oui", countOui);
+        stats.put("Non", countNon);
+
+        return stats;
+    }
+
+    /**
+     * Obtient les statistiques par branche filtrées par région
+     */
+    public Map<String, Long> getBrancheStatsByRegion(Region region) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (Branche branche : Branche.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> branche.equals(client.getNMBRA())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode))
+                    .count();
+
+            stats.put(branche.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    /**
+     * Obtient les statistiques de progression par mois filtrées par région
+     */
+    public Map<String, Long> getStatusProgressionByMonthAndRegion(Region region) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        LocalDateTime now = LocalDateTime.now();
+        String regionCode = region.getCode();
+
+        // Pour les 6 derniers mois
+        for (int i = 5; i >= 0; i--) {
+            LocalDateTime start = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime end = start.plusMonths(1).minusSeconds(1);
+            String monthYear = start.format(DateTimeFormatter.ofPattern("MM/yyyy"));
+
+            long contactedCount = clientRepository.findAll().stream()
+                    .filter(client -> client.getStatus() == ClientStatus.CONTACTE
+                            && client.getUpdatedAt() != null
+                            && client.getUpdatedAt().isAfter(start)
+                            && client.getUpdatedAt().isBefore(end)
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode))
+                    .count();
+
+            stats.put(monthYear, contactedCount);
+        }
+
+        return stats;
+    }
+
+    /**
+     * Versions avec dates pour chaque méthode
+     */
+
+    public Map<String, Long> getRaisonsNonRenouvellementStatsByRegionAndDate(Region region, LocalDateTime start, LocalDateTime end) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (RaisonNonRenouvellement raison : RaisonNonRenouvellement.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> raison.equals(client.getRaisonNonRenouvellement())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode)
+                            && client.getUpdatedAt() != null
+                            && client.getUpdatedAt().isAfter(start)
+                            && client.getUpdatedAt().isBefore(end))
+                    .count();
+
+            stats.put(raison.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    public Map<String, Long> getQualiteServiceStatsByRegionAndDate(Region region, LocalDateTime start, LocalDateTime end) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (QualiteService qualite : QualiteService.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> qualite.equals(client.getQualiteService())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode)
+                            && client.getUpdatedAt() != null
+                            && client.getUpdatedAt().isAfter(start)
+                            && client.getUpdatedAt().isBefore(end))
+                    .count();
+
+            stats.put(qualite.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    public Map<String, Long> getInteretCreditStatsByRegionAndDate(Region region, LocalDateTime start, LocalDateTime end) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (InteretCredit interet : InteretCredit.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> interet.equals(client.getInteretNouveauCredit())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode)
+                            && client.getUpdatedAt() != null
+                            && client.getUpdatedAt().isAfter(start)
+                            && client.getUpdatedAt().isBefore(end))
+                    .count();
+
+            stats.put(interet.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    public Map<String, Long> getFacteurInfluenceStatsByRegionAndDate(Region region, LocalDateTime start, LocalDateTime end) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (FacteurInfluence facteur : FacteurInfluence.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> facteur.equals(client.getFacteurInfluence())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode)
+                            && client.getUpdatedAt() != null
+                            && client.getUpdatedAt().isAfter(start)
+                            && client.getUpdatedAt().isBefore(end))
+                    .count();
+
+            stats.put(facteur.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    public Map<String, Long> getProfilStatsByRegionAndDate(Region region, LocalDateTime start, LocalDateTime end) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (Profil profil : Profil.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> profil.equals(client.getProfil())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode)
+                            && client.getUpdatedAt() != null
+                            && client.getUpdatedAt().isAfter(start)
+                            && client.getUpdatedAt().isBefore(end))
+                    .count();
+
+            stats.put(profil.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    public Map<String, Long> getActiviteClientStatsByRegionAndDate(Region region, LocalDateTime start, LocalDateTime end) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (ActiviteClient activite : ActiviteClient.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> activite.equals(client.getActiviteClient())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode)
+                            && client.getUpdatedAt() != null
+                            && client.getUpdatedAt().isAfter(start)
+                            && client.getUpdatedAt().isBefore(end))
+                    .count();
+
+            stats.put(activite.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    public Map<String, Long> getRendezVousStatsByRegionAndDate(Region region, LocalDateTime start, LocalDateTime end) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        // Pour les clients avec rendez-vous
+        long countOui = clientRepository.findAll().stream()
+                .filter(client -> Boolean.TRUE.equals(client.getRendezVousAgence())
+                        && client.getNMREG() != null
+                        && matchesRegion(client.getNMREG(), regionCode)
+                        && client.getUpdatedAt() != null
+                        && client.getUpdatedAt().isAfter(start)
+                        && client.getUpdatedAt().isBefore(end))
+                .count();
+
+        // Pour les clients sans rendez-vous
+        long countNon = clientRepository.findAll().stream()
+                .filter(client -> Boolean.FALSE.equals(client.getRendezVousAgence())
+                        && client.getNMREG() != null
+                        && matchesRegion(client.getNMREG(), regionCode)
+                        && client.getUpdatedAt() != null
+                        && client.getUpdatedAt().isAfter(start)
+                        && client.getUpdatedAt().isBefore(end))
+                .count();
+
+        stats.put("Oui", countOui);
+        stats.put("Non", countNon);
+
+        return stats;
+    }
+
+    public Map<String, Long> getBrancheStatsByRegionAndDate(Region region, LocalDateTime start, LocalDateTime end) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        for (Branche branche : Branche.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> branche.equals(client.getNMBRA())
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode)
+                            && client.getUpdatedAt() != null
+                            && client.getUpdatedAt().isAfter(start)
+                            && client.getUpdatedAt().isBefore(end))
+                    .count();
+
+            stats.put(branche.getDisplayName(), count);
+        }
+
+        return stats;
+    }
+
+    public Map<String, Long> getStatusProgressionByMonthAndRegionAndDate(Region region, LocalDateTime start, LocalDateTime end) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+        String regionCode = region.getCode();
+
+        // Calculer le nombre de mois entre start et end
+        long monthsBetween = ChronoUnit.MONTHS.between(
+                start.toLocalDate().withDayOfMonth(1),
+                end.toLocalDate().withDayOfMonth(1)
+        ) + 1;
+
+        // Limiter à 6 mois maximum pour l'affichage
+        int monthsToShow = (int) Math.min(monthsBetween, 6);
+
+        LocalDateTime currentEnd = end;
+        for (int i = 0; i < monthsToShow; i++) {
+            LocalDateTime monthStart = currentEnd.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime monthEnd = monthStart.plusMonths(1).minusSeconds(1);
+
+            // Si le mois dépasse la date de début, ajuster
+            if (monthStart.isBefore(start)) {
+                monthStart = start;
+            }
+
+            String monthYear = monthStart.format(DateTimeFormatter.ofPattern("MM/yyyy"));
+            final LocalDateTime finalMonthStart = monthStart;
+            final LocalDateTime finalMonthEnd = monthEnd;
+
+            long contactedCount = clientRepository.findAll().stream()
+                    .filter(client -> client.getStatus() == ClientStatus.CONTACTE
+                            && client.getUpdatedAt() != null
+                            && client.getUpdatedAt().isAfter(finalMonthStart)
+                            && client.getUpdatedAt().isBefore(finalMonthEnd)
+                            && client.getNMREG() != null
+                            && matchesRegion(client.getNMREG(), regionCode))
+                    .count();
+
+            stats.put(monthYear, contactedCount);
+
+            // Passer au mois précédent
+            currentEnd = monthStart.minusDays(1);
+        }
+
+        return stats;
+    }
+
+    /**
+     * Méthode utilitaire pour vérifier si une région client correspond à un code de région
+     * avec une correspondance plus souple
+     */
+    private boolean matchesRegion(String clientRegion, String regionCode) {
+        if (clientRegion == null || regionCode == null) {
+            return false;
+        }
+
+        // Normaliser les deux côtés pour une comparaison plus souple
+        String normalizedClientRegion = clientRegion.toUpperCase().replace(" ", "");
+        String normalizedRegionCode = regionCode.toUpperCase().replace("_", "");
+
+        // Vérifier si l'une contient l'autre (comparaison partielle)
+        return normalizedClientRegion.contains(normalizedRegionCode) ||
+                normalizedRegionCode.contains(normalizedClientRegion) ||
+                // Traiter les variantes orthographiques potentielles
+                (normalizedClientRegion.contains("SIDI") && normalizedRegionCode.contains("SEDY")) ||
+                (normalizedClientRegion.contains("SEDY") && normalizedRegionCode.contains("SIDI")) ||
+                (normalizedClientRegion.contains("FIDAA") && normalizedRegionCode.contains("FIDA")) ||
+                (normalizedClientRegion.contains("FIDA") && normalizedRegionCode.contains("FIDAA"));
+    }
 }
