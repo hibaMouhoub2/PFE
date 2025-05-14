@@ -1,6 +1,8 @@
 package com.example.projetpfe.service;
 
 import com.example.projetpfe.dto.UserDto;
+import com.example.projetpfe.entity.Client;
+import com.example.projetpfe.entity.Direction;
 import com.example.projetpfe.entity.User;
 
 import java.util.List;
@@ -46,4 +48,9 @@ public interface UserService {
     boolean isRegionalAdmin(User user);
 
     List<UserDto> findUsersByCreator(Long creatorId);
+
+    boolean isDirectionAdmin(User user);
+    boolean isUserManagingDirection(User user, Direction direction);
+    boolean canUserManageClient(User user, Client client);
+    List<UserDto> findUsersByDirection(Long directionId);
 }

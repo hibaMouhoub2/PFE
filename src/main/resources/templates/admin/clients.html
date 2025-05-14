@@ -195,6 +195,8 @@
                         <option value="CONTACTE" th:selected="${selectedStatus == 'CONTACTE'}">Contacté</option>
                         <option value="ABSENT" th:selected="${selectedStatus == 'ABSENT'}">Absent</option>
                         <option value="REFUS" th:selected="${selectedStatus == 'REFUS'}">Refus</option>
+                        <option value="INJOIGNABLE" th:selected="${selectedStatus == 'INJOIGNABLE'}">Injoignable</option>
+                        <option value="NUMERO_ERRONE" th:selected="${selectedStatus == 'NUMERO_ERRONE'}">Numéro erroné</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -209,10 +211,13 @@
                         </option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label for="rdvDate" class="form-label">Date de RDV</label>
-                    <input type="date" id="rdvDate" name="rdvDate" class="form-control"
-                           th:value="${rdvDate != null ? rdvDate : ''}">
+                <div class="col-md-3">
+                    <label for="direction" class="form-label">Direction</label>
+                    <select id="direction" name="direction" class="form-select">
+                        <option value="">Toutes les directions</option>
+                        <option value="CASA_SUD" th:selected="${selectedDirection == 'CASA_SUD'}">CASA SUD</option>
+                        <option value="CASA_NORD" th:selected="${selectedDirection == 'CASA_NORD'}">CASA NORD</option>
+                    </select>
                 </div>
                 <div class="col-md-3">
                     <label for="branche" class="form-label">Branche</label>
@@ -226,6 +231,12 @@
                         </option>
                     </select>
                 </div>
+                <div class="col-md-2">
+                    <label for="rdvDate" class="form-label">Date de RDV</label>
+                    <input type="date" id="rdvDate" name="rdvDate" class="form-control"
+                           th:value="${rdvDate != null ? rdvDate : ''}">
+                </div>
+
                 <div class="col-md-3">
                     <label for="searchQuery" class="form-label">Recherche</label>
                     <input type="text" id="searchQuery" name="q" class="form-control" placeholder="Nom, prénom, CIN...">

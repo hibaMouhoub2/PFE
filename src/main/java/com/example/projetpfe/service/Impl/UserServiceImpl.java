@@ -1,10 +1,8 @@
 package com.example.projetpfe.service.Impl;
 
 import com.example.projetpfe.dto.UserDto;
-import com.example.projetpfe.entity.AuditType;
-import com.example.projetpfe.entity.Region;
-import com.example.projetpfe.entity.Role;
-import com.example.projetpfe.entity.User;
+import com.example.projetpfe.entity.*;
+import com.example.projetpfe.repository.DirectionRepository;
 import com.example.projetpfe.repository.RegionRepository;
 import com.example.projetpfe.repository.RoleRepository;
 import com.example.projetpfe.repository.UserRepository;
@@ -28,6 +26,8 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private RoleRepository roleRepository;
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private DirectionRepository directionRepository;
 
     @Autowired
     private RegionRepository regionRepository;
@@ -560,4 +560,67 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Vérifie si l'utilisateur est un directeur (responsable d'une direction)
+     */
+    @Override
+    public boolean isDirectionAdmin(User user) {
+        return user.getRoles().stream()
+                .anyMatch(role -> role.getName().equals("ROLE_ADMIN"))
+                && user.getDirection() != null;
+    }
+
+    /**
+     * Vérifie si l'utilisateur est responsable d'une direction spécifique
+     */
+    @Override
+    public boolean isUserManagingDirection(User user, Direction direction) {
+        if (user == null || direction == null) {
+            return false;
+        }
+
+        // Super admin peut gérer toutes les directions
+        if (isSuperAdmin(user)) {
+            return true;
+        }
+
+        // Vérifier si l'utilisateur est un admin de cette direction
+        return isDirectionAdmin(user) &&
+                user.getDirection() != null &&
+                user.getDirection().getId().equals(direction.getId());
+    }
+
+    @Override
+    public boolean canUserManageClient(User user, Client client) {
+        if (user == null || client == null) {
+            return false;
+        }
+
+        // Super admin peut gérer tous les clients
+        if (isSuperAdmin(user)) {
+            return true;
+        }
+
+        // Si l'utilisateur est un admin de direction
+        if (isDirectionAdmin(user) && user.getDirection() != null && client.getNMDIR() != null) {
+            // Vérifier si le client appartient à la direction de l'utilisateur
+            return user.getDirection().getCode().equals(client.getNMDIR());
+        }
+
+        // Si l'utilisateur est un agent, vérifier s'il est assigné à ce client
+        return user.getId().equals(client.getAssignedUser().getId());
+    }
+    @Override
+    public List<UserDto> findUsersByDirection(Long directionId) {
+        Direction direction = directionRepository.findById(directionId)
+                .orElseThrow(() -> new RuntimeException("Direction non trouvée avec l'ID: " + directionId));
+
+        // Récupérer les utilisateurs par direction
+        List<User> users = userRepository.findByDirection(direction);
+
+        // Convertir en DTO
+        return users.stream()
+                .map(this::convertEntityToDto)
+                .collect(Collectors.toList());
+    }
 }

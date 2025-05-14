@@ -164,7 +164,7 @@
                     <div class="me-2">
                         <select class="form-select form-select-sm" id="brancheFilter">
                             <option value="">Toutes les branches</option>
-                            <option th:each="branche : ${T(com.example.projetpfe.entity.Branche).values()}"
+                            <option th:each="branche : ${branches}"
                                     th:value="${branche}"
                                     th:text="${branche.displayName}">Branche</option>
                         </select>

@@ -350,23 +350,21 @@ public class ClientService {
         int importedCount = 0;
         int skippedCount = 0;
         List<String> skippedCins = new ArrayList<>();
-        List<String> skippedForRegion = new ArrayList<>();
+        List<String> skippedForDirection = new ArrayList<>();
 
         System.out.println("Starting import for user: " + userEmail);
 
-        // Récupérer l'utilisateur connecté et sa région
+        // Récupérer l'utilisateur connecté et sa direction
         User currentUser = userRepository.findByEmail(userEmail);
         boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
 
-        List<String> userRegionCodes = new ArrayList<>();
-        if (!isSuperAdmin && currentUser.getRegions() != null) {
-            userRegionCodes = currentUser.getRegions().stream()
-                    .filter(region -> region != null && region.getCode() != null)
-                    .map(Region::getCode)
-                    .collect(Collectors.toList());
+        // Récupérer le code de direction de l'administrateur
+        String userDirectionCode = null;
+        if (!isSuperAdmin && currentUser.getDirection() != null) {
+            userDirectionCode = currentUser.getDirection().getCode();
         }
 
-        System.out.println("User region codes: " + userRegionCodes);
+        System.out.println("User direction codes: " + userDirectionCode);
         System.out.println("Is super admin: " + isSuperAdmin);
 
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
@@ -385,9 +383,10 @@ public class ClientService {
                 if (isEmptyRow(row)) continue;
                 // Récupérer le CIN avant de créer le client
                 String cin = getCellValueAsString(row.getCell(3));  // Indice 3 pour la colonne CIN
-                String nmreg = getCellValueAsString(row.getCell(1));
+                String nmdir = getCellValueAsString(row.getCell(0));
 
-                System.out.println("Processing row - CIN: " + cin + ", NMREG: " + nmreg);
+                System.out.println("Processing row - CIN: " + cin + ", NMDIR: " + nmdir);
+
 
                 // Vérifier si le CIN existe déjà
                 if (cin != null && !cin.isEmpty() && clientRepository.existsByCin(cin)) {
@@ -398,40 +397,28 @@ public class ClientService {
                 }
 
                 // Vérifier si le client appartient à la région de l'utilisateur avec une comparaison plus souple
-                boolean regionMatches = false;
+                boolean directionMatches = false;
 
                 if (isSuperAdmin) {
-                    regionMatches = true;
-                } else {
-                    // Vérifier si l'un des codes de région de l'utilisateur correspond
-                    for (String userRegion : userRegionCodes) {
-                        // Normaliser les deux côtés pour la comparaison (supprimer les tirets bas et les espaces)
-                        String normalizedUserRegion = userRegion.replace("_", "").replace(" ", "");
-                        String normalizedNmreg = nmreg != null ? nmreg.replace("_", "").replace(" ", "") : "";
-
-                        if (normalizedUserRegion.equalsIgnoreCase(normalizedNmreg)) {
-                            regionMatches = true;
-                            System.out.println("Region match found: " + userRegion + " matches " + nmreg);
-                            break;
-                        }
-                    }
+                    directionMatches = true;
+                } else if (userDirectionCode != null && nmdir != null) {
+                    // Vérifier si la direction correspond
+                    directionMatches = nmdir.equals(userDirectionCode);
+                    System.out.println("Direction match check: " + nmdir + " vs " + userDirectionCode + " = " + directionMatches);
                 }
-
-                System.out.println("Region match for " + cin + ": " + regionMatches);
-
-                if (!regionMatches) {
+                if (!directionMatches) {
                     skippedCount++;
                     if (cin != null && !cin.isEmpty()) {
-                        skippedForRegion.add(cin);
+                        skippedForDirection.add(cin);
                     }
-                    System.out.println("Skipping client " + cin + " - region mismatch");
+                    System.out.println("Skipping client " + cin + " - direction mismatch");
                     continue;
                 }
 
                 Client client = new Client();
 
                 // Mappage des colonnes Excel vers les propriétés de l'entité Client
-                client.setNMDIR(getCellValueAsString(row.getCell(0)));  // NMDIR
+                client.setNMDIR(nmdir);  // NMDIR
                 client.setNMREG(getCellValueAsString(row.getCell(1)));  // NMREG
 
                 // Pour NMBRA (enum), conversion nécessaire
@@ -508,7 +495,7 @@ public class ClientService {
 
             System.out.println("Import summary - Imported: " + importedCount + ", Skipped: " + skippedCount);
             System.out.println("Skipped CINs: " + skippedCins);
-            System.out.println("Skipped for region: " + skippedForRegion);
+            System.out.println("Skipped for direction: " + skippedForDirection);
 
             // Audit de l'importation
             auditService.auditEvent(AuditType.EXCEL_IMPORT,
@@ -518,7 +505,7 @@ public class ClientService {
                     userEmail);
         }
 
-        return new ImportResult(importedCount, skippedCount, skippedCins, skippedForRegion);
+        return new ImportResult(importedCount, skippedCount, skippedCins, skippedForDirection);
     }
 
     // Méthode auxiliaire pour parser NMBRA
@@ -634,6 +621,43 @@ public class ClientService {
 
     public List<Client> findUnassignedClientsByRegions(List<String> regionCodes) {
         return clientRepository.findByAssignedUserIsNullAndNMREGInOrderByUpdatedAtDesc(regionCodes);
+    }
+
+    /**
+     * Filtre les clients par direction (pour les statistiques et rapports)
+     */
+    public List<Client> filterClientsByDirection(String directionCode) {
+        if (directionCode == null) {
+            return new ArrayList<>();
+        }
+
+        return clientRepository.findAll().stream()
+                .filter(client -> directionCode.equals(client.getNMDIR()))
+                .collect(Collectors.toList());
+    }
+
+
+    public List<Client> filterClientsByDirectionAndDate(String directionCode, LocalDateTime start, LocalDateTime end) {
+        if (directionCode == null) {
+            return new ArrayList<>();
+        }
+
+        return clientRepository.findAll().stream()
+                .filter(client -> directionCode.equals(client.getNMDIR()) &&
+                        client.getUpdatedAt() != null &&
+                        client.getUpdatedAt().isAfter(start) &&
+                        client.getUpdatedAt().isBefore(end))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Trouve les clients non assignés par direction
+     */
+    public List<Client> findUnassignedClientsByDirection(String directionCode) {
+        return clientRepository.findAll().stream()
+                .filter(client -> client.getAssignedUser() == null &&
+                        directionCode.equals(client.getNMDIR()))
+                .collect(Collectors.toList());
     }
 
 }

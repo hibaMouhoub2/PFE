@@ -26,6 +26,11 @@ public class Region {
     @Column(nullable = false, unique = true)
     private String code;
 
+    // une région appartient à une direction
+    @ManyToOne
+    @JoinColumn(name = "direction_id", nullable = true)
+    private Direction direction;
+
     // Un admin régional peut être responsable de plusieurs régions
     @ManyToMany(mappedBy = "regions")
     private List<User> admins = new ArrayList<>();

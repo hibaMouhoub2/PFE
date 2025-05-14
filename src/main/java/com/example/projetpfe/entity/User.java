@@ -67,4 +67,14 @@ public class User
             inverseJoinColumns={@JoinColumn(name="ROLE_ID", referencedColumnName="ID")})
     private List<Role> roles = new ArrayList<>();
 
+    // un administrateur est responsable d'une direction
+    @ManyToOne
+    @JoinColumn(name = "direction_id")
+    private Direction direction;
+
+
+    // la branche assignée (puisque c'est un enum)
+    @Enumerated(EnumType.STRING)
+    private Branche assignedBranche;
+
 }

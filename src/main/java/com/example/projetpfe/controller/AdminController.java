@@ -4,6 +4,7 @@ import com.example.projetpfe.dto.ClientDto;
 import com.example.projetpfe.dto.UserDto;
 import com.example.projetpfe.entity.*;
 import com.example.projetpfe.repository.ClientRepository;
+import com.example.projetpfe.repository.DirectionRepository;
 import com.example.projetpfe.repository.UserRepository;
 import com.example.projetpfe.service.Impl.AuditService;
 import com.example.projetpfe.service.Impl.ClientService;
@@ -45,6 +46,8 @@ public class AdminController {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private DirectionRepository directionRepository;
 
     private final ClientService clientService;
     private final UserService userService;
@@ -58,6 +61,7 @@ public class AdminController {
         this.userService = userService;
         this.rappelService = rappelService;
     }
+
     @Autowired
     private AuditService auditService;
 
@@ -158,6 +162,7 @@ public class AdminController {
         System.out.println("DEBUG - Nombre final de clients affichés: " + clients.size());
         return "admin/clients";
     }
+
     @GetMapping("/search-results")
     public String showAdminSearchResults(Model model) {
         // Récupérer les résultats de recherche depuis l'attribut flash
@@ -192,39 +197,38 @@ public class AdminController {
         User currentUser = userRepository.findByEmail(auth.getName());
         boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
 
-        List<Client> unassignedClients = clientService.findUnassignedClients();
-        List<UserDto> users;
-        // Filtrer manuellement si ce n'est pas un super admin
-        if (!isSuperAdmin) {
-            users = userService.findAllUsers();
-            List<String> regionNames = currentUser.getRegions().stream()
-                    .map(Region::getName)
-                    .collect(Collectors.toList());
+        List<Client> unassignedClients;
+        List<UserDto> eligibleUsers;
 
+        // Si c'est un super admin, récupérer tous les clients non assignés
+        if (isSuperAdmin) {
+            unassignedClients = clientService.findUnassignedClients();
+            eligibleUsers = userService.findAllUsers();
+        } else {
+            // Pour un admin de direction, filtrer par sa direction
+            String directionCode = currentUser.getDirection() != null ?
+                    currentUser.getDirection().getCode() : null;
 
+            if (directionCode != null) {
+                unassignedClients = clientService.findUnassignedClientsByDirection(directionCode);
 
-            // Filtrer par correspondance partielle
-            unassignedClients = unassignedClients.stream()
-                    .filter(client -> {
-                        String nmreg = client.getNMREG();
-                        if (nmreg == null) return false;
-
-                        // Vérifier si une des régions de l'utilisateur correspond partiellement
-                        return regionNames.stream()
-                                .anyMatch(regionName -> nmreg.contains(regionName) ||
-                                        regionName.contains(nmreg));
-                    })
-                    .collect(Collectors.toList());
-        }else{
-            users = userService.findUsersByCreator(currentUser.getId());
+                // Récupérer uniquement les utilisateurs de cette direction
+                eligibleUsers = userService.findUsersByDirection(currentUser.getDirection().getId());
+            } else {
+                unassignedClients = new ArrayList<>();
+                eligibleUsers = new ArrayList<>();
+            }
         }
 
-
         model.addAttribute("clients", unassignedClients);
-        model.addAttribute("users", users);
+        model.addAttribute("users", eligibleUsers);
+
+        // Ajouter les branches pour le filtrage
+        model.addAttribute("branches", Branche.values());
 
         return "admin/unassigned-clients";
     }
+
 
 //    @GetMapping("/agenda")
 //    public String viewGlobalAgenda(Model model) {
@@ -265,21 +269,46 @@ public class AdminController {
                                @RequestParam Long userId,
                                RedirectAttributes redirectAttributes) {
         try {
-            // Vérifier que l'admin a le droit d'assigner à cet utilisateur
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            User currentAdmin = userRepository.findByEmail(auth.getName());
+            // Récupérer le client et l'utilisateur cible
+            Client client = clientService.getById(id);
             User targetUser = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("Utilisateur cible non trouvé"));
 
-            boolean isSuperAdmin = userService.isSuperAdmin(currentAdmin);
+            // Récupérer l'utilisateur courant (admin)
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            User currentUser = userRepository.findByEmail(auth.getName());
+            boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
 
-            // Vérifier si l'admin a le droit d'assigner
-            if (!isSuperAdmin && (targetUser.getCreatedByAdmin() == null ||
-                    !targetUser.getCreatedByAdmin().getId().equals(currentAdmin.getId()))) {
-                redirectAttributes.addFlashAttribute("error",
-                        "Vous ne pouvez assigner des clients qu'aux utilisateurs que vous avez créés");
-                return "redirect:/admin/clients";
+            // Vérifier que l'admin peut assigner ce client (basé sur la direction)
+            if (!isSuperAdmin && currentUser.getDirection() != null) {
+                String adminDirectionCode = currentUser.getDirection().getCode();
+
+                // Vérifier si le client appartient à la direction de l'admin
+                if (client.getNMDIR() == null || !client.getNMDIR().equals(adminDirectionCode)) {
+                    redirectAttributes.addFlashAttribute("error",
+                            "Vous ne pouvez assigner que des clients de votre direction");
+                    return "redirect:/admin/clients";
+                }
+
+                // Vérifier si l'utilisateur cible appartient à la direction de l'admin
+                if (targetUser.getDirection() == null ||
+                        !targetUser.getDirection().getId().equals(currentUser.getDirection().getId())) {
+                    redirectAttributes.addFlashAttribute("error",
+                            "Vous ne pouvez assigner des clients qu'aux utilisateurs de votre direction");
+                    return "redirect:/admin/clients";
+                }
+
+                // Vérifier que l'agent a la bonne branche si le client a une branche définie
+                if (client.getNMBRA() != null && targetUser.getAssignedBranche() != null &&
+                        !client.getNMBRA().equals(targetUser.getAssignedBranche())) {
+                    redirectAttributes.addFlashAttribute("error",
+                            "Vous ne pouvez assigner ce client qu'à un agent de la branche " +
+                                    client.getNMBRA().getDisplayName());
+                    return "redirect:/admin/clients";
+                }
             }
+
+            // Si toutes les vérifications passent, assigner le client
             clientService.assignToUser(id, userId);
             redirectAttributes.addFlashAttribute("success", "Client assigné avec succès");
             return "redirect:/admin/clients";
@@ -292,7 +321,6 @@ public class AdminController {
     public String assignMultipleClients(@RequestParam(required = false) List<Long> clientIds,
                                         @RequestParam Long userId,
                                         RedirectAttributes redirectAttributes) {
-
         if (clientIds == null || clientIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Aucun client sélectionné");
             return "redirect:/admin/unassigned-clients";
@@ -301,37 +329,49 @@ public class AdminController {
         try {
             // Récupérer l'authentification
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-            User currentAdmin = userRepository.findByEmail(auth.getName());
+            User currentUser = userRepository.findByEmail(auth.getName());
             User targetUser = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("Utilisateur cible non trouvé"));
 
-            boolean isSuperAdmin = userService.isSuperAdmin(currentAdmin);
+            boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
 
-            // Vérifier si l'admin a le droit d'assigner
-            if (!isSuperAdmin && (targetUser.getCreatedByAdmin() == null ||
-                    !targetUser.getCreatedByAdmin().getId().equals(currentAdmin.getId()))) {
-                redirectAttributes.addFlashAttribute("error",
-                        "Vous ne pouvez assigner des clients qu'aux utilisateurs que vous avez créés");
-                return "redirect:/admin/clients";
+            // Vérifications pour les administrateurs de direction
+            if (!isSuperAdmin && currentUser.getDirection() != null) {
+                String adminDirectionCode = currentUser.getDirection().getCode();
+
+                // Vérifier si l'utilisateur cible appartient à la direction de l'admin
+                if (targetUser.getDirection() == null ||
+                        !targetUser.getDirection().getId().equals(currentUser.getDirection().getId())) {
+                    redirectAttributes.addFlashAttribute("error",
+                            "Vous ne pouvez assigner des clients qu'aux utilisateurs de votre direction");
+                    return "redirect:/admin/unassigned-clients";
+                }
+
+                // Vérifier que tous les clients appartiennent à la direction de l'admin
+                for (Long clientId : clientIds) {
+                    Client client = clientService.getById(clientId);
+                    if (client.getNMDIR() == null || !client.getNMDIR().equals(adminDirectionCode)) {
+                        redirectAttributes.addFlashAttribute("error",
+                                "Certains clients sélectionnés n'appartiennent pas à votre direction");
+                        return "redirect:/admin/unassigned-clients";
+                    }
+
+                    // Vérifier la correspondance des branches si applicable
+                    if (targetUser.getAssignedBranche() != null && client.getNMBRA() != null &&
+                            !client.getNMBRA().equals(targetUser.getAssignedBranche())) {
+                        redirectAttributes.addFlashAttribute("error",
+                                "Certains clients ne correspondent pas à la branche de l'agent sélectionné");
+                        return "redirect:/admin/unassigned-clients";
+                    }
+                }
             }
 
+            // Si toutes les vérifications passent, assigner les clients
             int count = 0;
             for (Long clientId : clientIds) {
                 clientService.assignToUser(clientId, userId);
                 count++;
             }
-
-            // Récupérer l'utilisateur assigné pour l'audit
-            User assignedUser = userService.findById(userId);
-
-            // Audit de l'assignation multiple
-            String adminEmail = auth.getName();
-            auditService.auditEvent(AuditType.CLIENTS_BULK_ASSIGNED,
-                    "User",
-                    userId,
-                    count + " client(s) assigné(s) à " + assignedUser.getName(),
-                    adminEmail);
 
             redirectAttributes.addFlashAttribute("success", count + " client(s) assigné(s) avec succès");
             return "redirect:/admin/unassigned-clients";
@@ -340,7 +380,6 @@ public class AdminController {
             return "redirect:/admin/unassigned-clients";
         }
     }
-
     @GetMapping("/reports/daily")
     public String dailyReport(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                               Model model) {
@@ -371,155 +410,156 @@ public class AdminController {
         return "admin/rendez-vous-report";
     }
 
-//    @GetMapping("/export/clients")
+    //    @GetMapping("/export/clients")
 //    public String exportClients(Model model) {
 //        // La fonction d'export sera implémentée plus tard
 //        model.addAttribute("message", "Fonction d'export en cours de développement");
 //        return "admin/export";
 //    }
-@GetMapping("/agenda")
-public String viewAdminAgenda(Model model) {
-    // Récupérer l'utilisateur connecté
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    String userEmail = auth.getName();
-    User currentUser = userRepository.findByEmail(userEmail);
+    @GetMapping("/agenda")
+    public String viewAdminAgenda(Model model) {
+        // Récupérer l'utilisateur connecté
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+        User currentUser = userRepository.findByEmail(userEmail);
 
-    // Vérifier si l'utilisateur est un super admin ou un admin régional
-    boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
+        // Vérifier si l'utilisateur est un super admin ou un admin régional
+        boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
 
-    // Obtenir les codes de région pour l'affichage des logs
-    final List<String> regionCodes = new ArrayList<>();
-    if (!isSuperAdmin && currentUser.getRegions() != null) {
-        regionCodes.addAll(currentUser.getRegions().stream()
-                .filter(region -> region != null && region.getCode() != null)
-                .map(Region::getCode)
-                .collect(Collectors.toList()));
-    }
-
-    System.out.println("User: " + currentUser.getName());
-    System.out.println("Regions: " + (currentUser.getRegions() != null ? currentUser.getRegions().size() : "null"));
-    if (currentUser.getRegions() != null) {
-        for (Region region : currentUser.getRegions()) {
-            System.out.println("Region: " + region.getName() + ", Code: " + region.getCode());
+        // Obtenir les codes de région pour l'affichage des logs
+        final List<String> regionCodes = new ArrayList<>();
+        if (!isSuperAdmin && currentUser.getRegions() != null) {
+            regionCodes.addAll(currentUser.getRegions().stream()
+                    .filter(region -> region != null && region.getCode() != null)
+                    .map(Region::getCode)
+                    .collect(Collectors.toList()));
         }
-    }
-    System.out.println("Region codes: " + regionCodes);
 
-    List<Client> clientsNonTraites;
-    List<Client> clientsAbsents;
-    List<Client> clientsContactes;
-    List<Client> clientsRefus;
-    List<Client> clientsInjoignables;
-    List<Client> clientsNumeroErrone;
-
-    // Pour un super admin, récupérer tous les clients
-    if (isSuperAdmin) {
-        clientsNonTraites = clientService.findByStatus(ClientStatus.NON_TRAITE);
-        clientsAbsents = clientService.findByStatus(ClientStatus.ABSENT);
-        clientsContactes = clientService.findByStatus(ClientStatus.CONTACTE);
-        clientsRefus = clientService.findByStatus(ClientStatus.REFUS);
-        clientsInjoignables = clientService.findByStatus(ClientStatus.INJOIGNABLE);
-        clientsNumeroErrone = clientService.findByStatus(ClientStatus.NUMERO_ERRONE);
-    }
-    // Pour un admin régional, utiliser la méthode de filtrage souple
-    else {
-        clientsNonTraites = filterClientsByRegion(currentUser, ClientStatus.NON_TRAITE, null, null);
-        clientsAbsents = filterClientsByRegion(currentUser, ClientStatus.ABSENT, null, null);
-        clientsContactes = filterClientsByRegion(currentUser, ClientStatus.CONTACTE, null, null);
-        clientsRefus = filterClientsByRegion(currentUser, ClientStatus.REFUS, null, null);
-        clientsInjoignables = filterClientsByRegion(currentUser, ClientStatus.INJOIGNABLE, null, null);
-        clientsNumeroErrone = filterClientsByRegion(currentUser, ClientStatus.NUMERO_ERRONE, null, null);
-    }
-
-    // Ajouter des logs pour déboguer
-    System.out.println("Clients non traités: " + clientsNonTraites.size());
-    System.out.println("Clients absents: " + clientsAbsents.size());
-    System.out.println("Clients contactés: " + clientsContactes.size());
-    System.out.println("Clients refus: " + clientsRefus.size());
-    System.out.println("Clients injoignables: " + clientsInjoignables.size());
-    System.out.println("Clients numéro erroné: " + clientsNumeroErrone.size());
-
-    // Récupérer les rappels
-    List<Rappel> rappels;
-    if (isSuperAdmin) {
-        rappels = rappelService.getAllActiveRappels();
-    } else {
-        // Pour un admin régional, filtrer les rappels manuellement
-        // La liste regionCodes est maintenant finale
-        rappels = rappelService.getAllActiveRappels().stream()
-                .filter(rappel -> {
-                    Client client = rappel.getClient();
-                    if (client == null || client.getNMREG() == null) return false;
-
-                    String clientRegion = client.getNMREG().toUpperCase().replace(" ", "");
-
-                    return regionCodes.stream().anyMatch(regionCode -> {
-                        String normalizedRegionCode = regionCode.toUpperCase().replace("_", "");
-                        return clientRegion.contains(normalizedRegionCode) ||
-                                normalizedRegionCode.contains(clientRegion) ||
-                                (clientRegion.contains("SIDI") && normalizedRegionCode.contains("SEDY")) ||
-                                (clientRegion.contains("SEDY") && normalizedRegionCode.contains("SIDI")) ||
-                                (clientRegion.contains("FIDAA") && normalizedRegionCode.contains("FIDA")) ||
-                                (clientRegion.contains("FIDA") && normalizedRegionCode.contains("FIDAA"));
-                    });
-                })
-                .collect(Collectors.toList());
-    }
-
-    System.out.println("Rappels actifs: " + rappels.size());
-
-    // Créer une map client_id -> rappel pour afficher les dates de rappel
-    Map<Long, Rappel> clientRappelMap = new HashMap<>();
-    for (Rappel rappel : rappels) {
-        if (!rappel.getCompleted()) {
-            Long clientId = rappel.getClient().getId();
-            // Si plusieurs rappels existent pour un client, prendre le plus récent
-            if (!clientRappelMap.containsKey(clientId) ||
-                    rappel.getDateRappel().isAfter(clientRappelMap.get(clientId).getDateRappel())) {
-                clientRappelMap.put(clientId, rappel);
+        System.out.println("User: " + currentUser.getName());
+        System.out.println("Regions: " + (currentUser.getRegions() != null ? currentUser.getRegions().size() : "null"));
+        if (currentUser.getRegions() != null) {
+            for (Region region : currentUser.getRegions()) {
+                System.out.println("Region: " + region.getName() + ", Code: " + region.getCode());
             }
         }
+        System.out.println("Region codes: " + regionCodes);
+
+        List<Client> clientsNonTraites;
+        List<Client> clientsAbsents;
+        List<Client> clientsContactes;
+        List<Client> clientsRefus;
+        List<Client> clientsInjoignables;
+        List<Client> clientsNumeroErrone;
+
+        // Pour un super admin, récupérer tous les clients
+        if (isSuperAdmin) {
+            clientsNonTraites = clientService.findByStatus(ClientStatus.NON_TRAITE);
+            clientsAbsents = clientService.findByStatus(ClientStatus.ABSENT);
+            clientsContactes = clientService.findByStatus(ClientStatus.CONTACTE);
+            clientsRefus = clientService.findByStatus(ClientStatus.REFUS);
+            clientsInjoignables = clientService.findByStatus(ClientStatus.INJOIGNABLE);
+            clientsNumeroErrone = clientService.findByStatus(ClientStatus.NUMERO_ERRONE);
+        }
+        // Pour un admin régional, utiliser la méthode de filtrage souple
+        else {
+            clientsNonTraites = filterClientsByRegion(currentUser, ClientStatus.NON_TRAITE, null, null);
+            clientsAbsents = filterClientsByRegion(currentUser, ClientStatus.ABSENT, null, null);
+            clientsContactes = filterClientsByRegion(currentUser, ClientStatus.CONTACTE, null, null);
+            clientsRefus = filterClientsByRegion(currentUser, ClientStatus.REFUS, null, null);
+            clientsInjoignables = filterClientsByRegion(currentUser, ClientStatus.INJOIGNABLE, null, null);
+            clientsNumeroErrone = filterClientsByRegion(currentUser, ClientStatus.NUMERO_ERRONE, null, null);
+        }
+
+        // Ajouter des logs pour déboguer
+        System.out.println("Clients non traités: " + clientsNonTraites.size());
+        System.out.println("Clients absents: " + clientsAbsents.size());
+        System.out.println("Clients contactés: " + clientsContactes.size());
+        System.out.println("Clients refus: " + clientsRefus.size());
+        System.out.println("Clients injoignables: " + clientsInjoignables.size());
+        System.out.println("Clients numéro erroné: " + clientsNumeroErrone.size());
+
+        // Récupérer les rappels
+        List<Rappel> rappels;
+        if (isSuperAdmin) {
+            rappels = rappelService.getAllActiveRappels();
+        } else {
+            // Pour un admin régional, filtrer les rappels manuellement
+            // La liste regionCodes est maintenant finale
+            rappels = rappelService.getAllActiveRappels().stream()
+                    .filter(rappel -> {
+                        Client client = rappel.getClient();
+                        if (client == null || client.getNMREG() == null) return false;
+
+                        String clientRegion = client.getNMREG().toUpperCase().replace(" ", "");
+
+                        return regionCodes.stream().anyMatch(regionCode -> {
+                            String normalizedRegionCode = regionCode.toUpperCase().replace("_", "");
+                            return clientRegion.contains(normalizedRegionCode) ||
+                                    normalizedRegionCode.contains(clientRegion) ||
+                                    (clientRegion.contains("SIDI") && normalizedRegionCode.contains("SEDY")) ||
+                                    (clientRegion.contains("SEDY") && normalizedRegionCode.contains("SIDI")) ||
+                                    (clientRegion.contains("FIDAA") && normalizedRegionCode.contains("FIDA")) ||
+                                    (clientRegion.contains("FIDA") && normalizedRegionCode.contains("FIDAA"));
+                        });
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        System.out.println("Rappels actifs: " + rappels.size());
+
+        // Créer une map client_id -> rappel pour afficher les dates de rappel
+        Map<Long, Rappel> clientRappelMap = new HashMap<>();
+        for (Rappel rappel : rappels) {
+            if (!rappel.getCompleted()) {
+                Long clientId = rappel.getClient().getId();
+                // Si plusieurs rappels existent pour un client, prendre le plus récent
+                if (!clientRappelMap.containsKey(clientId) ||
+                        rappel.getDateRappel().isAfter(clientRappelMap.get(clientId).getDateRappel())) {
+                    clientRappelMap.put(clientId, rappel);
+                }
+            }
+        }
+
+        // Récupérer les rappels pour aujourd'hui
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+        List<Rappel> todayRappels = rappels.stream()
+                .filter(r -> !r.getCompleted() && r.getDateRappel().isAfter(startOfDay) && r.getDateRappel().isBefore(endOfDay))
+                .collect(Collectors.toList());
+
+        // Extraire les IDs des clients ayant un rappel aujourd'hui
+        Set<Long> todayRappelClientIds = todayRappels.stream()
+                .map(r -> r.getClient().getId())
+                .collect(Collectors.toSet());
+
+        Map<String, Object> stats = new HashMap<>();
+
+        // Utiliser les tailles des listes filtrées pour les statistiques
+        stats.put("nonTraites", clientsNonTraites.size());
+        stats.put("absents", clientsAbsents.size());
+        stats.put("contactes", clientsContactes.size());
+        stats.put("refus", clientsRefus.size());
+        stats.put("injoignables", clientsInjoignables.size());
+        stats.put("numeroErrones", clientsNumeroErrone.size());
+
+        // Ajouter la liste des utilisateurs pour l'assignation
+        List<UserDto> users = userService.findAllUsers();
+
+        model.addAttribute("clientsNonTraites", clientsNonTraites);
+        model.addAttribute("clientsAbsents", clientsAbsents);
+        model.addAttribute("clientsContactes", clientsContactes);
+        model.addAttribute("clientsRefus", clientsRefus);
+        model.addAttribute("clientsInjoignables", clientsInjoignables);
+        model.addAttribute("clientsNumeroErrone", clientsNumeroErrone);
+        model.addAttribute("rappels", rappels);
+        model.addAttribute("clientRappelMap", clientRappelMap);
+        model.addAttribute("todayRappelClientIds", todayRappelClientIds);
+        model.addAttribute("stats", stats);
+        model.addAttribute("users", users);
+
+        return "admin/agenda";
     }
 
-    // Récupérer les rappels pour aujourd'hui
-    LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-    LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
-    List<Rappel> todayRappels = rappels.stream()
-            .filter(r -> !r.getCompleted() && r.getDateRappel().isAfter(startOfDay) && r.getDateRappel().isBefore(endOfDay))
-            .collect(Collectors.toList());
-
-    // Extraire les IDs des clients ayant un rappel aujourd'hui
-    Set<Long> todayRappelClientIds = todayRappels.stream()
-            .map(r -> r.getClient().getId())
-            .collect(Collectors.toSet());
-
-    Map<String, Object> stats = new HashMap<>();
-
-    // Utiliser les tailles des listes filtrées pour les statistiques
-    stats.put("nonTraites", clientsNonTraites.size());
-    stats.put("absents", clientsAbsents.size());
-    stats.put("contactes", clientsContactes.size());
-    stats.put("refus", clientsRefus.size());
-    stats.put("injoignables", clientsInjoignables.size());
-    stats.put("numeroErrones", clientsNumeroErrone.size());
-
-    // Ajouter la liste des utilisateurs pour l'assignation
-    List<UserDto> users = userService.findAllUsers();
-
-    model.addAttribute("clientsNonTraites", clientsNonTraites);
-    model.addAttribute("clientsAbsents", clientsAbsents);
-    model.addAttribute("clientsContactes", clientsContactes);
-    model.addAttribute("clientsRefus", clientsRefus);
-    model.addAttribute("clientsInjoignables", clientsInjoignables);
-    model.addAttribute("clientsNumeroErrone", clientsNumeroErrone);
-    model.addAttribute("rappels", rappels);
-    model.addAttribute("clientRappelMap", clientRappelMap);
-    model.addAttribute("todayRappelClientIds", todayRappelClientIds);
-    model.addAttribute("stats", stats);
-    model.addAttribute("users", users);
-
-    return "admin/agenda";
-}
     @GetMapping("/clients/export")
     public ResponseEntity<byte[]> exportClients(
             @RequestParam(required = false) String q,
@@ -603,6 +643,7 @@ public String viewAdminAgenda(Model model) {
         System.out.println("DEBUG - Exportation terminée avec succès");
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
     }
+
     @PostMapping("/clients/import")
     public String importClientsFromExcel(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
         if (file.isEmpty()) {
@@ -845,5 +886,42 @@ public String viewAdminAgenda(Model model) {
 
         System.out.println("DEBUG - Nombre de clients après filtrage: " + filteredClients.size());
         return filteredClients;
+    }
+
+    /**
+     * Vérifie si l'utilisateur courant peut gérer une direction
+     */
+    private boolean canCurrentUserManageDirection(String directionCode) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(auth.getName());
+        Direction direction = directionRepository.findByCode(directionCode);
+
+        return userService.isUserManagingDirection(currentUser, direction);
+    }
+
+    /**
+     * Filtre les clients accessibles par l'utilisateur courant basé sur sa direction
+     */
+    private List<Client> filterClientsByDirectionAccess(List<Client> clients) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(auth.getName());
+
+        // Super admin voit tout
+        if (userService.isSuperAdmin(currentUser)) {
+            return clients;
+        }
+        // Admin de direction filtre par sa direction
+        if (userService.isDirectionAdmin(currentUser) && currentUser.getDirection() != null) {
+            return clients.stream()
+                    .filter(client -> client.getNMDIR() != null &&
+                            client.getNMDIR().equals(currentUser.getDirection().getCode()))
+                    .collect(Collectors.toList());
+        }
+
+        // Utilisateur normal ne voit que ses clients assignés
+        return clients.stream()
+                .filter(client -> client.getAssignedUser() != null &&
+                        client.getAssignedUser().getId().equals(currentUser.getId()))
+                .collect(Collectors.toList());
     }
 }
