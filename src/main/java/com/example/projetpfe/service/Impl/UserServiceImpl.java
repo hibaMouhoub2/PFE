@@ -623,4 +623,45 @@ public class UserServiceImpl implements UserService {
                 .map(this::convertEntityToDto)
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    public void saveDirectionAdmin(UserDto adminDto, Long directionId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User superAdmin = userRepository.findByEmail(auth.getName());
+
+        if (superAdmin == null || !isSuperAdmin(superAdmin)) {
+            throw new RuntimeException("Seuls les super administrateurs peuvent créer des directeurs de division");
+        }
+
+        // Créer l'admin
+        User admin = new User();
+        admin.setName(adminDto.getFirstName() + " " + adminDto.getLastName());
+        admin.setEmail(adminDto.getEmail());
+        admin.setEnabled(true);
+        admin.setCreatedAt(LocalDateTime.now());
+        admin.setPassword(passwordEncoder.encode(adminDto.getPassword()));
+
+        // Attribuer le rôle ADMIN
+        Role adminRole = checkRoleExist("ROLE_ADMIN");
+        admin.setRoles(Arrays.asList(adminRole));
+
+        // Définir le super admin comme créateur
+        admin.setCreatedByAdmin(superAdmin);
+
+        // Ajouter la direction
+        Direction direction = directionRepository.findById(directionId)
+                .orElseThrow(() -> new RuntimeException("Direction non trouvée avec l'ID: " + directionId));
+        admin.setDirection(direction);
+
+        User savedAdmin = userRepository.save(admin);
+
+        // Audit
+        auditService.auditEvent(
+                AuditType.ADMIN_CREATED,
+                "User",
+                savedAdmin.getId(),
+                "Directeur de division créé: " + savedAdmin.getName() + " (" + savedAdmin.getEmail() + ") pour la direction " + direction.getName(),
+                auth.getName()
+        );
+    }
 }

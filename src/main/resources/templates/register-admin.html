@@ -255,32 +255,10 @@
 
 <div class="container">
   <div class="row col-md-8 offset-md-2">
-    <!--<div th:if="${param.success}" class="alert alert-info">
-        <i class="fas fa-check-circle me-2"></i>Votre compte a été créé avec succès! Vous pouvez maintenant vous connecter.
-    </div> -->
-
     <div class="card animated-form">
       <div class="card-header">
-        <h2 class="text-center">Enregistrement d'un directeur régional</h2>
+        <h2 class="text-center">Enregistrement d'un directeur de division</h2>
       </div>
-
-      <!-- <div class="card-body">
-          <div class="registration-steps mb-4">
-              <div class="step">
-                  <div class="step-number">1</div>
-                  <div class="step-title">Informations personnelles</div>
-                  <div class="step-line"></div>
-              </div>
-              <div class="step">
-                  <div class="step-number">2</div>
-                  <div class="step-title">Création du compte</div>
-                  <div class="step-line"></div>
-              </div>
-              <div class="step">
-                  <div class="step-number">3</div>
-                  <div class="step-title">Confirmation</div>
-              </div>
-          </div> -->
 
       <form method="post" role="form" th:action="@{/register-admin/save}" th:object="${admin}" class="needs-validation">
         <div class="row">
@@ -288,9 +266,9 @@
             <div class="form-group mb-3">
               <label class="form-label">Prénom</label>
               <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="fas fa-user"></i>
-                                        </span>
+                <span class="input-group-text">
+                    <i class="fas fa-user"></i>
+                </span>
                 <input class="form-control"
                        id="firstName"
                        name="firstName"
@@ -310,9 +288,9 @@
             <div class="form-group mb-3">
               <label class="form-label">Nom</label>
               <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="fas fa-user"></i>
-                                        </span>
+                <span class="input-group-text">
+                    <i class="fas fa-user"></i>
+                </span>
                 <input class="form-control"
                        id="lastName"
                        name="lastName"
@@ -332,9 +310,9 @@
         <div class="form-group mb-3">
           <label class="form-label">Email</label>
           <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="fas fa-envelope"></i>
-                                </span>
+            <span class="input-group-text">
+                <i class="fas fa-envelope"></i>
+            </span>
             <input class="form-control"
                    id="email"
                    name="email"
@@ -352,9 +330,9 @@
         <div class="form-group mb-4">
           <label class="form-label">Mot de passe</label>
           <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="fas fa-lock"></i>
-                                </span>
+            <span class="input-group-text">
+                <i class="fas fa-lock"></i>
+            </span>
             <input class="form-control"
                    id="password"
                    name="password"
@@ -369,13 +347,15 @@
           </p>
           <small class="text-muted">Le mot de passe doit contenir au moins 8 caractères, incluant lettres, chiffres et caractères spéciaux</small>
         </div>
+
+        <!-- Changement ici : Sélection de direction au lieu de région -->
         <div class="form-group mb-3">
-          <label class="form-label">Région assignée</label>
-          <select name="selectedRegion" class="form-select" required>
-            <option value="">-- Sélectionner une région --</option>
-            <option th:each="region : ${regions}"
-                    th:value="${region.id}"
-                    th:text="${region.name}">Nom de la région</option>
+          <label class="form-label">Direction assignée</label>
+          <select name="selectedDirection" class="form-select" required>
+            <option value="">-- Sélectionner une direction --</option>
+            <option th:each="direction : ${directions}"
+                    th:value="${direction.id}"
+                    th:text="${direction.name}">Nom de la direction</option>
           </select>
         </div>
 
@@ -387,7 +367,6 @@
       </form>
     </div>
   </div>
-</div>
 </div>
 
 <!-- Bootstrap JS -->

@@ -1,8 +1,10 @@
 package com.example.projetpfe.controller;
 
 import com.example.projetpfe.dto.UserDto;
+import com.example.projetpfe.entity.Direction;
 import com.example.projetpfe.entity.Region;
 import com.example.projetpfe.entity.User;
+import com.example.projetpfe.repository.DirectionRepository;
 import com.example.projetpfe.security.LoginAttemptService;
 import com.example.projetpfe.service.Impl.RegionService;
 import com.example.projetpfe.service.UserService;
@@ -33,6 +35,9 @@ public class AuthController {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     private UserService userService;
+
+    @Autowired
+    private DirectionRepository directionRepository;
 
     @Autowired
     private RegionService regionService;
@@ -68,12 +73,14 @@ public class AuthController {
     // Méthode pour enregistrer un admin régional - accessible uniquement aux super admins
     @GetMapping("register-admin")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public String showAdminRegistrationForm(Model model){
+    public String showAdminRegistrationForm(Model model) {
         UserDto admin = new UserDto();
         model.addAttribute("admin", admin);
-        // Récupérer toutes les régions disponibles
-        List<Region> regions = regionService.findAll();
-        model.addAttribute("regions", regions);
+
+        // Au lieu de charger les régions, charger les directions
+        List<Direction> directions = directionRepository.findAll();
+        model.addAttribute("directions", directions);
+
         return "register-admin";
     }
 
@@ -117,7 +124,7 @@ public class AuthController {
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public String registerAdmin(@Valid @ModelAttribute("admin") UserDto admin,
                                 BindingResult result,
-                                @RequestParam Long selectedRegion,
+                                @RequestParam Long selectedDirection,
                                 Model model) {
 
         User existing = userService.findByEmail(admin.getEmail());
@@ -125,19 +132,19 @@ public class AuthController {
             result.rejectValue("email", null, "Il existe déjà un compte avec cet email");
         }
 
-        if (selectedRegion == null ) {
-            model.addAttribute("regionError", "Veuillez sélectionner au moins une région");
-            model.addAttribute("regions", regionService.findAll());
+        if (selectedDirection == null) {
+            model.addAttribute("directionError", "Veuillez sélectionner une direction");
+            model.addAttribute("directions", directionRepository.findAll());
             return "register-admin";
         }
 
         if (result.hasErrors()) {
-            model.addAttribute("regions", regionService.findAll());
+            model.addAttribute("directions", directionRepository.findAll());
             return "register-admin";
         }
-        List<Long> regionIds = Collections.singletonList(selectedRegion);
-        // Enregistrer l'admin régional
-        userService.saveAdminBySuper(admin, regionIds);
+
+        // Utiliser la direction au lieu de la région
+        userService.saveDirectionAdmin(admin, selectedDirection);
         return "redirect:/users";
     }
 

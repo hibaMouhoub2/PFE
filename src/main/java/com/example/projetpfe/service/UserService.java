@@ -53,4 +53,5 @@ public interface UserService {
     boolean isUserManagingDirection(User user, Direction direction);
     boolean canUserManageClient(User user, Client client);
     List<UserDto> findUsersByDirection(Long directionId);
+    void saveDirectionAdmin(UserDto adminDto, Long directionId);
 }
