@@ -1,10 +1,12 @@
 package com.example.projetpfe.controller;
 
 import com.example.projetpfe.dto.UserDto;
+import com.example.projetpfe.entity.Branche;
 import com.example.projetpfe.entity.Direction;
 import com.example.projetpfe.entity.Region;
 import com.example.projetpfe.entity.User;
 import com.example.projetpfe.repository.DirectionRepository;
+import com.example.projetpfe.repository.UserRepository;
 import com.example.projetpfe.security.LoginAttemptService;
 import com.example.projetpfe.service.Impl.RegionService;
 import com.example.projetpfe.service.UserService;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +44,9 @@ public class AuthController {
 
     @Autowired
     private RegionService regionService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private LoginAttemptService loginAttemptService;
@@ -63,13 +69,22 @@ public class AuthController {
 
         // Récupérer l'authentification correctement
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User admin = userService.findByEmail(auth.getName());
+        User admin = userRepository.findByEmail(auth.getName());
+
+        // Ajouter les branches disponibles
+        // Si l'admin est associé à une direction, filtrer les branches correspondantes
+        if (admin.getDirection() != null) {
+            model.addAttribute("branches", Arrays.asList(Branche.values()));
+        } else {
+            model.addAttribute("branches", Arrays.asList(Branche.values()));
+        }
+
+        // Régions gérées par l'admin
         List<Region> adminRegions = admin.getRegions();
         model.addAttribute("regions", adminRegions);
 
         return "register";
     }
-
     // Méthode pour enregistrer un admin régional - accessible uniquement aux super admins
     @GetMapping("register-admin")
     @PreAuthorize("hasRole('SUPER_ADMIN')")

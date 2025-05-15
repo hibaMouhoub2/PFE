@@ -80,8 +80,11 @@ public class AdminController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = userRepository.findByEmail(auth.getName());
         boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
+        boolean isDirectionAdmin = userService.isDirectionAdmin(currentUser);
 
-        System.out.println("DEBUG - Utilisateur: " + currentUser.getName() + ", est super admin: " + isSuperAdmin);
+        System.out.println("DEBUG - Utilisateur: " + currentUser.getName() +
+                ", est super admin: " + isSuperAdmin +
+                ", est directeur: " + isDirectionAdmin);
 
         // Conversion du statut en enum
         ClientStatus statusEnum = null;
@@ -112,13 +115,52 @@ public class AdminController {
             System.out.println("DEBUG - Mode super admin: récupération de tous les clients");
             // Récupérer les clients sans le filtre de date
             clients = clientRepository.findByFiltersWithBranche(q, statusEnum, userId, brancheEnum);
-        } else {
-            System.out.println("DEBUG - Mode directeur régional: filtrage par région");
+        }
+        // Si c'est un directeur de division
+        else if (isDirectionAdmin && currentUser.getDirection() != null) {
+            String directionCode = currentUser.getDirection().getCode();
+            System.out.println("DEBUG - Mode directeur: filtrage par direction " + directionCode);
+
+            // Récupérer les clients par direction
+            if (statusEnum != null) {
+                clients = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, statusEnum);
+            } else {
+                clients = clientRepository.findByNMDIROrderByUpdatedAtDesc(directionCode);
+            }
+
+            // Appliquer des filtres supplémentaires manuellement
+            if (userId != null) {
+                final Long finalUserId = userId;
+                clients = clients.stream()
+                        .filter(client -> client.getAssignedUser() != null &&
+                                client.getAssignedUser().getId().equals(finalUserId))
+                        .collect(Collectors.toList());
+            }
+
+            if (q != null && !q.isEmpty()) {
+                final String query = q.toLowerCase();
+                clients = clients.stream()
+                        .filter(client ->
+                                (client.getNom() != null && client.getNom().toLowerCase().contains(query)) ||
+                                        (client.getPrenom() != null && client.getPrenom().toLowerCase().contains(query)) ||
+                                        (client.getCin() != null && client.getCin().toLowerCase().contains(query)))
+                        .collect(Collectors.toList());
+            }
+
+            if (brancheEnum != null) {
+                final Branche finalBrancheEnum = brancheEnum;
+                clients = clients.stream()
+                        .filter(client -> client.getNMBRA() == finalBrancheEnum)
+                        .collect(Collectors.toList());
+            }
+        }
+        // Mode admin régional (ancien comportement)
+        else {
+            System.out.println("DEBUG - Mode admin régional: filtrage par région");
             // Utiliser la méthode auxiliaire pour le filtrage
             clients = filterClientsByRegion(currentUser, statusEnum, userId, q);
 
             // Filtre de branche en dehors de la méthode auxiliaire
-            // Lorsque vous utilisez brancheEnum dans la lambda:
             if (brancheEnum != null) {
                 final Branche finalBrancheEnum = brancheEnum;
                 clients = clients.stream()
@@ -127,10 +169,10 @@ public class AdminController {
             }
         }
 
-        // Filtrer manuellement par date si nécessaire
+        // Filtrer manuellement par date si nécessaire (pour tous les types d'utilisateurs)
         if (rdvDate != null) {
             System.out.println("DEBUG - Application du filtre de date: " + rdvDate);
-            final LocalDate finalRdvDate = rdvDate; // Cette variable est effectivement finale
+            final LocalDate finalRdvDate = rdvDate;
             clients = clients.stream()
                     .filter(client -> client.getRendezVousAgence() != null &&
                             client.getRendezVousAgence() &&
@@ -144,8 +186,11 @@ public class AdminController {
         List<UserDto> users;
         if (isSuperAdmin) {
             users = userService.findAllUsers();
+        } else if (isDirectionAdmin && currentUser.getDirection() != null) {
+            // Pour un directeur, uniquement les utilisateurs de sa direction
+            users = userService.findUsersByDirection(currentUser.getDirection().getId());
         } else {
-            // Pour un directeur régional, seulement ses utilisateurs créés
+            // Pour un admin régional, seulement ses utilisateurs créés
             users = userService.findUsersByCreator(currentUser.getId());
         }
         System.out.println("DEBUG - Nombre d'utilisateurs disponibles: " + users.size());
@@ -291,10 +336,15 @@ public class AdminController {
                 }
 
                 // Vérifier si l'utilisateur cible appartient à la direction de l'admin
-                if (targetUser.getDirection() == null ||
-                        !targetUser.getDirection().getId().equals(currentUser.getDirection().getId())) {
+                // OU s'il a été créé par cet admin
+                boolean isUserFromSameDirection = targetUser.getDirection() != null &&
+                        targetUser.getDirection().getId().equals(currentUser.getDirection().getId());
+                boolean isUserCreatedByAdmin = targetUser.getCreatedByAdmin() != null &&
+                        targetUser.getCreatedByAdmin().getId().equals(currentUser.getId());
+
+                if (!isUserFromSameDirection && !isUserCreatedByAdmin) {
                     redirectAttributes.addFlashAttribute("error",
-                            "Vous ne pouvez assigner des clients qu'aux utilisateurs de votre direction");
+                            "Vous ne pouvez assigner des clients qu'aux utilisateurs de votre direction ou que vous avez créés");
                     return "redirect:/admin/clients";
                 }
 
@@ -339,11 +389,15 @@ public class AdminController {
             if (!isSuperAdmin && currentUser.getDirection() != null) {
                 String adminDirectionCode = currentUser.getDirection().getCode();
 
-                // Vérifier si l'utilisateur cible appartient à la direction de l'admin
-                if (targetUser.getDirection() == null ||
-                        !targetUser.getDirection().getId().equals(currentUser.getDirection().getId())) {
+                // Vérifier si l'utilisateur cible appartient à la direction de l'admin OU a été créé par cet admin
+                boolean isUserFromSameDirection = targetUser.getDirection() != null &&
+                        targetUser.getDirection().getId().equals(currentUser.getDirection().getId());
+                boolean isUserCreatedByAdmin = targetUser.getCreatedByAdmin() != null &&
+                        targetUser.getCreatedByAdmin().getId().equals(currentUser.getId());
+
+                if (!isUserFromSameDirection && !isUserCreatedByAdmin) {
                     redirectAttributes.addFlashAttribute("error",
-                            "Vous ne pouvez assigner des clients qu'aux utilisateurs de votre direction");
+                            "Vous ne pouvez assigner des clients qu'aux utilisateurs de votre direction ou que vous avez créés");
                     return "redirect:/admin/unassigned-clients";
                 }
 
@@ -423,26 +477,17 @@ public class AdminController {
         String userEmail = auth.getName();
         User currentUser = userRepository.findByEmail(userEmail);
 
-        // Vérifier si l'utilisateur est un super admin ou un admin régional
+        // Vérifier si l'utilisateur est un super admin ou un admin régional/directeur
         boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
-
-        // Obtenir les codes de région pour l'affichage des logs
-        final List<String> regionCodes = new ArrayList<>();
-        if (!isSuperAdmin && currentUser.getRegions() != null) {
-            regionCodes.addAll(currentUser.getRegions().stream()
-                    .filter(region -> region != null && region.getCode() != null)
-                    .map(Region::getCode)
-                    .collect(Collectors.toList()));
-        }
+        boolean isDirectionAdmin = userService.isDirectionAdmin(currentUser);
 
         System.out.println("User: " + currentUser.getName());
-        System.out.println("Regions: " + (currentUser.getRegions() != null ? currentUser.getRegions().size() : "null"));
-        if (currentUser.getRegions() != null) {
-            for (Region region : currentUser.getRegions()) {
-                System.out.println("Region: " + region.getName() + ", Code: " + region.getCode());
-            }
+        System.out.println("Is Super Admin: " + isSuperAdmin);
+        System.out.println("Is Direction Admin: " + isDirectionAdmin);
+        if (isDirectionAdmin && currentUser.getDirection() != null) {
+            System.out.println("Direction: " + currentUser.getDirection().getName() +
+                    ", Code: " + currentUser.getDirection().getCode());
         }
-        System.out.println("Region codes: " + regionCodes);
 
         List<Client> clientsNonTraites;
         List<Client> clientsAbsents;
@@ -459,6 +504,18 @@ public class AdminController {
             clientsRefus = clientService.findByStatus(ClientStatus.REFUS);
             clientsInjoignables = clientService.findByStatus(ClientStatus.INJOIGNABLE);
             clientsNumeroErrone = clientService.findByStatus(ClientStatus.NUMERO_ERRONE);
+        }
+        // Pour un directeur de division
+        else if (isDirectionAdmin && currentUser.getDirection() != null) {
+            String directionCode = currentUser.getDirection().getCode();
+            System.out.println("Filtering by direction code: " + directionCode);
+
+            clientsNonTraites = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.NON_TRAITE);
+            clientsAbsents = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.ABSENT);
+            clientsContactes = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.CONTACTE);
+            clientsRefus = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.REFUS);
+            clientsInjoignables = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.INJOIGNABLE);
+            clientsNumeroErrone = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.NUMERO_ERRONE);
         }
         // Pour un admin régional, utiliser la méthode de filtrage souple
         else {
@@ -482,9 +539,22 @@ public class AdminController {
         List<Rappel> rappels;
         if (isSuperAdmin) {
             rappels = rappelService.getAllActiveRappels();
+        } else if (isDirectionAdmin && currentUser.getDirection() != null) {
+            // Récupérer les rappels pour cette direction
+            String directionCode = currentUser.getDirection().getCode();
+            rappels = rappelService.getAllActiveRappels().stream()
+                    .filter(rappel -> {
+                        Client client = rappel.getClient();
+                        return client != null && directionCode.equals(client.getNMDIR());
+                    })
+                    .collect(Collectors.toList());
         } else {
             // Pour un admin régional, filtrer les rappels manuellement
-            // La liste regionCodes est maintenant finale
+            final List<String> regionCodes = currentUser.getRegions().stream()
+                    .filter(region -> region != null && region.getCode() != null)
+                    .map(Region::getCode)
+                    .collect(Collectors.toList());
+
             rappels = rappelService.getAllActiveRappels().stream()
                     .filter(rappel -> {
                         Client client = rappel.getClient();
@@ -506,6 +576,17 @@ public class AdminController {
         }
 
         System.out.println("Rappels actifs: " + rappels.size());
+
+        // Le reste du code reste le même...
+        // [code existant pour clientRappelMap, todayRappels, stats, etc.]
+
+        model.addAttribute("clientsNonTraites", clientsNonTraites);
+        model.addAttribute("clientsAbsents", clientsAbsents);
+        model.addAttribute("clientsContactes", clientsContactes);
+        model.addAttribute("clientsRefus", clientsRefus);
+        model.addAttribute("clientsInjoignables", clientsInjoignables);
+        model.addAttribute("clientsNumeroErrone", clientsNumeroErrone);
+        model.addAttribute("rappels", rappels);
 
         // Créer une map client_id -> rappel pour afficher les dates de rappel
         Map<Long, Rappel> clientRappelMap = new HashMap<>();
@@ -545,13 +626,6 @@ public class AdminController {
         // Ajouter la liste des utilisateurs pour l'assignation
         List<UserDto> users = userService.findAllUsers();
 
-        model.addAttribute("clientsNonTraites", clientsNonTraites);
-        model.addAttribute("clientsAbsents", clientsAbsents);
-        model.addAttribute("clientsContactes", clientsContactes);
-        model.addAttribute("clientsRefus", clientsRefus);
-        model.addAttribute("clientsInjoignables", clientsInjoignables);
-        model.addAttribute("clientsNumeroErrone", clientsNumeroErrone);
-        model.addAttribute("rappels", rappels);
         model.addAttribute("clientRappelMap", clientRappelMap);
         model.addAttribute("todayRappelClientIds", todayRappelClientIds);
         model.addAttribute("stats", stats);
@@ -658,22 +732,30 @@ public class AdminController {
 
             ClientService.ImportResult result = clientService.importClientsFromExcel(file, userEmail);
 
-            String message = result.getImportedCount() + " client(s) importé(s) avec succès";
+            StringBuilder message = new StringBuilder();
+            message.append(result.getImportedCount()).append(" client(s) importé(s) avec succès");
+
+            if (result.getUpdatedCount() > 0) {
+                message.append(", ").append(result.getUpdatedCount())
+                        .append(" client(s) mis à jour avec une date de fin de contrat plus récente");
+            }
 
             if (result.getSkippedCount() > 0) {
                 int skippedForRegion = result.getSkippedForRegion().size();
                 int skippedForDuplicate = result.getSkippedCins().size();
 
                 if (skippedForDuplicate > 0) {
-                    message += ". " + skippedForDuplicate + " client(s) ignoré(s) car leur CIN existe déjà dans la base de données";
+                    message.append(". ").append(skippedForDuplicate)
+                            .append(" client(s) ignoré(s) car leur CIN existe déjà et la date de fin n'est pas plus récente");
                 }
 
                 if (skippedForRegion > 0) {
-                    message += ". " + skippedForRegion + " client(s) ignoré(s) car ils n'appartiennent pas à votre région";
+                    message.append(". ").append(skippedForRegion)
+                            .append(" client(s) ignoré(s) car ils n'appartiennent pas à votre région");
                 }
             }
 
-            redirectAttributes.addFlashAttribute("success", message);
+            redirectAttributes.addFlashAttribute("success", message.toString());
             return "redirect:/admin/clients";
         } catch (Exception e) {
             e.printStackTrace(); // Ajouter pour le débogage
@@ -801,91 +883,112 @@ public class AdminController {
     }
 
     private List<Client> filterClientsByRegion(User currentUser, ClientStatus status, Long userId, String searchQuery) {
-        // Pour un directeur régional, filtrer par région
-        List<String> regionCodes = currentUser.getRegions().stream()
-                .filter(region -> region != null && region.getCode() != null)
-                .map(Region::getCode)
-                .collect(Collectors.toList());
+        // Si l'utilisateur est un directeur de division
+        if (userService.isDirectionAdmin(currentUser) && currentUser.getDirection() != null) {
+            String directionCode = currentUser.getDirection().getCode();
+            System.out.println("DEBUG - Filtrage par direction: " + directionCode);
 
-        System.out.println("DEBUG - Filtrage par régions: " + regionCodes);
+            // Utiliser directement la méthode du repository pour meilleure performance
+            List<Client> clientsFromDirection;
 
-        // Récupérer tous les clients d'abord
-        List<Client> allClients = clientRepository.findAll();
-        System.out.println("DEBUG - Nombre total de clients: " + allClients.size());
+            if (status != null) {
+                clientsFromDirection = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, status);
+            } else {
+                clientsFromDirection = clientRepository.findByNMDIROrderByUpdatedAtDesc(directionCode);
+            }
 
-        // Filtrer manuellement avec une comparaison plus souple
-        List<Client> filteredClients = new ArrayList<>();
+            // Appliquer les filtres additionnels (userId, searchQuery)
+            return clientsFromDirection.stream()
+                    .filter(client -> {
+                        // Filtre par utilisateur assigné si nécessaire
+                        if (userId != null && (client.getAssignedUser() == null ||
+                                !client.getAssignedUser().getId().equals(userId))) {
+                            return false;
+                        }
 
-        for (Client client : allClients) {
-            // Vérifier si le client appartient à une des régions du directeur
-            boolean regionMatch = false;
-            String clientRegion = client.getNMREG();
+                        // Filtre par texte de recherche si nécessaire
+                        if (searchQuery != null && !searchQuery.isEmpty()) {
+                            String query = searchQuery.toLowerCase();
+                            return (client.getNom() != null && client.getNom().toLowerCase().contains(query)) ||
+                                    (client.getPrenom() != null && client.getPrenom().toLowerCase().contains(query)) ||
+                                    (client.getCin() != null && client.getCin().toLowerCase().contains(query));
+                        }
 
-            if (clientRegion != null) {
-                // Convertir en majuscules et supprimer les espaces pour une comparaison plus souple
-                String normalizedClientRegion = clientRegion.toUpperCase().replace(" ", "");
+                        return true;
+                    })
+                    .collect(Collectors.toList());
+        }
+        // Sinon, si c'est un administrateur régional (ancienne méthode)
+        else if (!currentUser.getRegions().isEmpty()) {
+            // Récupérer les codes de régions
+            List<String> regionCodes = currentUser.getRegions().stream()
+                    .filter(region -> region != null && region.getCode() != null)
+                    .map(Region::getCode)
+                    .collect(Collectors.toList());
 
-                for (String regionCode : regionCodes) {
-                    String normalizedRegionCode = regionCode.toUpperCase().replace("_", "");
+            System.out.println("DEBUG - Filtrage par régions: " + regionCodes);
 
-                    // Loguer pour comprendre les comparaisons
-                    System.out.println("DEBUG - Comparaison région: Client [" + normalizedClientRegion + "] vs Directeur [" + normalizedRegionCode + "]");
+            // Récupérer tous les clients
+            List<Client> allClients = clientRepository.findAll();
+            List<Client> filteredClients = new ArrayList<>();
 
-                    // Vérifier si l'une contient l'autre (comparaison partielle)
-                    if (normalizedClientRegion.contains(normalizedRegionCode) ||
-                            normalizedRegionCode.contains(normalizedClientRegion) ||
-                            // Essayer aussi avec SIDI/SEDY qui peuvent être des variantes orthographiques
-                            (normalizedClientRegion.contains("SIDI") && normalizedRegionCode.contains("SEDY")) ||
-                            (normalizedClientRegion.contains("SEDY") && normalizedRegionCode.contains("SIDI")) ||
-                            // Essayer aussi avec FIDAA/FIDA qui peuvent être des variantes orthographiques
-                            (normalizedClientRegion.contains("FIDAA") && normalizedRegionCode.contains("FIDA")) ||
-                            (normalizedClientRegion.contains("FIDA") && normalizedRegionCode.contains("FIDAA"))) {
+            for (Client client : allClients) {
+                // Vérifier si le client appartient à une des régions du directeur
+                boolean regionMatch = false;
+                String clientRegion = client.getNMREG();
 
-                        regionMatch = true;
-                        System.out.println("DEBUG - Correspondance trouvée pour le client: " + client.getNom() + " " + client.getPrenom());
-                        break;
+                if (clientRegion != null) {
+                    String normalizedClientRegion = clientRegion.toUpperCase().replace(" ", "");
+
+                    for (String regionCode : regionCodes) {
+                        String normalizedRegionCode = regionCode.toUpperCase().replace("_", "");
+
+                        if (normalizedClientRegion.contains(normalizedRegionCode) ||
+                                normalizedRegionCode.contains(normalizedClientRegion) ||
+                                (normalizedClientRegion.contains("SIDI") && normalizedRegionCode.contains("SEDY")) ||
+                                (normalizedClientRegion.contains("SEDY") && normalizedRegionCode.contains("SIDI")) ||
+                                (normalizedClientRegion.contains("FIDAA") && normalizedRegionCode.contains("FIDA")) ||
+                                (normalizedClientRegion.contains("FIDA") && normalizedRegionCode.contains("FIDAA"))) {
+                            regionMatch = true;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (!regionMatch) {
-                continue; // Passer au client suivant si pas de correspondance de région
-            }
+                if (!regionMatch) continue;
 
-            // Vérifier le statut
-            if (status != null && client.getStatus() != status) {
-                continue;
-            }
+                // Vérifier le statut
+                if (status != null && client.getStatus() != status) continue;
 
-            // Vérifier l'utilisateur assigné
-            if (userId != null && (client.getAssignedUser() == null || !client.getAssignedUser().getId().equals(userId))) {
-                continue;
-            }
-
-            // Vérifier la recherche textuelle
-            if (searchQuery != null && !searchQuery.isEmpty()) {
-                boolean textMatch = false;
-                String query = searchQuery.toLowerCase();
-
-                if (client.getNom() != null && client.getNom().toLowerCase().contains(query)) {
-                    textMatch = true;
-                } else if (client.getPrenom() != null && client.getPrenom().toLowerCase().contains(query)) {
-                    textMatch = true;
-                } else if (client.getCin() != null && client.getCin().toLowerCase().contains(query)) {
-                    textMatch = true;
-                }
-
-                if (!textMatch) {
+                // Vérifier l'utilisateur assigné
+                if (userId != null && (client.getAssignedUser() == null ||
+                        !client.getAssignedUser().getId().equals(userId))) {
                     continue;
                 }
+
+                // Vérifier la recherche textuelle
+                if (searchQuery != null && !searchQuery.isEmpty()) {
+                    boolean textMatch = false;
+                    String query = searchQuery.toLowerCase();
+
+                    if (client.getNom() != null && client.getNom().toLowerCase().contains(query)) {
+                        textMatch = true;
+                    } else if (client.getPrenom() != null && client.getPrenom().toLowerCase().contains(query)) {
+                        textMatch = true;
+                    } else if (client.getCin() != null && client.getCin().toLowerCase().contains(query)) {
+                        textMatch = true;
+                    }
+
+                    if (!textMatch) continue;
+                }
+
+                filteredClients.add(client);
             }
 
-            // Si on arrive ici, le client a passé tous les filtres
-            filteredClients.add(client);
+            return filteredClients;
         }
 
-        System.out.println("DEBUG - Nombre de clients après filtrage: " + filteredClients.size());
-        return filteredClients;
+        return new ArrayList<>(); // Retourner une liste vide si pas de direction ni région
     }
 
     /**

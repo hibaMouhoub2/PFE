@@ -140,13 +140,18 @@ public class UserServiceImpl implements UserService {
         Role userRole = checkRoleExist("ROLE_USER");
         user.setRoles(Arrays.asList(userRole));
 
-        // Associer l'utilisateur à la même région que l'admin
-        if (!admin.getRegions().isEmpty()) {
-            user.setRegion(admin.getRegions().get(0));
+        // Associer l'utilisateur à la même direction que l'admin
+        if (admin.getDirection() != null) {
+            user.setDirection(admin.getDirection());
         }
 
         // Définir l'admin comme créateur
         user.setCreatedByAdmin(admin);
+
+        // Si une branche est spécifiée, l'assigner à l'agent
+        if (userDto.getAssignedBranche() != null) {
+            user.setAssignedBranche(userDto.getAssignedBranche());
+        }
 
         userRepository.save(user);
 

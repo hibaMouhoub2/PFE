@@ -98,7 +98,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     List<Client> findByAssignedUserIsNullAndNMDIROrderByUpdatedAtDesc(String nmdir);
     long countByNMDIR(String nmdir);
     long countByNMDIRAndStatus(String nmdir, ClientStatus status);
-
+    Client findByCin(String cin);
     // Méthodes combinant NMDIR et date
     List<Client> findByNMDIRAndUpdatedAtBetweenOrderByUpdatedAtDesc(
             String nmdir, LocalDateTime start, LocalDateTime end);

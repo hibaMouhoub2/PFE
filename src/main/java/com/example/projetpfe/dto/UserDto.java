@@ -1,5 +1,8 @@
 package com.example.projetpfe.dto;
 
+import com.example.projetpfe.entity.Branche;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -40,4 +43,6 @@ public class UserDto
     // ID de l'administrateur qui a créé cet utilisateur
     private Long createdByAdminId;
     private String createdByAdminName;
+    @Enumerated(EnumType.STRING)
+    private Branche assignedBranche;
 }

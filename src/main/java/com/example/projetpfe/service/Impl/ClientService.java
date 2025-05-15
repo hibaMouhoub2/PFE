@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -349,8 +350,10 @@ public class ClientService {
     public ImportResult importClientsFromExcel(MultipartFile file, String userEmail) throws IOException {
         int importedCount = 0;
         int skippedCount = 0;
+        int updatedCount = 0;  // Nouveau compteur pour les clients mis à jour
         List<String> skippedCins = new ArrayList<>();
         List<String> skippedForDirection = new ArrayList<>();
+        List<String> updatedCins = new ArrayList<>();  // Liste pour suivre les CIN mises à jour
 
         System.out.println("Starting import for user: " + userEmail);
 
@@ -381,24 +384,15 @@ public class ClientService {
 
                 // Skip empty rows
                 if (isEmptyRow(row)) continue;
+
                 // Récupérer le CIN avant de créer le client
                 String cin = getCellValueAsString(row.getCell(3));  // Indice 3 pour la colonne CIN
                 String nmdir = getCellValueAsString(row.getCell(0));
 
                 System.out.println("Processing row - CIN: " + cin + ", NMDIR: " + nmdir);
 
-
-                // Vérifier si le CIN existe déjà
-                if (cin != null && !cin.isEmpty() && clientRepository.existsByCin(cin)) {
-                    skippedCount++;
-                    skippedCins.add(cin);
-                    System.out.println("Skipping existing CIN: " + cin);
-                    continue; // Passer à la ligne suivante sans traiter ce client
-                }
-
-                // Vérifier si le client appartient à la région de l'utilisateur avec une comparaison plus souple
+                // Vérifier les autorisations de direction
                 boolean directionMatches = false;
-
                 if (isSuperAdmin) {
                     directionMatches = true;
                 } else if (userDirectionCode != null && nmdir != null) {
@@ -406,6 +400,7 @@ public class ClientService {
                     directionMatches = nmdir.equals(userDirectionCode);
                     System.out.println("Direction match check: " + nmdir + " vs " + userDirectionCode + " = " + directionMatches);
                 }
+
                 if (!directionMatches) {
                     skippedCount++;
                     if (cin != null && !cin.isEmpty()) {
@@ -415,97 +410,174 @@ public class ClientService {
                     continue;
                 }
 
-                Client client = new Client();
+                // Extraire la date de fin de contrat du fichier Excel
+                Date dtfincImported = null;
+                Cell dtfincCell = row.getCell(6);
+                if (dtfincCell != null && dtfincCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dtfincCell)) {
+                    dtfincImported = dtfincCell.getDateCellValue();
+                }
 
-                // Mappage des colonnes Excel vers les propriétés de l'entité Client
-                client.setNMDIR(nmdir);  // NMDIR
-                client.setNMREG(getCellValueAsString(row.getCell(1)));  // NMREG
+                boolean updateExisting = false;
+                Client existingClient = null;
 
-                // Pour NMBRA (enum), conversion nécessaire
-                String nmbraStr = getCellValueAsString(row.getCell(2));
-                if (nmbraStr != null && !nmbraStr.isEmpty()) {
-                    try {
-                        // Tentative de conversion directe (si les valeurs correspondent exactement)
-                        client.setNMBRA(Branche.valueOf(nmbraStr));
-                    } catch (IllegalArgumentException e) {
-                        // Si échec, tentative de trouver une correspondance par displayName
-                        for (Branche branche : Branche.values()) {
-                            if (branche.getDisplayName().equalsIgnoreCase(nmbraStr)) {
-                                client.setNMBRA(branche);
-                                break;
-                            }
+                // Vérifier si le CIN existe déjà
+                if (cin != null && !cin.isEmpty()) {
+                    existingClient = clientRepository.findByCin(cin);
+
+                    if (existingClient != null) {
+                        Date existingDtfinc = existingClient.getDTFINC();
+
+                        // Comparer les dates de fin de contrat
+                        if (dtfincImported != null && existingDtfinc != null &&
+                                dtfincImported.after(existingDtfinc)) {
+
+                            // La date importée est plus récente, on met à jour le client existant
+                            updateExisting = true;
+                            System.out.println("Updating existing client " + cin +
+                                    " with newer contract end date: " + dtfincImported +
+                                    " (old: " + existingDtfinc + ")");
+                        } else {
+                            // La date n'est pas plus récente, on ignore ce client
+                            skippedCount++;
+                            skippedCins.add(cin);
+                            System.out.println("Skipping existing CIN: " + cin +
+                                    " - new date not newer than existing");
+                            continue;
                         }
                     }
                 }
 
-                client.setCin(cin);  // cin
-                client.setNom(getCellValueAsString(row.getCell(4)));  // NMCLI
-                client.setPrenom(getCellValueAsString(row.getCell(5)));  // PNCLI
+                // Créer ou mettre à jour le client
+                Client client;
+                if (updateExisting) {
+                    client = existingClient;
+                    // Garder l'utilisateur assigné et les autres données importantes
+                    // qui ne devraient pas être écrasées
+                    User assignedUser = client.getAssignedUser();
+                    ClientStatus oldStatus = client.getStatus();
+                    // Autres champs à préserver si nécessaire
 
-                // Pour DTFINC (date)
-                Cell dtfincCell = row.getCell(6);
-                if (dtfincCell != null && dtfincCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dtfincCell)) {
-                    client.setDTFINC(dtfincCell.getDateCellValue());
+                    // Mettre à jour les données de base (à adapter selon vos besoins)
+                    updateClientBaseInfo(client, row);
+
+                    // Restaurer les données importantes
+                    client.setAssignedUser(assignedUser);
+
+                    // Réinitialiser le statut uniquement si nécessaire
+                    // Par exemple, si vous voulez que les clients mis à jour soient considérés
+                    // comme "non traités" à nouveau:
+                    client.setStatus(ClientStatus.NON_TRAITE);
+
+                    // Date de mise à jour
+                    client.setUpdatedAt(LocalDateTime.now());
+
+                    updatedCount++;
+                    updatedCins.add(cin);
+                } else {
+                    // Créer un nouveau client
+                    client = new Client();
+                    updateClientBaseInfo(client, row);
+
+                    // Définir les valeurs par défaut pour un nouveau client
+                    client.setStatus(ClientStatus.NON_TRAITE);
+                    client.setCreatedAt(LocalDateTime.now());
+                    client.setUpdatedAt(LocalDateTime.now());
+
+                    importedCount++;
                 }
-
-                client.setTelephone(getCellValueAsString(row.getCell(7)));  // teledo
-                client.setTelephone2(getCellValueAsString(row.getCell(8)));  // telex
-                client.setActiviteActuelle(getCellValueAsString(row.getCell(9)));  // activ
-                client.setBAREM(getCellValueAsString(row.getCell(10)));  // BAREM
-
-                // Pour date_deb (date)
-                Cell dtdebcCell = row.getCell(11);
-                if (dtdebcCell != null && dtdebcCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dtdebcCell)) {
-                    client.setDTDEBC(dtdebcCell.getDateCellValue());
-                }
-
-                // Pour mnt_deb (double)
-                Cell mntDebCell = row.getCell(12);
-                if (mntDebCell != null && mntDebCell.getCellType() == CellType.NUMERIC) {
-                    client.setMNTDEB(mntDebCell.getNumericCellValue());
-                }
-
-                // Pour nbre_inc (integer)
-                Cell nbreIncCell = row.getCell(13);
-                if (nbreIncCell != null && nbreIncCell.getCellType() == CellType.NUMERIC) {
-                    client.setNBINC((int) nbreIncCell.getNumericCellValue());
-                }
-
-                // Pour age_clt (integer)
-                Cell ageCell = row.getCell(14);
-                if (ageCell != null && ageCell.getCellType() == CellType.NUMERIC) {
-                    client.setAgeClient((int) ageCell.getNumericCellValue());
-                }
-
-                // Pour nbre_prets (integer)
-                Cell nbrePretsCell = row.getCell(15);
-                if (nbrePretsCell != null && nbrePretsCell.getCellType() == CellType.NUMERIC) {
-                    client.setNBPRETS((int) nbrePretsCell.getNumericCellValue());
-                }
-
-                // Set default values
-                client.setStatus(ClientStatus.NON_TRAITE);
-                client.setCreatedAt(LocalDateTime.now());
-                client.setUpdatedAt(LocalDateTime.now());
 
                 clientRepository.save(client);
-                importedCount++;
-                System.out.println("Imported client: " + cin);
+                System.out.println((updateExisting ? "Updated" : "Imported") + " client: " + cin);
             }
 
-            System.out.println("Import summary - Imported: " + importedCount + ", Skipped: " + skippedCount);
+            System.out.println("Import summary - Imported: " + importedCount +
+                    ", Updated: " + updatedCount +
+                    ", Skipped: " + skippedCount);
             System.out.println("Skipped CINs: " + skippedCins);
+            System.out.println("Updated CINs: " + updatedCins);
             System.out.println("Skipped for direction: " + skippedForDirection);
 
             // Audit de l'importation
+            String auditMessage = "Importation Excel: " + importedCount + " clients importés, " +
+                    updatedCount + " clients mis à jour, " +
+                    skippedCount + " ignorés";
+
             auditService.auditEvent(AuditType.EXCEL_IMPORT,
                     "System",
                     null,
-                    "Importation Excel: " + importedCount + " clients importés, " + skippedCount + " ignorés",
+                    auditMessage,
                     userEmail);
         }
 
-        return new ImportResult(importedCount, skippedCount, skippedCins, skippedForDirection);
+        // Modifier la classe ImportResult pour inclure les clients mis à jour
+        return new ImportResult(importedCount, updatedCount, skippedCount, skippedCins, updatedCins, skippedForDirection);
+    }
+
+    // Méthode auxiliaire pour mettre à jour les informations de base d'un client
+    private void updateClientBaseInfo(Client client, Row row) {
+        client.setNMDIR(getCellValueAsString(row.getCell(0)));
+        client.setNMREG(getCellValueAsString(row.getCell(1)));
+
+        // Pour NMBRA (enum), conversion nécessaire
+        String nmbraStr = getCellValueAsString(row.getCell(2));
+        if (nmbraStr != null && !nmbraStr.isEmpty()) {
+            try {
+                client.setNMBRA(Branche.valueOf(nmbraStr));
+            } catch (IllegalArgumentException e) {
+                // Tentative de trouver une correspondance par displayName
+                for (Branche branche : Branche.values()) {
+                    if (branche.getDisplayName().equalsIgnoreCase(nmbraStr)) {
+                        client.setNMBRA(branche);
+                        break;
+                    }
+                }
+            }
+        }
+
+        client.setCin(getCellValueAsString(row.getCell(3)));
+        client.setNom(getCellValueAsString(row.getCell(4)));
+        client.setPrenom(getCellValueAsString(row.getCell(5)));
+
+        // Pour DTFINC (date)
+        Cell dtfincCell = row.getCell(6);
+        if (dtfincCell != null && dtfincCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dtfincCell)) {
+            client.setDTFINC(dtfincCell.getDateCellValue());
+        }
+
+        client.setTelephone(getCellValueAsString(row.getCell(7)));
+        client.setTelephone2(getCellValueAsString(row.getCell(8)));
+        client.setActiviteActuelle(getCellValueAsString(row.getCell(9)));
+        client.setBAREM(getCellValueAsString(row.getCell(10)));
+
+        // Pour date_deb (date)
+        Cell dtdebcCell = row.getCell(11);
+        if (dtdebcCell != null && dtdebcCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dtdebcCell)) {
+            client.setDTDEBC(dtdebcCell.getDateCellValue());
+        }
+
+        // Pour mnt_deb (double)
+        Cell mntDebCell = row.getCell(12);
+        if (mntDebCell != null && mntDebCell.getCellType() == CellType.NUMERIC) {
+            client.setMNTDEB(mntDebCell.getNumericCellValue());
+        }
+
+        // Pour nbre_inc (integer)
+        Cell nbreIncCell = row.getCell(13);
+        if (nbreIncCell != null && nbreIncCell.getCellType() == CellType.NUMERIC) {
+            client.setNBINC((int) nbreIncCell.getNumericCellValue());
+        }
+
+        // Pour age_clt (integer)
+        Cell ageCell = row.getCell(14);
+        if (ageCell != null && ageCell.getCellType() == CellType.NUMERIC) {
+            client.setAgeClient((int) ageCell.getNumericCellValue());
+        }
+
+        // Pour nbre_prets (integer)
+        Cell nbrePretsCell = row.getCell(15);
+        if (nbrePretsCell != null && nbrePretsCell.getCellType() == CellType.NUMERIC) {
+            client.setNBPRETS((int) nbrePretsCell.getNumericCellValue());
+        }
     }
 
     // Méthode auxiliaire pour parser NMBRA
@@ -531,21 +603,32 @@ public class ClientService {
     }
 
     // Classe pour retourner les résultats de l'importation
+    // Classe pour retourner les résultats de l'importation
     public static class ImportResult {
         private final int importedCount;
+        private final int updatedCount;  // Nouveau compteur
         private final int skippedCount;
         private final List<String> skippedCins;
+        private final List<String> updatedCins;  // Nouvelle liste
         private final List<String> skippedForRegion;
 
-        public ImportResult(int importedCount, int skippedCount, List<String> skippedCins, List<String> skippedForRegion) {
+        public ImportResult(int importedCount, int updatedCount, int skippedCount,
+                            List<String> skippedCins, List<String> updatedCins,
+                            List<String> skippedForRegion) {
             this.importedCount = importedCount;
+            this.updatedCount = updatedCount;
             this.skippedCount = skippedCount;
             this.skippedCins = skippedCins;
+            this.updatedCins = updatedCins;
             this.skippedForRegion = skippedForRegion;
         }
 
         public int getImportedCount() {
             return importedCount;
+        }
+
+        public int getUpdatedCount() {
+            return updatedCount;
         }
 
         public int getSkippedCount() {
@@ -555,7 +638,14 @@ public class ClientService {
         public List<String> getSkippedCins() {
             return skippedCins;
         }
-         public List<String> getSkippedForRegion() {return skippedForRegion;}
+
+        public List<String> getUpdatedCins() {
+            return updatedCins;
+        }
+
+        public List<String> getSkippedForRegion() {
+            return skippedForRegion;
+        }
     }
 
     private boolean isEmptyRow(Row row) {
@@ -658,6 +748,16 @@ public class ClientService {
                 .filter(client -> client.getAssignedUser() == null &&
                         directionCode.equals(client.getNMDIR()))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Trouve les clients par direction et statut
+     */
+    public List<Client> findClientsByDirectionAndStatus(String directionCode, ClientStatus status) {
+        if (directionCode == null) {
+            return new ArrayList<>();
+        }
+        return clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, status);
     }
 
 }
