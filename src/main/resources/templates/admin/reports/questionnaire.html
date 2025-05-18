@@ -183,6 +183,13 @@
                         <!-- Les options seront remplies dynamiquement -->
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <label for="brancheFilter" class="form-label">Branche</label>
+                    <select id="brancheFilter" name="branche" class="form-control">
+                        <option value="">Toutes les branches</option>
+                        <!-- Les options seront remplies dynamiquement -->
+                    </select>
+                </div>
                 <div class="col-md-4">
                     <button type="button" id="applyFilter" class="btn btn-primary w-100">
                         <i class="fas fa-filter me-1"></i>Appliquer le filtre
@@ -593,6 +600,185 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Initialiser les graphiques au chargement
         initCharts();
+        // Dans le script existant, ajoutez ceci à la méthode document.addEventListener('DOMContentLoaded', ...):
+
+// Charger les régions au chargement de la page
+        fetch('/admin/reports/api/regions')
+            .then(response => response.json())
+            .then(regions => {
+                const regionFilter = document.getElementById('regionFilter');
+                if (regionFilter) {
+                    regions.forEach(region => {
+                        const option = document.createElement('option');
+                        option.value = region.id;
+                        option.textContent = region.name;
+                        regionFilter.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => console.error('Erreur lors du chargement des régions:', error));
+
+// Charger les branches au chargement de la page
+        fetch('/admin/reports/api/branches')
+            .then(response => response.json())
+            .then(branches => {
+                const brancheFilter = document.getElementById('brancheFilter');
+                if (brancheFilter) {
+                    branches.forEach(branche => {
+                        const option = document.createElement('option');
+                        option.value = branche.code;
+                        option.textContent = branche.name;
+                        option.dataset.regionCode = branche.regionCode;
+                        brancheFilter.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => console.error('Erreur lors du chargement des branches:', error));
+
+// Ajouter un gestionnaire d'événement pour le filtre de région
+        document.getElementById('regionFilter').addEventListener('change', function() {
+            const selectedRegionId = this.value;
+            const brancheFilter = document.getElementById('brancheFilter');
+
+            // Réinitialiser le filtre de branche
+            brancheFilter.value = '';
+
+            // Si une région est sélectionnée, filter les branches disponibles
+            if (selectedRegionId) {
+                fetch(`/admin/reports/api/regions/${selectedRegionId}`)
+                    .then(response => response.json())
+                    .then(region => {
+                        // Activer/désactiver les options de branche en fonction de la région
+                        Array.from(brancheFilter.options).forEach(option => {
+                            if (option.value && option.dataset.regionCode) {
+                                option.disabled = option.dataset.regionCode !== region.code;
+                            }
+                        });
+                    })
+                    .catch(error => console.error('Erreur lors du chargement des détails de la région:', error));
+            } else {
+                // Si aucune région n'est sélectionnée, activer toutes les branches
+                Array.from(brancheFilter.options).forEach(option => {
+                    option.disabled = false;
+                });
+            }
+        });
+
+// Mettre à jour le gestionnaire du bouton de filtre
+        document.getElementById('applyFilter').addEventListener('click', function() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const regionId = document.getElementById('regionFilter').value;
+            const branche = document.getElementById('brancheFilter').value;
+
+            // Vérifier que les dates sont valides si renseignées
+            if ((startDate && !endDate) || (!startDate && endDate)) {
+                alert('Veuillez spécifier une date de début et une date de fin.');
+                return;
+            }
+
+            if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+                alert('La date de début doit être antérieure à la date de fin.');
+                return;
+            }
+
+            // Construire l'URL avec les paramètres de filtre
+            let url = '/admin/reports/api/data?';
+            const params = [];
+
+            if (startDate && endDate) {
+                params.push(`startDate=${startDate}`);
+                params.push(`endDate=${endDate}`);
+            }
+
+            if (regionId) {
+                params.push(`regionId=${regionId}`);
+            }
+
+            if (branche) {
+                params.push(`branche=${branche}`);
+            }
+
+            if (params.length > 0) {
+                url += params.join('&');
+            }
+
+            // Effectuer la requête pour récupérer les données filtrées
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Erreur HTTP: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Mettre à jour les graphiques avec les nouvelles données
+                    updateCharts(data);
+
+                    // Afficher un message indiquant les filtres appliqués
+                    displayAppliedFilters(startDate, endDate, regionId, branche);
+                })
+                .catch(error => {
+                    console.error('Erreur lors du chargement des données:', error);
+                    alert('Une erreur est survenue lors du chargement des données.');
+                });
+        });
+
+// Fonction pour afficher les filtres appliqués
+        function displayAppliedFilters(startDate, endDate, regionId, branche) {
+            let filterText = '';
+
+            if (startDate && endDate) {
+                const formattedStartDate = new Date(startDate).toLocaleDateString();
+                const formattedEndDate = new Date(endDate).toLocaleDateString();
+                filterText += `Période: du <strong>${formattedStartDate}</strong> au <strong>${formattedEndDate}</strong>`;
+            }
+
+            if (regionId) {
+                const regionSelect = document.getElementById('regionFilter');
+                const selectedOption = regionSelect.options[regionSelect.selectedIndex];
+                filterText += (filterText ? ', ' : '') + `Région: <strong>${selectedOption.textContent}</strong>`;
+            }
+
+            if (branche) {
+                const brancheSelect = document.getElementById('brancheFilter');
+                const selectedOption = brancheSelect.options[brancheSelect.selectedIndex];
+                filterText += (filterText ? ', ' : '') + `Branche: <strong>${selectedOption.textContent}</strong>`;
+            }
+
+            // Créer ou mettre à jour une notification pour l'utilisateur
+            let filterNotice = document.getElementById('filter-notice');
+            if (!filterNotice) {
+                filterNotice = document.createElement('div');
+                filterNotice.id = 'filter-notice';
+                filterNotice.className = 'alert alert-info mt-3';
+                document.getElementById('periodFilterForm').parentNode.appendChild(filterNotice);
+            }
+
+            if (filterText) {
+                filterNotice.innerHTML = `
+        <i class="fas fa-info-circle me-2"></i>
+        Affichage des données filtrées par ${filterText}
+        <button type="button" id="resetFilter" class="btn btn-sm btn-outline-secondary float-end">
+            <i class="fas fa-times me-1"></i>Réinitialiser
+        </button>
+        `;
+
+                // Configurer le bouton de réinitialisation
+                document.getElementById('resetFilter').addEventListener('click', function() {
+                    document.getElementById('startDate').value = '';
+                    document.getElementById('endDate').value = '';
+                    document.getElementById('regionFilter').value = '';
+                    document.getElementById('brancheFilter').value = '';
+
+                    // Recharger les données sans filtre
+                    initCharts();
+                    filterNotice.remove();
+                });
+            } else {
+                filterNotice.remove();
+            }
+        }
 
         // Configurer le bouton de filtre
         document.getElementById('applyFilter').addEventListener('click', function() {
@@ -1132,6 +1318,30 @@
                 }
             }
         });
+    }
+    // Fonction pour mettre à jour les graphiques avec de nouvelles données
+    function updateCharts(data) {
+        // Supprimer les anciens graphiques s'ils existent
+        Chart.helpers.each(Chart.instances, function(instance) {
+            instance.destroy();
+        });
+
+        // Créer les nouveaux graphiques avec les données mises à jour
+        if (data.raisonsNonRenouvellement) createInteractiveBarChart('raisonsChart', data.raisonsNonRenouvellement, 'Raisons de non-renouvellement', 'raison');
+        if (data.qualiteService) createInteractivePieChart('qualiteChart', data.qualiteService, 'Évaluation de la qualité', 'qualite');
+        if (data.interetCredit) createInteractivePieChart('interetChart', data.interetCredit, 'Intérêt pour un nouveau crédit', 'interet');
+        if (data.facteurInfluence) createInteractiveBarChart('facteursChart', data.facteurInfluence, 'Facteurs d\'influence', 'facteur');
+        if (data.profil) createInteractivePieChart('profilChart', data.profil, 'Profil des clients', 'profil');
+        if (data.activiteClient) createInteractiveBarChart('activiteChart', data.activiteClient, 'Activité des clients', 'activite');
+        if (data.rendezVous) createInteractivePieChart('rendezVousChart', data.rendezVous, 'Rendez-vous agence', 'rendez-vous');
+        if (data.branche) createInteractiveBarChart('brancheChart', data.branche, 'Répartition par agence', 'branche');
+        if (data.progression) createProgressionChart(data.progression);
+
+        // Si les données de performance des agents sont disponibles, mettre à jour ces graphiques
+        if (data.agentPerformance) {
+            createAgentPerformanceChart(data.agentPerformance);
+            if (data.dailyActivity) createDailyActivityChart(data.dailyActivity);
+        }
     }
 </script>
 </body>
