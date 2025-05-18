@@ -345,6 +345,52 @@ public class ClientService {
 
         return dto;
     }
+    @Transactional
+    public Client updateStatusAndPhone(Long clientId, ClientStatus status, String notes, String telephone, String userEmail) {
+        Client client = getById(clientId);
+        User user = userRepository.findByEmail(userEmail);
+
+        // Statut précédent pour l'audit
+        ClientStatus oldStatus = client.getStatus();
+        client.setStatus(status);
+        client.setUpdatedBy(user);
+        client.setNotes(notes);
+        client.setUpdatedAt(LocalDateTime.now());
+
+        // Vérifier si le téléphone a été modifié
+        boolean phoneChanged = false;
+        String oldPhone = client.getTelephone();
+
+        if (telephone != null && !telephone.isEmpty() && !telephone.equals(oldPhone)) {
+            client.setTelephone(telephone);
+            phoneChanged = true;
+        }
+
+        // Si le statut est CONTACTE, marquer tous les rappels comme complétés
+        if (status == ClientStatus.CONTACTE) {
+            rappelRepository.completeAllRappelsForClient(clientId);
+        }
+
+        Client savedClient = clientRepository.save(client);
+
+        // Audit du changement de statut
+        auditService.auditEvent(AuditType.CLIENT_STATUS_CHANGE,
+                "Client",
+                client.getId(),
+                "Statut modifié: " + oldStatus + " -> " + status + (notes != null && !notes.isEmpty() ? " (Notes: " + notes + ")" : ""),
+                userEmail);
+
+        // Audit du changement de téléphone si nécessaire
+        if (phoneChanged) {
+            auditService.auditEvent(AuditType.CLIENT_PHONE_CHANGED,
+                    "Client",
+                    client.getId(),
+                    "Téléphone modifié: " + oldPhone + " -> " + telephone,
+                    userEmail);
+        }
+
+        return savedClient;
+    }
 
     @Transactional
     public ImportResult importClientsFromExcel(MultipartFile file, String userEmail) throws IOException {
@@ -758,6 +804,10 @@ public class ClientService {
             return new ArrayList<>();
         }
         return clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, status);
+    }
+
+    public List<Client> findClientsWithPhoneChanges(LocalDateTime startDate, LocalDateTime endDate) {
+        return clientRepository.findClientsWithPhoneChanges(startDate, endDate);
     }
 
 }

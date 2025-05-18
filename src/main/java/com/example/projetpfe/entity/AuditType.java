@@ -27,7 +27,7 @@ public enum AuditType {
     ADMIN_DELETED("Suppression d'administrateur régional"),
     ADMIN_ASSIGNED_REGION("Association admin-région"),
     ADMIN_REMOVED_REGION("Dissociation admin-région"),
-
+    CLIENT_PHONE_CHANGED("Modification du téléphone client"),
     // Actions sur les régions
     REGION_CREATED("Création de région"),
     REGION_UPDATED("Mise à jour de région"),

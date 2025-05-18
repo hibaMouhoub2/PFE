@@ -139,6 +139,7 @@ public class ClientController {
     @PostMapping("/{id}/status")
     @Transactional
     public String updateStatus(@PathVariable Long id,
+                               @RequestParam(required = false) String telephone,
                                @RequestParam ClientStatus status,
                                @RequestParam(required = false) String notes,
                                @RequestParam(required = false) LocalDateTime rappelDate,
@@ -150,7 +151,7 @@ public class ClientController {
         try {
 
             rappelRepository.completeAllRappelsForClient(id);
-            clientService.updateStatus(id, status, notes, userEmail);
+            clientService.updateStatusAndPhone(id, status, notes, telephone, userEmail);
 
             // Programmer un rappel uniquement pour le statut ABSENT
             if (status == ClientStatus.ABSENT && rappelDate != null) {

@@ -106,7 +106,8 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
             String nmdir, LocalDateTime start, LocalDateTime end);
     long countByNMDIRAndStatusAndUpdatedAtBetween(
             String nmdir, ClientStatus status, LocalDateTime start, LocalDateTime end);
-
+    @Query("SELECT c FROM Client c JOIN Audit a ON a.entityId = c.id WHERE a.entityType = 'Client' AND a.type = 'CLIENT_PHONE_CHANGED' AND a.timestamp BETWEEN :startDate AND :endDate ORDER BY a.timestamp DESC")
+    List<Client> findClientsWithPhoneChanges(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
     // Recherche par multiple directions
     List<Client> findByNMDIRInOrderByUpdatedAtDesc(List<String> nmdirs);
     }

@@ -215,12 +215,19 @@
                     <input type="datetime-local" id="rappelDate" name="rappelDate" class="form-control">
                     <div class="form-text">La date à laquelle le client doit être rappelé.</div>
                 </div>
+                <div class="mb-3">
+                    <label for="telephone" class="form-label">Numéro de téléphone</label>
+                    <input type="text" id="telephone" name="telephone" class="form-control"
+                           th:value="${client.telephone}" placeholder="Nouveau numéro de téléphone">
+                    <div class="form-text">Modifiez le numéro uniquement s'il a changé.</div>
+                </div>
 
                 <!-- Champ pour les notes -->
                 <div class="mb-3">
                     <label for="notes" class="form-label">Notes</label>
                     <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="Ajoutez des notes concernant le traitement de ce client..."></textarea>
                 </div>
+
 
                 <!-- Boutons du formulaire -->
                 <div class="d-flex justify-content-between mt-4">

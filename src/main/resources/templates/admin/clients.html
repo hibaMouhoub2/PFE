@@ -100,6 +100,11 @@
             background-color: #f8d7da;
             color: #842029;
         }
+        .card-header {
+            background-color: var(--secondary-color);
+            color: white;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -181,8 +186,9 @@
     </div>
 
     <!-- Filtres -->
+    <!-- Filtres avancés dans une card comme les autres sections -->
     <div class="card mb-4">
-        <div class="card-header bg-light">
+        <div class="card-header ">
             <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtres</h5>
         </div>
         <div class="card-body">
@@ -220,24 +226,6 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label for="branche" class="form-label">Branche</label>
-                    <select id="branche" name="branche" class="form-select">
-                        <option value="">Toutes les branches</option>
-                        <option th:each="b : ${T(com.example.projetpfe.entity.Branche).values()}"
-                                th:value="${b}"
-                                th:text="${b.displayName}"
-                                th:selected="${b == selectedBranche}">
-                            Branche
-                        </option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="rdvDate" class="form-label">Date de RDV</label>
-                    <input type="date" id="rdvDate" name="rdvDate" class="form-control"
-                           th:value="${rdvDate != null ? rdvDate : ''}">
-                </div>
-
-                <div class="col-md-3">
                     <label for="searchQuery" class="form-label">Recherche</label>
                     <input type="text" id="searchQuery" name="q" class="form-control" placeholder="Nom, prénom, CIN...">
                 </div>
@@ -246,26 +234,81 @@
                         <i class="fas fa-search me-1"></i>Filtrer
                     </button>
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <a th:href="@{/admin/clients/export(q=${searchQuery},status=${selectedStatus},userId=${selectedUserId},rdvDate=${rdvDate})}"
-                       class="btn btn-success">
-                        <i class="fas fa-file-excel me-1"></i>Exporter en Excel
-                    </a>
-                    <!--                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#emailModal">-->
-                    <!--                    <i class="fas fa-envelope me-1"></i>Envoyer par Email-->
-                    <!--                </button>-->
+            </form>
+        </div>
+    </div>
+
+    <!-- Export des clients avec téléphone modifié -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary-custom text-white">
+            <h5 class="mb-0"><i class="fas fa-mobile-alt me-2"></i>Export des clients avec téléphone modifié</h5>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/admin/export/phone-changes}" method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="phoneChangeStartDate" class="form-label">Date de début</label>
+                    <input type="date" id="phoneChangeStartDate" name="startDate" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label for="phoneChangeEndDate" class="form-label">Date de fin</label>
+                    <input type="date" id="phoneChangeEndDate" name="endDate" class="form-control">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-download me-1"></i>Exporter les données
+                    </button>
                 </div>
             </form>
-            <!-- À ajouter près des filtres dans admin/clients.html -->
-<!--            <div class="col-md-12 mt-3 text-end">-->
-<!--                <a th:href="@{/admin/clients/export(q=${searchQuery},status=${selectedStatus},userId=${selectedUserId},rdvDate=${rdvDate})}"-->
-<!--                   class="btn btn-success">-->
-<!--                    <i class="fas fa-file-excel me-1"></i>Exporter en Excel-->
-<!--                </a>-->
-<!--&lt;!&ndash;                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#emailModal">&ndash;&gt;-->
-<!--&lt;!&ndash;                    <i class="fas fa-envelope me-1"></i>Envoyer par Email&ndash;&gt;-->
-<!--&lt;!&ndash;                </button>&ndash;&gt;-->
-<!--            </div>-->
+        </div>
+    </div>
+
+    <!-- Export des rendez-vous -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary-custom text-white">
+            <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Export des rendez-vous</h5>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/admin/export/rendez-vous}" method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="rdvStartDate" class="form-label">Date de début</label>
+                    <input type="date" id="rdvStartDate" name="startDate" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label for="rdvEndDate" class="form-label">Date de fin</label>
+                    <input type="date" id="rdvEndDate" name="endDate" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label for="brancheRdvExport" class="form-label">Agence (optionnel)</label>
+                    <select id="brancheRdvExport" name="branche" class="form-select">
+                        <option value="">Toutes les agences</option>
+                        <option th:each="b : ${T(com.example.projetpfe.entity.Branche).values()}"
+                                th:value="${b}"
+                                th:text="${b.displayName}">
+                            Branche
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-download me-1"></i>Exporter les données
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Export clients standard (bouton existant) -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary-custom text-white">
+            <h5 class="mb-0"><i class="fas fa-file-excel me-2"></i>Export standard des clients</h5>
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-content-center">
+                <a th:href="@{/admin/clients/export(q=${searchQuery},status=${selectedStatus},userId=${selectedUserId},rdvDate=${rdvDate})}"
+                   class="btn btn-primary">
+                    <i class="fas fa-file-excel me-1"></i>Exporter tous les clients selon les filtres actuels
+                </a>
+            </div>
         </div>
     </div>
 

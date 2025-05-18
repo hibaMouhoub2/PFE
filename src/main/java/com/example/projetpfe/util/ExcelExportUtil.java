@@ -117,6 +117,55 @@ public class ExcelExportUtil {
             return outputStream.toByteArray();
         }
     }
+    public byte[] exportClientsWithPhoneChangesToExcel(List<Client> clients) throws IOException {
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Clients avec téléphone modifié");
+
+            // Créer les styles
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setBorderBottom(BorderStyle.THIN);
+
+            // Créer l'en-tête avec seulement les colonnes de base
+            Row headerRow = sheet.createRow(0);
+            String[] columns = {
+                    "ID", "Nom", "Prénom", "CIN", "Téléphone Actuel", "Direction", "Région", "Branche"
+            };
+
+            for (int i = 0; i < columns.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(columns[i]);
+                cell.setCellStyle(headerStyle);
+                sheet.setColumnWidth(i, 4500);
+            }
+
+            // Remplir les données
+            int rowNum = 1;
+            for (Client client : clients) {
+                Row row = sheet.createRow(rowNum++);
+                int colNum = 0;
+
+                // Seulement les informations de base
+                setCellValue(row.createCell(colNum++), client.getId());
+                setCellValue(row.createCell(colNum++), client.getNom());
+                setCellValue(row.createCell(colNum++), client.getPrenom());
+                setCellValue(row.createCell(colNum++), client.getCin());
+                setCellValue(row.createCell(colNum++), client.getTelephone());
+                setCellValue(row.createCell(colNum++), client.getNMDIR());
+                setCellValue(row.createCell(colNum++), client.getNMREG());
+                setCellValue(row.createCell(colNum++), client.getNMBRA() != null ? client.getNMBRA().getDisplayName() : null);
+            }
+
+            // Écrire le workbook dans un ByteArrayOutputStream
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            workbook.write(outputStream);
+            return outputStream.toByteArray();
+        }
+    }
 
     // Méthode utilitaire pour définir les valeurs de cellule avec gestion des null
     private void setCellValue(Cell cell, Object value) {

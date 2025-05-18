@@ -717,6 +717,42 @@ public class AdminController {
         System.out.println("DEBUG - Exportation terminée avec succès");
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
     }
+    @GetMapping("/export/phone-changes")
+    public ResponseEntity<byte[]> exportClientsWithPhoneChanges(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) throws IOException {
+
+        // Par défaut, utiliser les 30 derniers jours
+        LocalDateTime start = startDate != null ? startDate.atStartOfDay() : LocalDateTime.now().minusDays(30);
+        LocalDateTime end = endDate != null ? endDate.atTime(LocalTime.MAX) : LocalDateTime.now();
+
+        List<Client> clientsWithPhoneChanges = clientService.findClientsWithPhoneChanges(start, end);
+
+        // Générer le fichier Excel avec uniquement les données de base (fonction spécifique)
+        byte[] excelContent = excelExportUtil.exportClientsWithPhoneChangesToExcel(clientsWithPhoneChanges);
+
+        // Audit de l'exportation
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+
+        auditService.auditEvent(AuditType.EXCEL_EXPORT,
+                "Client",
+                null,
+                "Export Excel des clients avec numéro de téléphone modifié entre " +
+                        start.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " et " +
+                        end.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " (" + clientsWithPhoneChanges.size() + " clients)",
+                userEmail);
+
+        // Préparer la réponse HTTP
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+
+        // Définir le nom du fichier avec la date actuelle
+        String filename = "clients_phone_changes_export_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
+        headers.setContentDispositionFormData("attachment", filename);
+
+        return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
+    }
 
     @PostMapping("/clients/import")
     public String importClientsFromExcel(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
@@ -766,11 +802,14 @@ public class AdminController {
 
     @GetMapping("/export/rendez-vous")
     public ResponseEntity<byte[]> exportRendezVous(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) String branche) throws IOException {
 
-        // Par défaut, utiliser la date du jour
-        LocalDate exportDate = date != null ? date : LocalDate.now();
+        // Si startDate est null, utilisez la date du jour
+        LocalDate defaultStartDate = startDate != null ? startDate : LocalDate.now();
+        // Si endDate est null, utilisez aussi la date du jour (pour un jour spécifique)
+        LocalDate defaultEndDate = endDate != null ? endDate : defaultStartDate;
 
         // Convertir la chaîne de branche en enum si nécessaire
         Branche brancheEnum = null;
@@ -782,23 +821,33 @@ public class AdminController {
             }
         }
 
-        // Récupérer les clients avec rendez-vous pour cette date et cette branche
-        List<Client> clientsWithRdv = clientService.findClientsWithRendezVousForDateAndBranche(exportDate, brancheEnum);
+        // Récupérer tous les clients avec rendez-vous pour cette plage de dates et cette branche
+        List<Client> clientsWithRdv = new ArrayList<>();
 
-        // Générer le fichier Excel
-        byte[] excelContent = excelExportUtil.exportRendezVousToExcel(clientsWithRdv, exportDate);
+        // Parcourir chaque jour dans la plage de dates
+        LocalDate currentDate = defaultStartDate;
+        while (!currentDate.isAfter(defaultEndDate)) {
+            clientsWithRdv.addAll(clientService.findClientsWithRendezVousForDateAndBranche(currentDate, brancheEnum));
+            currentDate = currentDate.plusDays(1);
+        }
+
+        // Générer le fichier Excel avec tous les détails (fonction existante)
+        byte[] excelContent = excelExportUtil.exportClientsToExcel(clientsWithRdv);
 
         // Audit de l'exportation
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = auth.getName();
 
         String brancheInfo = brancheEnum != null ? " pour la branche " + brancheEnum.getDisplayName() : " pour toutes les agences";
+        String dateInfo = defaultStartDate.equals(defaultEndDate) ?
+                " du " + defaultStartDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) :
+                " du " + defaultStartDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) +
+                        " au " + defaultEndDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
         auditService.auditEvent(AuditType.EXCEL_EXPORT,
                 "RendezVous",
                 null,
-                "Export Excel des rendez-vous du " +
-                        exportDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) +
+                "Export Excel des rendez-vous" + dateInfo +
                         brancheInfo + " (" + clientsWithRdv.size() + " rendez-vous)",
                 userEmail);
 
@@ -808,7 +857,10 @@ public class AdminController {
 
         // Définir le nom du fichier
         String brancheStr = brancheEnum != null ? "_" + brancheEnum.name() : "_TOUTES_AGENCES";
-        String filename = "rendez_vous_" + exportDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + brancheStr + ".xlsx";
+        String filename = "rendez_vous" +
+                "_du_" + defaultStartDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) +
+                "_au_" + defaultEndDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) +
+                brancheStr + ".xlsx";
         headers.setContentDispositionFormData("attachment", filename);
 
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
