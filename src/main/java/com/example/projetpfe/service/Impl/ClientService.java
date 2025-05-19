@@ -250,7 +250,8 @@ public class ClientService {
     public Client saveQuestionnaire(Long clientId, ClientDto dto, String userEmail) {
         Client client = getById(clientId);
         User user = userRepository.findByEmail(userEmail);
-
+        System.out.println("DEBUG - Avant enregistrement du questionnaire - Branche: " + client.getNMBRA());
+        Branche clientBranche = client.getNMBRA();
         // Mise à jour des champs du questionnaire
         client.setRaisonNonRenouvellement(dto.getRaisonNonRenouvellement());
         client.setQualiteService(dto.getQualiteService());
@@ -269,11 +270,15 @@ public class ClientService {
         client.setUpdatedBy(user);
         client.setUpdatedAt(LocalDateTime.now());
 
+
         // Marquer tous les rappels associés à ce client comme complétés
         rappelRepository.completeAllRappelsForClient(client.getId());
-
+        if (clientBranche != null) {
+            client.setNMBRA(clientBranche);
+        }
+        System.out.println("DEBUG - Juste avant sauvegarde - Branche: " + client.getNMBRA());
         Client savedClient = clientRepository.save(client);
-
+        System.out.println("DEBUG - Après sauvegarde - Branche: " + savedClient.getNMBRA());
         // Audit du questionnaire complété
         auditService.auditEvent(AuditType.CLIENT_QUESTIONNAIRE_COMPLETED,
                 "Client",
@@ -349,13 +354,14 @@ public class ClientService {
     public Client updateStatusAndPhone(Long clientId, ClientStatus status, String notes, String telephone, String userEmail) {
         Client client = getById(clientId);
         User user = userRepository.findByEmail(userEmail);
-
+        System.out.println("DEBUG - Avant mise à jour - Branche: " + client.getNMBRA());
         // Statut précédent pour l'audit
         ClientStatus oldStatus = client.getStatus();
         client.setStatus(status);
         client.setUpdatedBy(user);
         client.setNotes(notes);
         client.setUpdatedAt(LocalDateTime.now());
+        Branche clientBranche = client.getNMBRA();
 
         // Vérifier si le téléphone a été modifié
         boolean phoneChanged = false;
@@ -370,9 +376,12 @@ public class ClientService {
         if (status == ClientStatus.CONTACTE) {
             rappelRepository.completeAllRappelsForClient(clientId);
         }
+        if (clientBranche != null) {
+            client.setNMBRA(clientBranche);
+        }
 
         Client savedClient = clientRepository.save(client);
-
+        System.out.println("DEBUG - Après sauvegarde - Branche: " + savedClient.getNMBRA());
         // Audit du changement de statut
         auditService.auditEvent(AuditType.CLIENT_STATUS_CHANGE,
                 "Client",

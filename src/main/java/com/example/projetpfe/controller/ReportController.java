@@ -649,11 +649,6 @@ public class ReportController {
         try {
             // Récupérer l'authentification courante
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-            // Log pour débugger
-            System.out.println("Demande de branches par: " + auth.getName());
-
-            // Récupérer l'utilisateur connecté
             User currentUser = userRepository.findByEmail(auth.getName());
 
             // Vérifier les rôles
@@ -661,56 +656,47 @@ public class ReportController {
             boolean isAdmin = auth.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-            System.out.println("isSuperAdmin: " + isSuperAdmin);
-            System.out.println("isAdmin: " + isAdmin);
-
             List<Branche> branches = new ArrayList<>();
 
             // Si c'est un super admin, récupérer toutes les branches
             if (isSuperAdmin) {
-                System.out.println("Récupération de toutes les branches pour super admin");
                 branches = Arrays.asList(Branche.values());
             }
             // Si c'est un admin normal
             else if (isAdmin) {
-                System.out.println("Récupération des branches pour admin");
+                // Récupérer les régions associées à cet admin
+                List<Region> adminRegions = currentUser.getRegions();
+                // Si l'admin n'a pas de régions directement associées mais a une direction
+                if ((adminRegions == null || adminRegions.isEmpty()) && currentUser.getDirection() != null) {
+                    // Récupérer les régions associées à sa direction
+                    adminRegions = currentUser.getDirection().getRegions();
+                }
 
-                // Si l'admin a une direction, filtrer les branches par cette direction
-                if (currentUser.getDirection() != null) {
-                    String directionCode = currentUser.getDirection().getCode();
-                    System.out.println("Direction de l'admin: " + directionCode);
+                if (adminRegions != null && !adminRegions.isEmpty()) {
+                    // Extraire les codes de régions
+                    List<String> regionCodes = adminRegions.stream()
+                            .map(Region::getCode)
+                            .collect(Collectors.toList());
 
+                    System.out.println("Codes des régions de l'admin: " + regionCodes);
+
+                    // Filtrer les branches par ces codes de régions
                     branches = Arrays.stream(Branche.values())
                             .filter(branche -> {
-                                if (branche.getRegionCode() != null) {
-                                    boolean matches = branche.getRegionCode().equals(directionCode);
-                                    System.out.println("Vérification de la branche " + branche.name() +
-                                            " avec code région " + branche.getRegionCode() +
-                                            ": " + matches);
-                                    return matches;
-                                }
-                                return false;
+                                String brancheRegionCode = branche.getRegionCode();
+                                return brancheRegionCode != null && regionCodes.contains(brancheRegionCode);
                             })
                             .collect(Collectors.toList());
-                }
-                // Si l'admin n'a pas de direction spécifique, récupérer toutes les branches
-                else {
-                    System.out.println("Admin sans direction, récupération de toutes les branches");
+                } else {
+                    // Par sécurité, si l'admin n'a aucune région, on lui donne toutes les branches
                     branches = Arrays.asList(Branche.values());
-                }
-            }
-            // Pour les utilisateurs normaux ou cas par défaut
-            else {
-                System.out.println("Utilisateur normal, récupération de sa branche assignée");
-                if (currentUser.getAssignedBranche() != null) {
-                    branches = Collections.singletonList(currentUser.getAssignedBranche());
                 }
             }
 
             System.out.println("Nombre de branches récupérées: " + branches.size());
 
-            // Convertir les branches en format JSON approprié
-            List<Map<String, Object>> result = branches.stream()
+            // Convertir en format JSON
+            return branches.stream()
                     .map(branche -> {
                         Map<String, Object> brancheMap = new HashMap<>();
                         brancheMap.put("value", branche.name());
@@ -719,12 +705,7 @@ public class ReportController {
                         return brancheMap;
                     })
                     .collect(Collectors.toList());
-
-            System.out.println("Résultat final: " + result.size() + " branches");
-            return result;
-
         } catch (Exception e) {
-            // En cas d'erreur, logger et retourner une liste vide
             System.err.println("Erreur lors de la récupération des branches: " + e.getMessage());
             e.printStackTrace();
             return new ArrayList<>();

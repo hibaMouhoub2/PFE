@@ -303,15 +303,15 @@
           <span class="info-label">Difficultés rencontrées :</span>
           <span th:text="${client.ADifficultesRencontrees == null ? '-' : (client.ADifficultesRencontrees ? 'OUI' : 'NON')}">-</span>
         </p>
-        <p><span class="info-label">Activité :</span> <span th:text="${client.activiteClient.getDisplayName() ?: '-'}">-</span></p>
-        <p><span class="info-label">Profil :</span> <span th:text="${client.profil.getDisplayName() ?: '-'}">-</span></p>
+        <p><span class="info-label">Activité :</span> <span th:text="${client.activiteClient?.getDisplayName() ?: '-'}">-</span></p>
+        <p><span class="info-label">Profil :</span> <span th:text="${client.profil?.getDisplayName() ?: '-'}">-</span></p>
 <!--        <p><span class="info-label">Région:</span> <span th:text="${client.NMREG ?: '-'}">-</span></p>-->
       </div>
       <div class="col-md-6">
-        <p><span class="info-label">Qualité du service :</span> <span th:text="${client.qualiteService.getDisplayName() ?: '-'}">-</span></p>
-        <p><span class="info-label">Intérêt par nouveau crédit :</span> <span th:text="${client.interetNouveauCredit.getDisplayName() ?: '-'}">-</span></p>
+        <p><span class="info-label">Qualité du service :</span> <span th:text="${client.qualiteService?.getDisplayName() ?: '-'}">-</span></p>
+        <p><span class="info-label">Intérêt par nouveau crédit :</span> <span th:text="${client.interetNouveauCredit?.getDisplayName() ?: '-'}">-</span></p>
         <p><span class="info-label">Rendez-vous :</span> <span th:text="${client.dateHeureRendezVous ?: '-'}">-</span></p>
-        <p><span class="info-label">Facteurs influence :</span> <span th:text="${client.facteurInfluence.getDisplayName() ?: '-'}">-</span></p>
+        <p><span class="info-label">Facteurs influence :</span> <span th:text="${client.facteurInfluence?.getDisplayName() ?: '-'}">-</span></p>
         <p><span class="info-label">Autres facteurs :</span> <span th:text="${client.autresFacteurs ?: '-'}">-</span></p>
       </div>
     </div>
