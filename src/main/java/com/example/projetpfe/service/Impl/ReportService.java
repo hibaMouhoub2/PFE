@@ -1122,6 +1122,22 @@ public class ReportService {
         }
         return stats;
     }
+    public Map<String, Long> getBrancheStatsByDate(LocalDateTime start, LocalDateTime end) {
+        Map<String, Long> stats = new LinkedHashMap<>();
+
+        for (Branche branche : Branche.values()) {
+            long count = clientRepository.findAll().stream()
+                    .filter(client -> branche.equals(client.getNMBRA())
+                            && client.getUpdatedAt() != null
+                            && client.getUpdatedAt().isAfter(start)
+                            && client.getUpdatedAt().isBefore(end))
+                    .count();
+
+            stats.put(branche.getDisplayName(), count);
+        }
+
+        return stats;
+    }
 
     public Map<String, Long> getProfilStatsByRegionAndBrancheAndDate(Region region, Branche branche, LocalDateTime start, LocalDateTime end) {
         Map<String, Long> stats = new LinkedHashMap<>();

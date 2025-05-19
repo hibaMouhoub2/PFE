@@ -80,7 +80,7 @@ public class ReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) Long regionId,
-            @RequestParam(required = false) String branche) {
+            @RequestParam(required = false) String brancheCode) {
 
         // Récupérer l'utilisateur connecté
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -92,15 +92,13 @@ public class ReportController {
         if (isSuperAdmin && regionId != null) {
             selectedRegion = regionService.findById(regionId).orElse(null);
         }
-
-        // Conversion de la branche en enum si nécessaire
-        Branche brancheEnum = null;
-        try {
-            if (branche != null && !branche.isEmpty()) {
-                brancheEnum = Branche.valueOf(branche);
+        Branche selectedBranche = null;
+        if (brancheCode != null && !brancheCode.isEmpty()) {
+            try {
+                selectedBranche = Branche.valueOf(brancheCode);
+            } catch (IllegalArgumentException e) {
+                // Ignorer si le code n'est pas valide
             }
-        } catch (IllegalArgumentException e) {
-            // Gérer silencieusement l'erreur si la branche n'est pas valide
         }
 
         // Utiliser le reste du code existant pour traiter les données
@@ -108,44 +106,30 @@ public class ReportController {
 
         // Si aucune date n'est fournie, utiliser des dates par défaut (tout)
         if (startDate == null && endDate == null) {
-            // Si une région est sélectionnée et que l'utilisateur est super admin
-            if (isSuperAdmin && selectedRegion != null) {
-                // Filtrer par région et branche si applicable
-                if (brancheEnum != null) {
-                    data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStatsByRegionAndBranche(selectedRegion, brancheEnum));
-                    data.put("qualiteService", reportService.getQualiteServiceStatsByRegionAndBranche(selectedRegion, brancheEnum));
-                    data.put("interetCredit", reportService.getInteretCreditStatsByRegionAndBranche(selectedRegion, brancheEnum));
-                    data.put("facteurInfluence", reportService.getFacteurInfluenceStatsByRegionAndBranche(selectedRegion, brancheEnum));
-                    data.put("profil", reportService.getProfilStatsByRegionAndBranche(selectedRegion, brancheEnum));
-                    data.put("activiteClient", reportService.getActiviteClientStatsByRegionAndBranche(selectedRegion, brancheEnum));
-                    data.put("rendezVous", reportService.getRendezVousStatsByRegionAndBranche(selectedRegion, brancheEnum));
-                    data.put("branche", reportService.getBrancheStatsByRegion(selectedRegion));
-                    data.put("progression", reportService.getStatusProgressionByMonthAndRegionAndBranche(selectedRegion, brancheEnum));
-                } else {
-                    // Utiliser les méthodes existantes si pas de branche spécifiée
-                    data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStatsByRegion(selectedRegion));
-                    data.put("qualiteService", reportService.getQualiteServiceStatsByRegion(selectedRegion));
-                    data.put("interetCredit", reportService.getInteretCreditStatsByRegion(selectedRegion));
-                    data.put("facteurInfluence", reportService.getFacteurInfluenceStatsByRegion(selectedRegion));
-                    data.put("profil", reportService.getProfilStatsByRegion(selectedRegion));
-                    data.put("activiteClient", reportService.getActiviteClientStatsByRegion(selectedRegion));
-                    data.put("rendezVous", reportService.getRendezVousStatsByRegion(selectedRegion));
-                    data.put("branche", reportService.getBrancheStatsByRegion(selectedRegion));
-                    data.put("progression", reportService.getStatusProgressionByMonthAndRegion(selectedRegion));
-                }
-            } else if (isSuperAdmin && brancheEnum != null) {
-                // Filtrage par branche uniquement sans région
-                data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStatsByBranche(brancheEnum));
-                data.put("qualiteService", reportService.getQualiteServiceStatsByBranche(brancheEnum));
-                data.put("interetCredit", reportService.getInteretCreditStatsByBranche(brancheEnum));
-                data.put("facteurInfluence", reportService.getFacteurInfluenceStatsByBranche(brancheEnum));
-                data.put("profil", reportService.getProfilStatsByBranche(brancheEnum));
-                data.put("activiteClient", reportService.getActiviteClientStatsByBranche(brancheEnum));
-                data.put("rendezVous", reportService.getRendezVousStatsByBranche(brancheEnum));
+            if (selectedBranche != null) {
+                data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStatsByBranche(selectedBranche));
+                data.put("qualiteService", reportService.getQualiteServiceStatsByBranche(selectedBranche));
+                data.put("interetCredit", reportService.getInteretCreditStatsByBranche(selectedBranche));
+                data.put("facteurInfluence", reportService.getFacteurInfluenceStatsByBranche(selectedBranche));
+                data.put("profil", reportService.getProfilStatsByBranche(selectedBranche));
+                data.put("activiteClient", reportService.getActiviteClientStatsByBranche(selectedBranche));
+                data.put("rendezVous", reportService.getRendezVousStatsByBranche(selectedBranche));
                 data.put("branche", reportService.getBrancheStats());
-                data.put("progression", reportService.getStatusProgressionByMonthAndBranche(brancheEnum));
+                data.put("progression", reportService.getStatusProgressionByMonthAndBranche(selectedBranche));
+            }
+            // Si une région est sélectionnée et que l'utilisateur est super admin
+            else if (isSuperAdmin && selectedRegion != null) {
+                data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStatsByRegion(selectedRegion));
+                data.put("qualiteService", reportService.getQualiteServiceStatsByRegion(selectedRegion));
+                data.put("interetCredit", reportService.getInteretCreditStatsByRegion(selectedRegion));
+                data.put("facteurInfluence", reportService.getFacteurInfluenceStatsByRegion(selectedRegion));
+                data.put("profil", reportService.getProfilStatsByRegion(selectedRegion));
+                data.put("activiteClient", reportService.getActiviteClientStatsByRegion(selectedRegion));
+                data.put("rendezVous", reportService.getRendezVousStatsByRegion(selectedRegion));
+                data.put("branche", reportService.getBrancheStatsByRegion(selectedRegion));
+                data.put("progression", reportService.getStatusProgressionByMonthAndRegion(selectedRegion));
             } else {
-                // Code existant pour obtenir toutes les données sans filtre
+                // Code existant pour obtenir toutes les données
                 data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStats());
                 data.put("qualiteService", reportService.getQualiteServiceStats());
                 data.put("interetCredit", reportService.getInteretCreditStats());
@@ -157,49 +141,34 @@ public class ReportController {
                 data.put("progression", reportService.getStatusProgressionByMonth());
             }
         } else {
-            // Code pour le filtrage avec dates (similaire à ci-dessus, mais avec les dates)
-            // Initialiser les dates
+            // Initialiser les dates si une seule est fournie
             LocalDateTime start = startDate != null ?
                     startDate.atStartOfDay() : LocalDateTime.now().minusMonths(1);
             LocalDateTime end = endDate != null ?
                     endDate.atTime(LocalTime.MAX) : LocalDateTime.now();
-
-            // Même logique pour le filtrage par région et branche avec dates
-            if (isSuperAdmin && selectedRegion != null) {
-                if (brancheEnum != null) {
-                    // Filtrer par région, branche et dates
-                    data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStatsByRegionAndBrancheAndDate(selectedRegion, brancheEnum, start, end));
-                    data.put("qualiteService", reportService.getQualiteServiceStatsByRegionAndBrancheAndDate(selectedRegion, brancheEnum, start, end));
-                    data.put("interetCredit", reportService.getInteretCreditStatsByRegionAndBrancheAndDate(selectedRegion, brancheEnum, start, end));
-                    data.put("facteurInfluence", reportService.getFacteurInfluenceStatsByRegionAndBrancheAndDate(selectedRegion, brancheEnum, start, end));
-                    data.put("profil", reportService.getProfilStatsByRegionAndBrancheAndDate(selectedRegion, brancheEnum, start, end));
-                    data.put("activiteClient", reportService.getActiviteClientStatsByRegionAndBrancheAndDate(selectedRegion, brancheEnum, start, end));
-                    data.put("rendezVous", reportService.getRendezVousStatsByRegionAndBrancheAndDate(selectedRegion, brancheEnum, start, end));
-                    data.put("branche", reportService.getBrancheStatsByRegionAndDate(selectedRegion, start, end));
-                    data.put("progression", reportService.getStatusProgressionByMonthAndRegionAndBrancheAndDate(selectedRegion, brancheEnum, start, end));
-                } else {
-                    // Filtrer par région et dates
-                    data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStatsByRegionAndDate(selectedRegion, start, end));
-                    data.put("qualiteService", reportService.getQualiteServiceStatsByRegionAndDate(selectedRegion, start, end));
-                    data.put("interetCredit", reportService.getInteretCreditStatsByRegionAndDate(selectedRegion, start, end));
-                    data.put("facteurInfluence", reportService.getFacteurInfluenceStatsByRegionAndDate(selectedRegion, start, end));
-                    data.put("profil", reportService.getProfilStatsByRegionAndDate(selectedRegion, start, end));
-                    data.put("activiteClient", reportService.getActiviteClientStatsByRegionAndDate(selectedRegion, start, end));
-                    data.put("rendezVous", reportService.getRendezVousStatsByRegionAndDate(selectedRegion, start, end));
-                    data.put("branche", reportService.getBrancheStatsByRegionAndDate(selectedRegion, start, end));
-                    data.put("progression", reportService.getStatusProgressionByMonthAndRegionAndDate(selectedRegion, start, end));
-                }
-            } else if (isSuperAdmin && brancheEnum != null) {
-                // Filtrer par branche et dates
-                data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStatsByBrancheAndDate(brancheEnum, start, end));
-                data.put("qualiteService", reportService.getQualiteServiceStatsByBrancheAndDate(brancheEnum, start, end));
-                data.put("interetCredit", reportService.getInteretCreditStatsByBrancheAndDate(brancheEnum, start, end));
-                data.put("facteurInfluence", reportService.getFacteurInfluenceStatsByBrancheAndDate(brancheEnum, start, end));
-                data.put("profil", reportService.getProfilStatsByBrancheAndDate(brancheEnum, start, end));
-                data.put("activiteClient", reportService.getActiviteClientStatsByBrancheAndDate(brancheEnum, start, end));
-                data.put("rendezVous", reportService.getRendezVousStatsByBrancheAndDate(brancheEnum, start, end));
-                data.put("branche", reportService.getBrancheStats(start, end));
-                data.put("progression", reportService.getStatusProgressionByMonthAndBrancheAndDate(brancheEnum, start, end));
+            if (selectedBranche != null) {
+                data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStatsByBrancheAndDate(selectedBranche, start, end));
+                data.put("qualiteService", reportService.getQualiteServiceStatsByBrancheAndDate(selectedBranche, start, end));
+                data.put("interetCredit", reportService.getInteretCreditStatsByBrancheAndDate(selectedBranche, start, end));
+                data.put("facteurInfluence", reportService.getFacteurInfluenceStatsByBrancheAndDate(selectedBranche, start, end));
+                data.put("profil", reportService.getProfilStatsByBrancheAndDate(selectedBranche, start, end));
+                data.put("activiteClient", reportService.getActiviteClientStatsByBrancheAndDate(selectedBranche, start, end));
+                data.put("rendezVous", reportService.getRendezVousStatsByBrancheAndDate(selectedBranche, start, end));
+                data.put("branche", reportService.getBrancheStatsByDate(start, end));
+                data.put("progression", reportService.getStatusProgressionByMonthAndBrancheAndDate(selectedBranche, start, end));
+            }
+            // Même logique pour le filtrage par région avec dates
+            else if (isSuperAdmin && selectedRegion != null) {
+                // Filtrer les données par région et dates
+                data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("qualiteService", reportService.getQualiteServiceStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("interetCredit", reportService.getInteretCreditStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("facteurInfluence", reportService.getFacteurInfluenceStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("profil", reportService.getProfilStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("activiteClient", reportService.getActiviteClientStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("rendezVous", reportService.getRendezVousStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("branche", reportService.getBrancheStatsByRegionAndDate(selectedRegion, start, end));
+                data.put("progression", reportService.getStatusProgressionByMonthAndRegionAndDate(selectedRegion, start, end));
             } else {
                 // Code existant pour le filtrage par dates
                 data.put("raisonsNonRenouvellement", reportService.getRaisonsNonRenouvellementStats(start, end));
@@ -233,31 +202,6 @@ public class ReportController {
                                 (normalizedClientRegion.contains("FIDAA") && normalizedRegionCode.contains("FIDA")) ||
                                 (normalizedClientRegion.contains("FIDA") && normalizedRegionCode.contains("FIDAA"));
                     });
-                })
-                .collect(Collectors.toList());
-    }
-    @GetMapping("/api/branches")
-    @ResponseBody
-    public List<Map<String, Object>> getBranches() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User currentUser = userRepository.findByEmail(auth.getName());
-        boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
-
-        if (!isSuperAdmin) {
-            return Collections.emptyList();
-        }
-
-        // Récupérer toutes les branches
-        Branche[] branches = Branche.values();
-
-        // Convertir en format approprié pour JSON
-        return Arrays.stream(branches)
-                .map(branche -> {
-                    Map<String, Object> brancheMap = new HashMap<>();
-                    brancheMap.put("code", branche.name());
-                    brancheMap.put("name", branche.getDisplayName());
-                    brancheMap.put("regionCode", branche.getRegionCode());
-                    return brancheMap;
                 })
                 .collect(Collectors.toList());
     }
@@ -673,29 +617,6 @@ public class ReportController {
 
         return data;
     }
-    @GetMapping("/api/regions/{id}")
-    @ResponseBody
-    public Map<String, Object> getRegionDetails(@PathVariable Long id) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User currentUser = userRepository.findByEmail(auth.getName());
-        boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
-
-        if (!isSuperAdmin) {
-            return Collections.emptyMap();
-        }
-
-        Region region = regionService.findById(id).orElse(null);
-        if (region == null) {
-            return Collections.emptyMap();
-        }
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("id", region.getId());
-        result.put("name", region.getName());
-        result.put("code", region.getCode());
-
-        return result;
-    }
 
     // Ajouter dans ReportController.java
     @GetMapping("/api/regions")
@@ -721,5 +642,92 @@ public class ReportController {
                     return regionMap;
                 })
                 .collect(Collectors.toList());
+    }
+    @GetMapping("/api/branches")
+    @ResponseBody
+    public List<Map<String, Object>> getBranches() {
+        try {
+            // Récupérer l'authentification courante
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+            // Log pour débugger
+            System.out.println("Demande de branches par: " + auth.getName());
+
+            // Récupérer l'utilisateur connecté
+            User currentUser = userRepository.findByEmail(auth.getName());
+
+            // Vérifier les rôles
+            boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
+            boolean isAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+            System.out.println("isSuperAdmin: " + isSuperAdmin);
+            System.out.println("isAdmin: " + isAdmin);
+
+            List<Branche> branches = new ArrayList<>();
+
+            // Si c'est un super admin, récupérer toutes les branches
+            if (isSuperAdmin) {
+                System.out.println("Récupération de toutes les branches pour super admin");
+                branches = Arrays.asList(Branche.values());
+            }
+            // Si c'est un admin normal
+            else if (isAdmin) {
+                System.out.println("Récupération des branches pour admin");
+
+                // Si l'admin a une direction, filtrer les branches par cette direction
+                if (currentUser.getDirection() != null) {
+                    String directionCode = currentUser.getDirection().getCode();
+                    System.out.println("Direction de l'admin: " + directionCode);
+
+                    branches = Arrays.stream(Branche.values())
+                            .filter(branche -> {
+                                if (branche.getRegionCode() != null) {
+                                    boolean matches = branche.getRegionCode().equals(directionCode);
+                                    System.out.println("Vérification de la branche " + branche.name() +
+                                            " avec code région " + branche.getRegionCode() +
+                                            ": " + matches);
+                                    return matches;
+                                }
+                                return false;
+                            })
+                            .collect(Collectors.toList());
+                }
+                // Si l'admin n'a pas de direction spécifique, récupérer toutes les branches
+                else {
+                    System.out.println("Admin sans direction, récupération de toutes les branches");
+                    branches = Arrays.asList(Branche.values());
+                }
+            }
+            // Pour les utilisateurs normaux ou cas par défaut
+            else {
+                System.out.println("Utilisateur normal, récupération de sa branche assignée");
+                if (currentUser.getAssignedBranche() != null) {
+                    branches = Collections.singletonList(currentUser.getAssignedBranche());
+                }
+            }
+
+            System.out.println("Nombre de branches récupérées: " + branches.size());
+
+            // Convertir les branches en format JSON approprié
+            List<Map<String, Object>> result = branches.stream()
+                    .map(branche -> {
+                        Map<String, Object> brancheMap = new HashMap<>();
+                        brancheMap.put("value", branche.name());
+                        brancheMap.put("label", branche.getDisplayName());
+                        brancheMap.put("regionCode", branche.getRegionCode());
+                        return brancheMap;
+                    })
+                    .collect(Collectors.toList());
+
+            System.out.println("Résultat final: " + result.size() + " branches");
+            return result;
+
+        } catch (Exception e) {
+            // En cas d'erreur, logger et retourner une liste vide
+            System.err.println("Erreur lors de la récupération des branches: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 }
