@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "directions")
@@ -33,4 +34,24 @@ public class Direction {
     // Relation avec les administrateurs (une direction peut avoir plusieurs admins)
     @OneToMany(mappedBy = "direction")
     private List<User> directionalAdmins = new ArrayList<>();
+
+    /**
+     * Retourne uniquement les utilisateurs avec le rôle ADMIN pour cette direction
+     */
+    public List<User> getAdministrators() {
+        return this.directionalAdmins.stream()
+                .filter(user -> user.getRoles().stream()
+                        .anyMatch(role -> "ROLE_ADMIN".equals(role.getName())))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Retourne le nombre d'administrateurs (rôle ADMIN) pour cette direction
+     */
+    public int getAdministratorsCount() {
+        return (int) this.directionalAdmins.stream()
+                .filter(user -> user.getRoles().stream()
+                        .anyMatch(role -> "ROLE_ADMIN".equals(role.getName())))
+                .count();
+    }
 }

@@ -56,9 +56,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                 throw new DisabledException("Compte désactivé");
             }
 
-            return new org.springframework.security.core.userdetails.User(user.getEmail(),
-                    user.getPassword(),
-                    mapRolesToAuthorities(user.getRoles()));
+            return new CustomUserDetails(user, mapRolesToAuthorities(user.getRoles()));
+
         } else {
             logger.debug("Utilisateur non trouvé avec l'email: {}", email);
             throw new UsernameNotFoundException("Invalid username or password.");

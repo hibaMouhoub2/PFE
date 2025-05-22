@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "regions")
@@ -38,4 +39,21 @@ public class Region {
     // Les utilisateurs appartenant à cette région
     @OneToMany(mappedBy = "region")
     private List<User> users = new ArrayList<>();
+
+    public List<User> getAdministrators() {
+        return this.admins.stream()
+                .filter(user -> user.getRoles().stream()
+                        .anyMatch(role -> "ROLE_ADMIN".equals(role.getName())))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Retourne le nombre d'administrateurs (rôle ADMIN) pour cette direction
+     */
+    public int getAdministratorsCount() {
+        return (int) this.admins.stream()
+                .filter(user -> user.getRoles().stream()
+                        .anyMatch(role -> "ROLE_ADMIN".equals(role.getName())))
+                .count();
+    }
 }

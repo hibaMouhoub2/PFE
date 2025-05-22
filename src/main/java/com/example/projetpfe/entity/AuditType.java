@@ -35,7 +35,12 @@ public enum AuditType {
 
     // Actions de rappel
     RAPPEL_CREATED("Rappel créé"),
-    RAPPEL_COMPLETED("Rappel complété");
+    RAPPEL_COMPLETED("Rappel complété"),
+    // Actions sur les directions
+    DIRECTION_CREATED("Création de direction"),
+    DIRECTION_UPDATED("Mise à jour de direction"),
+    DIRECTION_DELETED("Suppression de direction");
+
 
     private final String displayName;
 

@@ -1,6 +1,8 @@
 package com.example.projetpfe.controller;
 
+import com.example.projetpfe.entity.Direction;
 import com.example.projetpfe.entity.Region;
+import com.example.projetpfe.service.Impl.DirectionService;
 import com.example.projetpfe.service.Impl.RegionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,11 +14,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 @Controller
-@RequestMapping("/regions")
+@RequestMapping("/admin/regions")
 public class RegionController {
 
     @Autowired
     private RegionService regionService;
+
+    @Autowired
+    private DirectionService directionService;
 
     @GetMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
@@ -30,6 +35,11 @@ public class RegionController {
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public String showCreateForm(Model model) {
         model.addAttribute("region", new Region());
+
+        // Ajouter la liste des directions disponibles
+        List<Direction> directions = directionService.findAll();
+        model.addAttribute("directions", directions);
+
         return "admin/regions/create";
     }
 
@@ -37,14 +47,22 @@ public class RegionController {
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public String createRegion(@RequestParam String name,
                                @RequestParam String code,
+                               @RequestParam(required = false) Long directionId,
                                RedirectAttributes redirectAttributes) {
         try {
-            regionService.createRegion(name, code);
+            // Si une direction est sélectionnée, l'associer à la région
+            Direction direction = null;
+            if (directionId != null) {
+                direction = directionService.findById(directionId)
+                        .orElseThrow(() -> new RuntimeException("Direction non trouvée"));
+            }
+
+            Region region = regionService.createRegionWithDirection(name, code, direction);
             redirectAttributes.addFlashAttribute("success", "Région créée avec succès");
-            return "redirect:/regions";
+            return "redirect:/admin/regions";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur lors de la création: " + e.getMessage());
-            return "redirect:/regions/create";
+            return "redirect:/admin/regions/create";
         }
     }
 
@@ -55,9 +73,14 @@ public class RegionController {
             Region region = regionService.findById(id)
                     .orElseThrow(() -> new RuntimeException("Région non trouvée"));
             model.addAttribute("region", region);
+
+            // Ajouter la liste des directions pour modification
+            List<Direction> directions = directionService.findAll();
+            model.addAttribute("directions", directions);
+
             return "admin/regions/edit";
         } catch (Exception e) {
-            return "redirect:/regions?error=" + e.getMessage();
+            return "redirect:/admin/regions?error=" + e.getMessage();
         }
     }
 
@@ -66,14 +89,21 @@ public class RegionController {
     public String updateRegion(@PathVariable Long id,
                                @RequestParam String name,
                                @RequestParam String code,
+                               @RequestParam(required = false) Long directionId,
                                RedirectAttributes redirectAttributes) {
         try {
-            regionService.updateRegion(id, name, code);
+            Direction direction = null;
+            if (directionId != null) {
+                direction = directionService.findById(directionId)
+                        .orElseThrow(() -> new RuntimeException("Direction non trouvée"));
+            }
+
+            regionService.updateRegionWithDirection(id, name, code, direction);
             redirectAttributes.addFlashAttribute("success", "Région mise à jour avec succès");
-            return "redirect:/regions";
+            return "redirect:/admin/regions";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur lors de la mise à jour: " + e.getMessage());
-            return "redirect:/regions/edit/" + id;
+            return "redirect:/admin/regions/edit/" + id;
         }
     }
 
@@ -86,6 +116,6 @@ public class RegionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur lors de la suppression: " + e.getMessage());
         }
-        return "redirect:/regions";
+        return "redirect:/admin/regions";
     }
 }

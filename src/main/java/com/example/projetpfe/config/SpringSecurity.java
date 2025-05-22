@@ -55,8 +55,12 @@ public class SpringSecurity {
                 .authorizeHttpRequests((authorize) ->
                         authorize.requestMatchers("/register/**").hasAnyRole("ADMIN","SUPER_ADMIN")
                                 .requestMatchers("/index").permitAll()
+                                .requestMatchers("/admin/directions/**").hasRole("SUPER_ADMIN")
+                                .requestMatchers("/admin/directions").hasRole("SUPER_ADMIN")
                                 .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**", "/webjars/**").hasAnyRole("ADMIN","SUPER_ADMIN","USER")
                                 .requestMatchers("/login-success").permitAll()
+                                .requestMatchers("/admin/regions/**").hasRole("SUPER_ADMIN")
+                                .requestMatchers("/admin/regions").hasRole("SUPER_ADMIN")
                                 .requestMatchers("/users-home").permitAll()
                                 .requestMatchers("/api/branches").hasAnyRole("ADMIN", "SUPER_ADMIN")
                                 .requestMatchers("/api/regions/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
