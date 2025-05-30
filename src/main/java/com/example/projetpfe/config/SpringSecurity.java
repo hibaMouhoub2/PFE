@@ -66,7 +66,7 @@ public class SpringSecurity {
                                 .requestMatchers("/api/regions/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                                 .requestMatchers("/users").hasAnyRole("ADMIN","SUPER_ADMIN")
                                 .requestMatchers("/register-admin/**").hasAnyRole("SUPER_ADMIN")
-                                .requestMatchers("/clients/**").hasAnyRole("USER","ADMIN")
+                                .requestMatchers("/clients/**").hasAnyRole("USER","ADMIN","SUPER_ADMIN")
                                 .requestMatchers("/rappels/{id}/complete").hasAnyRole("USER", "ADMIN","SUPER_ADMIN")
                                 .requestMatchers("/delete-user/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                                 .requestMatchers("/edit-user/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
