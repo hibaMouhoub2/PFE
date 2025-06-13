@@ -1,0 +1,36 @@
+# Ignorer les fichiers de build
+target/
+!target/*.jar
+
+# Ignorer les fichiers IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Ignorer les fichiers système
+.DS_Store
+Thumbs.db
+
+# Ignorer les logs
+*.log
+logs/
+
+# Ignorer les fichiers Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Ignorer Git
+.git/
+.gitignore
+
+# Ignorer les fichiers temporaires
+*.tmp
+*.swp
+*.swo
+
+# Ignorer les fichiers de configuration locaux
+application-local.properties
+application-dev.properties

@@ -1,0 +1,58 @@
+services:
+  # Service PostgreSQL
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: projetpfe-postgres
+    environment:
+      POSTGRES_DB: projetpfedb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - projetpfe-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Service Application Spring Boot
+  projetpfe-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: projetpfe-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/projetpfedb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SERVER_PORT=8080
+      - SPRING_MAIL_HOST=smtp.office365.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY=INFO
+      - LOGGING_LEVEL_ROOT=INFO
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - projetpfe-network
+    restart: unless-stopped
+
+# Volumes pour persister les données
+volumes:
+  postgres_data:
+    driver: local
+
+# Réseau pour la communication entre services
+networks:
+  projetpfe-network:
+    driver: bridge
