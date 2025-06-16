@@ -62,6 +62,7 @@ public class SpringSecurity {
                                 .requestMatchers("/admin/regions/**").hasRole("SUPER_ADMIN")
                                 .requestMatchers("/admin/regions").hasRole("SUPER_ADMIN")
                                 .requestMatchers("/users-home").permitAll()
+                                .requestMatchers("/agent/**").hasRole("USER")
                                 .requestMatchers("/api/branches").hasAnyRole("ADMIN", "SUPER_ADMIN")
                                 .requestMatchers("/api/regions/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                                 .requestMatchers("/users").hasAnyRole("ADMIN","SUPER_ADMIN")
