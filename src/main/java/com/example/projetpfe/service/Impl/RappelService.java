@@ -26,16 +26,17 @@ public class RappelService {
     private final RappelRepository rappelRepository;
     private final ClientRepository clientRepository;
     private final UserRepository userRepository;
-    @Autowired
     private AuditService auditService;
 
     @Autowired
     public RappelService(RappelRepository rappelRepository,
                          ClientRepository clientRepository,
-                         UserRepository userRepository) {
+                         UserRepository userRepository,
+                         AuditService auditService) {
         this.rappelRepository = rappelRepository;
         this.clientRepository = clientRepository;
         this.userRepository = userRepository;
+        this.auditService = auditService;
     }
 
     @Transactional
