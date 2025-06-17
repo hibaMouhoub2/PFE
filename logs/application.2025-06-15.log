@@ -1,0 +1,435 @@
+2025-06-13 09:16:15 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-06-13 09:16:15 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2025-06-13 09:16:15 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2025-06-15 12:46:06 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.0.Final
+2025-06-15 12:46:06 [main] INFO  c.e.projetpfe.ProjetPfeApplication - Starting ProjetPfeApplication using Java 17.0.12 with PID 30024 (C:\Users\hiba3\PROJETPFE\target\classes started by hiba3 in C:\Users\hiba3\PROJETPFE)
+2025-06-15 12:46:06 [main] INFO  c.e.projetpfe.ProjetPfeApplication - No active profile set, falling back to 1 default profile: "default"
+2025-06-15 12:46:07 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-06-15 12:46:07 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 77 ms. Found 7 JPA repository interfaces.
+2025-06-15 12:46:08 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port(s): 8080 (http)
+2025-06-15 12:46:08 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2025-06-15 12:46:08 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-06-15 12:46:08 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.1]
+2025-06-15 12:46:08 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-06-15 12:46:08 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1423 ms
+2025-06-15 12:46:08 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-06-15 12:46:08 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.1.5.Final
+2025-06-15 12:46:08 [main] WARN  org.hibernate.orm.deprecation - HHH90000021: Encountered deprecated setting [javax.persistence.sharedCache.mode], use [jakarta.persistence.sharedCache.mode] instead
+2025-06-15 12:46:08 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-06-15 12:46:09 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@22c8ee48
+2025-06-15 12:46:09 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-06-15 12:46:09 [main] INFO  SQL dialect - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQLDialect
+2025-06-15 12:46:10 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2025-06-15 12:46:10 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-06-15 12:46:11 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-06-15 12:46:11 [main] INFO  o.s.b.a.w.s.WelcomePageHandlerMapping - Adding welcome page template: index
+2025-06-15 12:46:12 [main] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@70ad9a9b, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@300cdf3f, org.springframework.security.web.context.SecurityContextHolderFilter@4285b1bd, org.springframework.security.web.header.HeaderWriterFilter@484313a6, org.springframework.security.web.csrf.CsrfFilter@3d1f809, org.springframework.security.web.authentication.logout.LogoutFilter@68a1906f, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter@38c464df, org.springframework.security.web.session.ConcurrentSessionFilter@65314e4, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@4caeeab6, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@77b987f3, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@2b75b77d, org.springframework.security.web.session.SessionManagementFilter@763960eb, org.springframework.security.web.access.ExceptionTranslationFilter@6431ab21, org.springframework.security.web.access.intercept.AuthorizationFilter@4ff1e20b]
+2025-06-15 12:46:12 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2025-06-15 12:46:12 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port(s): 8080 (http) with context path ''
+2025-06-15 12:46:12 [main] INFO  c.e.projetpfe.ProjetPfeApplication - Started ProjetPfeApplication in 5.898 seconds (process running for 6.79)
+2025-06-15 12:46:16 [http-nio-8080-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-15 12:46:16 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-06-15 12:46:16 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2025-06-15 12:46:16 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login
+2025-06-15 12:46:16 [http-nio-8080-exec-1] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:46:16 [http-nio-8080-exec-1] DEBUG o.s.s.w.s.SessionManagementFilter - Request requested invalid session id 5E575858CD049EBD79A72627F97A9685
+2025-06-15 12:46:16 [http-nio-8080-exec-1] DEBUG o.s.s.w.s.SimpleRedirectInvalidSessionStrategy - Starting new session (if required) and redirecting to '/login'
+2025-06-15 12:46:16 [http-nio-8080-exec-1] DEBUG o.s.s.web.DefaultRedirectStrategy - Redirecting to /login
+2025-06-15 12:46:16 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login
+2025-06-15 12:46:16 [http-nio-8080-exec-2] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:46:16 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Secured GET /login
+2025-06-15 12:46:16 [http-nio-8080-exec-2] DEBUG c.e.p.controller.AuthController - Accès à la page de login - Query string: null
+2025-06-15 12:46:16 [http-nio-8080-exec-2] DEBUG c.e.p.controller.AuthController - Vérification du blocage pour l'IP: 0:0:0:0:0:0:0:1
+2025-06-15 12:46:16 [http-nio-8080-exec-2] DEBUG c.e.p.controller.AuthController - IP non bloquée
+2025-06-15 12:46:17 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:46:17 [http-nio-8080-exec-3] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:46:17 [http-nio-8080-exec-3] DEBUG o.s.s.web.DefaultRedirectStrategy - Redirecting to http://localhost:8080/login
+2025-06-15 12:46:17 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login
+2025-06-15 12:46:17 [http-nio-8080-exec-4] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:46:17 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Secured GET /login
+2025-06-15 12:46:17 [http-nio-8080-exec-4] DEBUG c.e.p.controller.AuthController - Accès à la page de login - Query string: null
+2025-06-15 12:46:17 [http-nio-8080-exec-4] DEBUG c.e.p.controller.AuthController - Vérification du blocage pour l'IP: 0:0:0:0:0:0:0:1
+2025-06-15 12:46:17 [http-nio-8080-exec-4] DEBUG c.e.p.controller.AuthController - IP non bloquée
+2025-06-15 12:46:42 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Securing POST /login
+2025-06-15 12:46:42 [http-nio-8080-exec-5] DEBUG o.s.s.a.d.DaoAuthenticationProvider - Authenticated user
+2025-06-15 12:46:42 [http-nio-8080-exec-5] DEBUG o.s.s.w.a.s.ChangeSessionIdAuthenticationStrategy - Changed session id from 13B75DBC5C596E9C367F9801D294061B
+2025-06-15 12:46:42 [http-nio-8080-exec-5] DEBUG o.s.s.c.session.SessionRegistryImpl - Registering session F2D0C4C152E9F2DAF6AE3BD2E347B8D6, for principal com.example.projetpfe.security.CustomUserDetails@4759bee8
+2025-06-15 12:46:42 [http-nio-8080-exec-5] DEBUG o.s.s.w.c.CsrfAuthenticationStrategy - Replaced CSRF Token
+2025-06-15 12:46:42 [http-nio-8080-exec-5] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Stored SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]] to HttpSession [org.apache.catalina.session.StandardSessionFacade@11cf1eb2]
+2025-06-15 12:46:42 [http-nio-8080-exec-5] DEBUG o.s.s.w.a.UsernamePasswordAuthenticationFilter - Set SecurityContextHolder to UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]
+2025-06-15 12:46:42 [http-nio-8080-exec-5] DEBUG o.s.s.web.DefaultRedirectStrategy - Redirecting to /login-success
+2025-06-15 12:46:42 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login-success
+2025-06-15 12:46:42 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Secured GET /login-success
+2025-06-15 12:46:42 [http-nio-8080-exec-6] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:46:42 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agenda/index
+2025-06-15 12:46:42 [http-nio-8080-exec-7] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:46:42 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agenda/index
+2025-06-15 12:46:43 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:46:43 [http-nio-8080-exec-8] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:46:43 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:46:43 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:46:43 [http-nio-8080-exec-8] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:46:43 [http-nio-8080-exec-8] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:46:45 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agent/count-rendez-vous?startDate=2025-06-16&endDate=2025-06-22
+2025-06-15 12:46:45 [http-nio-8080-exec-9] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:46:45 [http-nio-8080-exec-9] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:46:45 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error?startDate=2025-06-16&endDate=2025-06-22
+2025-06-15 12:46:45 [http-nio-8080-exec-9] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:46:45 [http-nio-8080-exec-9] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:46:54 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agent/count-rendez-vous?startDate=2025-05-01&endDate=2025-06-22
+2025-06-15 12:46:54 [http-nio-8080-exec-10] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:46:54 [http-nio-8080-exec-10] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:46:54 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error?startDate=2025-05-01&endDate=2025-06-22
+2025-06-15 12:46:54 [http-nio-8080-exec-10] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:46:54 [http-nio-8080-exec-10] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:46:58 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agent/count-rendez-vous?startDate=2025-05-01&endDate=2025-06-30
+2025-06-15 12:46:58 [http-nio-8080-exec-1] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:46:58 [http-nio-8080-exec-1] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:46:58 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error?startDate=2025-05-01&endDate=2025-06-30
+2025-06-15 12:46:58 [http-nio-8080-exec-1] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:46:58 [http-nio-8080-exec-1] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:47:45 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /.well-known/appspecific/com.chrome.devtools.json
+2025-06-15 12:47:45 [http-nio-8080-exec-3] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:47:45 [http-nio-8080-exec-3] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:47:45 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:47:45 [http-nio-8080-exec-3] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=13B75DBC5C596E9C367F9801D294061B], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:47:45 [http-nio-8080-exec-3] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:49:50 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-06-15 12:49:50 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2025-06-15 12:49:50 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2025-06-15 12:49:55 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.0.Final
+2025-06-15 12:49:55 [main] INFO  c.e.projetpfe.ProjetPfeApplication - Starting ProjetPfeApplication using Java 17.0.12 with PID 14952 (C:\Users\hiba3\PROJETPFE\target\classes started by hiba3 in C:\Users\hiba3\PROJETPFE)
+2025-06-15 12:49:55 [main] INFO  c.e.projetpfe.ProjetPfeApplication - No active profile set, falling back to 1 default profile: "default"
+2025-06-15 12:49:56 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-06-15 12:49:56 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 79 ms. Found 7 JPA repository interfaces.
+2025-06-15 12:49:57 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port(s): 8080 (http)
+2025-06-15 12:49:57 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2025-06-15 12:49:57 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-06-15 12:49:57 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.1]
+2025-06-15 12:49:57 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-06-15 12:49:57 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1356 ms
+2025-06-15 12:49:57 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-06-15 12:49:57 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.1.5.Final
+2025-06-15 12:49:57 [main] WARN  org.hibernate.orm.deprecation - HHH90000021: Encountered deprecated setting [javax.persistence.sharedCache.mode], use [jakarta.persistence.sharedCache.mode] instead
+2025-06-15 12:49:57 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-06-15 12:49:57 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@22c8ee48
+2025-06-15 12:49:57 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-06-15 12:49:57 [main] INFO  SQL dialect - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQLDialect
+2025-06-15 12:49:59 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2025-06-15 12:49:59 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-06-15 12:50:00 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-06-15 12:50:00 [main] INFO  o.s.b.a.w.s.WelcomePageHandlerMapping - Adding welcome page template: index
+2025-06-15 12:50:01 [main] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@50931911, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@29b21fa6, org.springframework.security.web.context.SecurityContextHolderFilter@7e1b96a7, org.springframework.security.web.header.HeaderWriterFilter@66a5f996, org.springframework.security.web.csrf.CsrfFilter@46791608, org.springframework.security.web.authentication.logout.LogoutFilter@12eb281f, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter@1e7edfb2, org.springframework.security.web.session.ConcurrentSessionFilter@4552f89f, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@63c8a30e, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@6fa84885, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@4159c66d, org.springframework.security.web.session.SessionManagementFilter@1c6d65f7, org.springframework.security.web.access.ExceptionTranslationFilter@7e01d838, org.springframework.security.web.access.intercept.AuthorizationFilter@233b5c71]
+2025-06-15 12:50:01 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2025-06-15 12:50:01 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port(s): 8080 (http) with context path ''
+2025-06-15 12:50:01 [main] INFO  c.e.projetpfe.ProjetPfeApplication - Started ProjetPfeApplication in 6.092 seconds (process running for 6.989)
+2025-06-15 12:50:03 [http-nio-8080-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-15 12:50:03 [http-nio-8080-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-06-15 12:50:03 [http-nio-8080-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2025-06-15 12:50:03 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login
+2025-06-15 12:50:03 [http-nio-8080-exec-2] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:50:03 [http-nio-8080-exec-2] DEBUG o.s.s.w.s.SessionManagementFilter - Request requested invalid session id F2D0C4C152E9F2DAF6AE3BD2E347B8D6
+2025-06-15 12:50:03 [http-nio-8080-exec-2] DEBUG o.s.s.w.s.SimpleRedirectInvalidSessionStrategy - Starting new session (if required) and redirecting to '/login'
+2025-06-15 12:50:03 [http-nio-8080-exec-2] DEBUG o.s.s.web.DefaultRedirectStrategy - Redirecting to /login
+2025-06-15 12:50:03 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login
+2025-06-15 12:50:03 [http-nio-8080-exec-5] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:50:03 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Secured GET /login
+2025-06-15 12:50:03 [http-nio-8080-exec-5] DEBUG c.e.p.controller.AuthController - Accès à la page de login - Query string: null
+2025-06-15 12:50:03 [http-nio-8080-exec-5] DEBUG c.e.p.controller.AuthController - Vérification du blocage pour l'IP: 0:0:0:0:0:0:0:1
+2025-06-15 12:50:03 [http-nio-8080-exec-5] DEBUG c.e.p.controller.AuthController - IP non bloquée
+2025-06-15 12:50:04 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:50:04 [http-nio-8080-exec-1] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:50:04 [http-nio-8080-exec-1] DEBUG o.s.s.web.DefaultRedirectStrategy - Redirecting to http://localhost:8080/login
+2025-06-15 12:50:04 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login
+2025-06-15 12:50:04 [http-nio-8080-exec-4] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:50:04 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Secured GET /login
+2025-06-15 12:50:04 [http-nio-8080-exec-4] DEBUG c.e.p.controller.AuthController - Accès à la page de login - Query string: null
+2025-06-15 12:50:04 [http-nio-8080-exec-4] DEBUG c.e.p.controller.AuthController - Vérification du blocage pour l'IP: 0:0:0:0:0:0:0:1
+2025-06-15 12:50:04 [http-nio-8080-exec-4] DEBUG c.e.p.controller.AuthController - IP non bloquée
+2025-06-15 12:50:10 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing POST /login
+2025-06-15 12:50:10 [http-nio-8080-exec-3] DEBUG o.s.s.a.d.DaoAuthenticationProvider - Authenticated user
+2025-06-15 12:50:10 [http-nio-8080-exec-3] DEBUG o.s.s.w.a.s.ChangeSessionIdAuthenticationStrategy - Changed session id from 24AA078FF9ACB0999A5D0C5902FCAFAB
+2025-06-15 12:50:10 [http-nio-8080-exec-3] DEBUG o.s.s.c.session.SessionRegistryImpl - Registering session F44DBDB17D5BADF520E18731830C8D8F, for principal com.example.projetpfe.security.CustomUserDetails@74665fe5
+2025-06-15 12:50:10 [http-nio-8080-exec-3] DEBUG o.s.s.w.c.CsrfAuthenticationStrategy - Replaced CSRF Token
+2025-06-15 12:50:10 [http-nio-8080-exec-3] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Stored SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]] to HttpSession [org.apache.catalina.session.StandardSessionFacade@362bc6d8]
+2025-06-15 12:50:10 [http-nio-8080-exec-3] DEBUG o.s.s.w.a.UsernamePasswordAuthenticationFilter - Set SecurityContextHolder to UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]
+2025-06-15 12:50:10 [http-nio-8080-exec-3] DEBUG o.s.s.web.DefaultRedirectStrategy - Redirecting to /login-success
+2025-06-15 12:50:10 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login-success
+2025-06-15 12:50:10 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Secured GET /login-success
+2025-06-15 12:50:10 [http-nio-8080-exec-6] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:50:10 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agenda/index
+2025-06-15 12:50:10 [http-nio-8080-exec-7] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:50:10 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agenda/index
+2025-06-15 12:50:11 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:50:11 [http-nio-8080-exec-8] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:50:11 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:50:11 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:50:11 [http-nio-8080-exec-8] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:50:11 [http-nio-8080-exec-8] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:50:13 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agent/count-rendez-vous?startDate=2025-06-16&endDate=2025-06-22
+2025-06-15 12:50:13 [http-nio-8080-exec-9] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:50:13 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agent/count-rendez-vous?startDate=2025-06-16&endDate=2025-06-22
+2025-06-15 12:50:19 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agent/count-rendez-vous?startDate=2025-05-01&endDate=2025-06-22
+2025-06-15 12:50:19 [http-nio-8080-exec-10] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:50:19 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agent/count-rendez-vous?startDate=2025-05-01&endDate=2025-06-22
+2025-06-15 12:50:28 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /clients/1033/status
+2025-06-15 12:50:28 [http-nio-8080-exec-2] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:50:28 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Secured GET /clients/1033/status
+2025-06-15 12:50:28 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:50:28 [http-nio-8080-exec-5] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:50:28 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:50:28 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:50:28 [http-nio-8080-exec-5] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:50:28 [http-nio-8080-exec-5] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:50:34 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing POST /clients/1033/status
+2025-06-15 12:50:34 [http-nio-8080-exec-1] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:50:34 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Secured POST /clients/1033/status
+2025-06-15 12:50:34 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Securing GET /clients/1033/questionnaire
+2025-06-15 12:50:34 [http-nio-8080-exec-4] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:50:34 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Secured GET /clients/1033/questionnaire
+2025-06-15 12:50:34 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:50:34 [http-nio-8080-exec-3] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:50:34 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:50:34 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:50:34 [http-nio-8080-exec-3] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:50:34 [http-nio-8080-exec-3] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:51:04 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Securing POST /clients/1033/questionnaire
+2025-06-15 12:51:04 [http-nio-8080-exec-6] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:51:04 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Secured POST /clients/1033/questionnaire
+2025-06-15 12:51:04 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agenda/index
+2025-06-15 12:51:04 [http-nio-8080-exec-7] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:51:04 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agenda/index
+2025-06-15 12:51:04 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:51:04 [http-nio-8080-exec-8] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:51:04 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:51:04 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:51:04 [http-nio-8080-exec-8] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:51:04 [http-nio-8080-exec-8] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:51:08 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agent/count-rendez-vous?startDate=2025-06-16&endDate=2025-06-22
+2025-06-15 12:51:08 [http-nio-8080-exec-9] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:51:08 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agent/count-rendez-vous?startDate=2025-06-16&endDate=2025-06-22
+2025-06-15 12:51:09 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agent/export/rendez-vous?startDate=2025-06-16&endDate=2025-06-22
+2025-06-15 12:51:09 [http-nio-8080-exec-10] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:51:09 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agent/export/rendez-vous?startDate=2025-06-16&endDate=2025-06-22
+2025-06-15 12:51:27 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agenda/search-results
+2025-06-15 12:51:27 [http-nio-8080-exec-5] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:51:27 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agenda/search-results
+2025-06-15 12:51:27 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:51:27 [http-nio-8080-exec-1] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:51:27 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:51:27 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:51:27 [http-nio-8080-exec-1] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:51:27 [http-nio-8080-exec-1] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:51:29 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agenda/index
+2025-06-15 12:51:29 [http-nio-8080-exec-4] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:51:29 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agenda/index
+2025-06-15 12:51:29 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:51:29 [http-nio-8080-exec-3] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:51:29 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:51:29 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:51:29 [http-nio-8080-exec-3] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=24AA078FF9ACB0999A5D0C5902FCAFAB], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:51:29 [http-nio-8080-exec-3] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:51:32 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-06-15 12:51:32 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2025-06-15 12:51:32 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2025-06-15 12:55:27 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.0.Final
+2025-06-15 12:55:27 [main] INFO  c.e.projetpfe.ProjetPfeApplication - Starting ProjetPfeApplication using Java 17.0.12 with PID 2860 (C:\Users\hiba3\PROJETPFE\target\classes started by hiba3 in C:\Users\hiba3\PROJETPFE)
+2025-06-15 12:55:27 [main] INFO  c.e.projetpfe.ProjetPfeApplication - No active profile set, falling back to 1 default profile: "default"
+2025-06-15 12:55:28 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-06-15 12:55:28 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 80 ms. Found 7 JPA repository interfaces.
+2025-06-15 12:55:28 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port(s): 8080 (http)
+2025-06-15 12:55:28 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2025-06-15 12:55:28 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-06-15 12:55:28 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.1]
+2025-06-15 12:55:28 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-06-15 12:55:28 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1430 ms
+2025-06-15 12:55:29 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-06-15 12:55:29 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.1.5.Final
+2025-06-15 12:55:29 [main] WARN  org.hibernate.orm.deprecation - HHH90000021: Encountered deprecated setting [javax.persistence.sharedCache.mode], use [jakarta.persistence.sharedCache.mode] instead
+2025-06-15 12:55:29 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-06-15 12:55:29 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@22c8ee48
+2025-06-15 12:55:29 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-06-15 12:55:29 [main] INFO  SQL dialect - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQLDialect
+2025-06-15 12:55:30 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2025-06-15 12:55:30 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-06-15 12:55:32 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-06-15 12:55:32 [main] INFO  o.s.b.a.w.s.WelcomePageHandlerMapping - Adding welcome page template: index
+2025-06-15 12:55:32 [main] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@59b7cbec, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@f9402c2, org.springframework.security.web.context.SecurityContextHolderFilter@4d652bc6, org.springframework.security.web.header.HeaderWriterFilter@21dc1d99, org.springframework.security.web.csrf.CsrfFilter@6f14ce3, org.springframework.security.web.authentication.logout.LogoutFilter@66a5f996, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter@2b75b77d, org.springframework.security.web.session.ConcurrentSessionFilter@1e31e7e0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@77b987f3, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@1c1b9de9, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@9dc9212, org.springframework.security.web.session.SessionManagementFilter@467924d8, org.springframework.security.web.access.ExceptionTranslationFilter@763960eb, org.springframework.security.web.access.intercept.AuthorizationFilter@300cdf3f]
+2025-06-15 12:55:33 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2025-06-15 12:55:33 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port(s): 8080 (http) with context path ''
+2025-06-15 12:55:33 [main] INFO  c.e.projetpfe.ProjetPfeApplication - Started ProjetPfeApplication in 6.07 seconds (process running for 6.976)
+2025-06-15 12:55:33 [http-nio-8080-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-15 12:55:33 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-06-15 12:55:33 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2025-06-15 12:55:33 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login
+2025-06-15 12:55:33 [http-nio-8080-exec-1] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:55:33 [http-nio-8080-exec-1] DEBUG o.s.s.w.s.SessionManagementFilter - Request requested invalid session id F44DBDB17D5BADF520E18731830C8D8F
+2025-06-15 12:55:33 [http-nio-8080-exec-1] DEBUG o.s.s.w.s.SimpleRedirectInvalidSessionStrategy - Starting new session (if required) and redirecting to '/login'
+2025-06-15 12:55:33 [http-nio-8080-exec-1] DEBUG o.s.s.web.DefaultRedirectStrategy - Redirecting to /login
+2025-06-15 12:55:33 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login
+2025-06-15 12:55:33 [http-nio-8080-exec-2] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:55:33 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Secured GET /login
+2025-06-15 12:55:33 [http-nio-8080-exec-2] DEBUG c.e.p.controller.AuthController - Accès à la page de login - Query string: null
+2025-06-15 12:55:33 [http-nio-8080-exec-2] DEBUG c.e.p.controller.AuthController - Vérification du blocage pour l'IP: 0:0:0:0:0:0:0:1
+2025-06-15 12:55:33 [http-nio-8080-exec-2] DEBUG c.e.p.controller.AuthController - IP non bloquée
+2025-06-15 12:55:33 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:55:33 [http-nio-8080-exec-3] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:55:33 [http-nio-8080-exec-3] DEBUG o.s.s.web.DefaultRedirectStrategy - Redirecting to http://localhost:8080/login
+2025-06-15 12:55:33 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login
+2025-06-15 12:55:33 [http-nio-8080-exec-6] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:55:33 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Secured GET /login
+2025-06-15 12:55:33 [http-nio-8080-exec-6] DEBUG c.e.p.controller.AuthController - Accès à la page de login - Query string: null
+2025-06-15 12:55:33 [http-nio-8080-exec-6] DEBUG c.e.p.controller.AuthController - Vérification du blocage pour l'IP: 0:0:0:0:0:0:0:1
+2025-06-15 12:55:33 [http-nio-8080-exec-6] DEBUG c.e.p.controller.AuthController - IP non bloquée
+2025-06-15 12:55:42 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Securing POST /login
+2025-06-15 12:55:43 [http-nio-8080-exec-5] DEBUG o.s.s.a.d.DaoAuthenticationProvider - Authenticated user
+2025-06-15 12:55:43 [http-nio-8080-exec-5] DEBUG o.s.s.w.a.s.ChangeSessionIdAuthenticationStrategy - Changed session id from 4F4AB323A42ED01A8932B6E46468C15E
+2025-06-15 12:55:43 [http-nio-8080-exec-5] DEBUG o.s.s.c.session.SessionRegistryImpl - Registering session 75C8351B875AEE8D13020A34018D7047, for principal com.example.projetpfe.security.CustomUserDetails@74665fe5
+2025-06-15 12:55:43 [http-nio-8080-exec-5] DEBUG o.s.s.w.c.CsrfAuthenticationStrategy - Replaced CSRF Token
+2025-06-15 12:55:43 [http-nio-8080-exec-5] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Stored SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]] to HttpSession [org.apache.catalina.session.StandardSessionFacade@362bc6d8]
+2025-06-15 12:55:43 [http-nio-8080-exec-5] DEBUG o.s.s.w.a.UsernamePasswordAuthenticationFilter - Set SecurityContextHolder to UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]
+2025-06-15 12:55:43 [http-nio-8080-exec-5] DEBUG o.s.s.web.DefaultRedirectStrategy - Redirecting to /login-success
+2025-06-15 12:55:43 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login-success
+2025-06-15 12:55:43 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Secured GET /login-success
+2025-06-15 12:55:43 [http-nio-8080-exec-9] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:43 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agenda/index
+2025-06-15 12:55:43 [http-nio-8080-exec-7] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:43 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agenda/index
+2025-06-15 12:55:43 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:55:43 [http-nio-8080-exec-8] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:43 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:55:43 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:55:43 [http-nio-8080-exec-8] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:43 [http-nio-8080-exec-8] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:55:45 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agenda/index
+2025-06-15 12:55:45 [http-nio-8080-exec-4] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:45 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agenda/index
+2025-06-15 12:55:46 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:55:46 [http-nio-8080-exec-10] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:46 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:55:46 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:55:46 [http-nio-8080-exec-10] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:46 [http-nio-8080-exec-10] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:55:47 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agenda/search-results
+2025-06-15 12:55:47 [http-nio-8080-exec-1] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:47 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agenda/search-results
+2025-06-15 12:55:47 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:55:47 [http-nio-8080-exec-2] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:47 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:55:47 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:55:47 [http-nio-8080-exec-2] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:47 [http-nio-8080-exec-2] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:55:51 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agenda/index
+2025-06-15 12:55:51 [http-nio-8080-exec-3] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:51 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agenda/index
+2025-06-15 12:55:51 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:55:51 [http-nio-8080-exec-6] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:51 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:55:51 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:55:51 [http-nio-8080-exec-6] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:51 [http-nio-8080-exec-6] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:55:54 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Securing GET /clients/1034
+2025-06-15 12:55:54 [http-nio-8080-exec-5] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:54 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Secured GET /clients/1034
+2025-06-15 12:55:54 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:55:54 [http-nio-8080-exec-9] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:54 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:55:54 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:55:54 [http-nio-8080-exec-9] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@74665fe5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4F4AB323A42ED01A8932B6E46468C15E], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:55:54 [http-nio-8080-exec-9] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:57:43 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-06-15 12:57:43 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2025-06-15 12:57:43 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2025-06-15 12:57:47 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.0.Final
+2025-06-15 12:57:47 [main] INFO  c.e.projetpfe.ProjetPfeApplication - Starting ProjetPfeApplication using Java 17.0.12 with PID 7732 (C:\Users\hiba3\PROJETPFE\target\classes started by hiba3 in C:\Users\hiba3\PROJETPFE)
+2025-06-15 12:57:47 [main] INFO  c.e.projetpfe.ProjetPfeApplication - No active profile set, falling back to 1 default profile: "default"
+2025-06-15 12:57:48 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-06-15 12:57:48 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 79 ms. Found 7 JPA repository interfaces.
+2025-06-15 12:57:49 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port(s): 8080 (http)
+2025-06-15 12:57:49 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2025-06-15 12:57:49 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-06-15 12:57:49 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.1]
+2025-06-15 12:57:49 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-06-15 12:57:49 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1547 ms
+2025-06-15 12:57:49 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-06-15 12:57:49 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.1.5.Final
+2025-06-15 12:57:49 [main] WARN  org.hibernate.orm.deprecation - HHH90000021: Encountered deprecated setting [javax.persistence.sharedCache.mode], use [jakarta.persistence.sharedCache.mode] instead
+2025-06-15 12:57:49 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-06-15 12:57:49 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@56835f2f
+2025-06-15 12:57:49 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-06-15 12:57:49 [main] INFO  SQL dialect - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQLDialect
+2025-06-15 12:57:51 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2025-06-15 12:57:51 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-06-15 12:57:52 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-06-15 12:57:52 [main] INFO  o.s.b.a.w.s.WelcomePageHandlerMapping - Adding welcome page template: index
+2025-06-15 12:57:52 [main] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@4b7ecd37, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@28c06c3c, org.springframework.security.web.context.SecurityContextHolderFilter@7152ee36, org.springframework.security.web.header.HeaderWriterFilter@6f14ce3, org.springframework.security.web.csrf.CsrfFilter@4ce2f4d6, org.springframework.security.web.authentication.logout.LogoutFilter@46791608, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter@2e2d7dc, org.springframework.security.web.session.ConcurrentSessionFilter@27165978, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@7bfa2d74, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@4b76a0f4, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@3c8802cf, org.springframework.security.web.session.SessionManagementFilter@1c1bb1e7, org.springframework.security.web.access.ExceptionTranslationFilter@686a192d, org.springframework.security.web.access.intercept.AuthorizationFilter@6c31ed81]
+2025-06-15 12:57:52 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2025-06-15 12:57:52 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port(s): 8080 (http) with context path ''
+2025-06-15 12:57:53 [main] INFO  c.e.projetpfe.ProjetPfeApplication - Started ProjetPfeApplication in 5.756 seconds (process running for 6.747)
+2025-06-15 12:58:21 [http-nio-8080-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-15 12:58:21 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-06-15 12:58:21 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+2025-06-15 12:58:21 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login
+2025-06-15 12:58:21 [http-nio-8080-exec-1] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:58:21 [http-nio-8080-exec-1] DEBUG o.s.s.w.s.SessionManagementFilter - Request requested invalid session id 75C8351B875AEE8D13020A34018D7047
+2025-06-15 12:58:21 [http-nio-8080-exec-1] DEBUG o.s.s.w.s.SimpleRedirectInvalidSessionStrategy - Starting new session (if required) and redirecting to '/login'
+2025-06-15 12:58:21 [http-nio-8080-exec-1] DEBUG o.s.s.web.DefaultRedirectStrategy - Redirecting to /login
+2025-06-15 12:58:21 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login
+2025-06-15 12:58:21 [http-nio-8080-exec-2] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:58:21 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Secured GET /login
+2025-06-15 12:58:21 [http-nio-8080-exec-2] DEBUG c.e.p.controller.AuthController - Accès à la page de login - Query string: null
+2025-06-15 12:58:21 [http-nio-8080-exec-2] DEBUG c.e.p.controller.AuthController - Vérification du blocage pour l'IP: 0:0:0:0:0:0:0:1
+2025-06-15 12:58:21 [http-nio-8080-exec-2] DEBUG c.e.p.controller.AuthController - IP non bloquée
+2025-06-15 12:58:22 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:58:22 [http-nio-8080-exec-3] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:58:22 [http-nio-8080-exec-3] DEBUG o.s.s.web.DefaultRedirectStrategy - Redirecting to http://localhost:8080/login
+2025-06-15 12:58:22 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login
+2025-06-15 12:58:22 [http-nio-8080-exec-4] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-06-15 12:58:22 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Secured GET /login
+2025-06-15 12:58:22 [http-nio-8080-exec-4] DEBUG c.e.p.controller.AuthController - Accès à la page de login - Query string: null
+2025-06-15 12:58:22 [http-nio-8080-exec-4] DEBUG c.e.p.controller.AuthController - Vérification du blocage pour l'IP: 0:0:0:0:0:0:0:1
+2025-06-15 12:58:22 [http-nio-8080-exec-4] DEBUG c.e.p.controller.AuthController - IP non bloquée
+2025-06-15 12:58:34 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Securing POST /login
+2025-06-15 12:58:34 [http-nio-8080-exec-5] DEBUG o.s.s.a.d.DaoAuthenticationProvider - Authenticated user
+2025-06-15 12:58:34 [http-nio-8080-exec-5] DEBUG o.s.s.w.a.s.ChangeSessionIdAuthenticationStrategy - Changed session id from 4E89A9FEA2539DA95428BF7F83A6DC60
+2025-06-15 12:58:34 [http-nio-8080-exec-5] DEBUG o.s.s.c.session.SessionRegistryImpl - Registering session A6CD59E508E3112381C92E15294B3625, for principal com.example.projetpfe.security.CustomUserDetails@4759bee8
+2025-06-15 12:58:34 [http-nio-8080-exec-5] DEBUG o.s.s.w.c.CsrfAuthenticationStrategy - Replaced CSRF Token
+2025-06-15 12:58:34 [http-nio-8080-exec-5] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Stored SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4E89A9FEA2539DA95428BF7F83A6DC60], Granted Authorities=[ROLE_USER]]] to HttpSession [org.apache.catalina.session.StandardSessionFacade@11cf1eb2]
+2025-06-15 12:58:34 [http-nio-8080-exec-5] DEBUG o.s.s.w.a.UsernamePasswordAuthenticationFilter - Set SecurityContextHolder to UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4E89A9FEA2539DA95428BF7F83A6DC60], Granted Authorities=[ROLE_USER]]
+2025-06-15 12:58:34 [http-nio-8080-exec-5] DEBUG o.s.s.web.DefaultRedirectStrategy - Redirecting to /login-success
+2025-06-15 12:58:34 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Securing GET /login-success
+2025-06-15 12:58:34 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Secured GET /login-success
+2025-06-15 12:58:34 [http-nio-8080-exec-6] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4E89A9FEA2539DA95428BF7F83A6DC60], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:58:34 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agenda/index
+2025-06-15 12:58:34 [http-nio-8080-exec-7] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4E89A9FEA2539DA95428BF7F83A6DC60], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:58:34 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agenda/index
+2025-06-15 12:58:34 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:58:34 [http-nio-8080-exec-8] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4E89A9FEA2539DA95428BF7F83A6DC60], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:58:34 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:58:34 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:58:34 [http-nio-8080-exec-8] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4E89A9FEA2539DA95428BF7F83A6DC60], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:58:34 [http-nio-8080-exec-8] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:58:36 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agenda/index
+2025-06-15 12:58:36 [http-nio-8080-exec-9] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4E89A9FEA2539DA95428BF7F83A6DC60], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:58:36 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agenda/index
+2025-06-15 12:58:36 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:58:36 [http-nio-8080-exec-10] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4E89A9FEA2539DA95428BF7F83A6DC60], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:58:36 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:58:36 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:58:36 [http-nio-8080-exec-10] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4E89A9FEA2539DA95428BF7F83A6DC60], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:58:36 [http-nio-8080-exec-10] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:58:37 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agenda/search-results
+2025-06-15 12:58:37 [http-nio-8080-exec-1] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4E89A9FEA2539DA95428BF7F83A6DC60], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:58:37 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agenda/search-results
+2025-06-15 12:58:37 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /favicon.ico
+2025-06-15 12:58:37 [http-nio-8080-exec-2] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4E89A9FEA2539DA95428BF7F83A6DC60], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:58:37 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Secured GET /favicon.ico
+2025-06-15 12:58:37 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2025-06-15 12:58:37 [http-nio-8080-exec-2] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4E89A9FEA2539DA95428BF7F83A6DC60], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:58:37 [http-nio-8080-exec-2] DEBUG o.s.s.w.a.AccessDeniedHandlerImpl - Responding with 403 status code
+2025-06-15 12:58:39 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /agent/count-rendez-vous?startDate=2025-06-16&endDate=2025-06-22
+2025-06-15 12:58:39 [http-nio-8080-exec-3] DEBUG o.s.s.w.c.HttpSessionSecurityContextRepository - Retrieved SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=com.example.projetpfe.security.CustomUserDetails@4759bee8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=4E89A9FEA2539DA95428BF7F83A6DC60], Granted Authorities=[ROLE_USER]]]
+2025-06-15 12:58:39 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Secured GET /agent/count-rendez-vous?startDate=2025-06-16&endDate=2025-06-22
+2025-06-15 12:59:47 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-06-15 12:59:47 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2025-06-15 12:59:47 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.

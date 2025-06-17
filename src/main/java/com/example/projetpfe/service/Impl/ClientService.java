@@ -26,19 +26,23 @@ import java.util.stream.Collectors;
 
 @Service
 public class ClientService {
-    @Autowired
-    private RappelRepository rappelRepository;
     private final ClientRepository clientRepository;
     private final UserRepository userRepository;
-    @Autowired
-    private AuditService auditService;
-    @Autowired
-    private UserService userService;
+    private final RappelRepository rappelRepository;
+    private final AuditService auditService;
+    private final UserService userService;
 
     @Autowired
-    public ClientService(ClientRepository clientRepository, UserRepository userRepository) {
+    public ClientService(ClientRepository clientRepository,
+                         UserRepository userRepository,
+                         RappelRepository rappelRepository,
+                         AuditService auditService,
+                         UserService userService) {
         this.clientRepository = clientRepository;
         this.userRepository = userRepository;
+        this.rappelRepository = rappelRepository;
+        this.auditService = auditService;
+        this.userService = userService;
     }
 
     public List<Client> findAll() {

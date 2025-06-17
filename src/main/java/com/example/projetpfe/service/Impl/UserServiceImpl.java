@@ -26,23 +26,24 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private RoleRepository roleRepository;
     private PasswordEncoder passwordEncoder;
-    @Autowired
     private DirectionRepository directionRepository;
-
-    @Autowired
     private RegionRepository regionRepository;
-
     private boolean passwordChanged = false;
-
-    @Autowired
     private AuditService auditService;
 
+    @Autowired
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           DirectionRepository directionRepository,
+                           RegionRepository regionRepository,
+                           AuditService auditService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.directionRepository = directionRepository;
+        this.regionRepository = regionRepository;
+        this.auditService = auditService;
     }
 
     public User findById(Long id) {

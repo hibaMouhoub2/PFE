@@ -19,7 +19,7 @@ import java.util.Collections;
  * Configuration de test pour créer des données de test réutilisables
  */
 @org.springframework.boot.test.context.TestConfiguration
-public class TestConfiguration {
+public class TestData {
 
     @Bean
     @Primary
@@ -71,12 +71,11 @@ public class TestConfiguration {
     public static Client createTestClient() {
         Client client = new Client();
         client.setId(1L);
-        client.setNMCLI("CLI001");
         client.setNom("Test Client");
         client.setPrenom("Jean");
         client.setTelephone("0612345678");
         client.setStatus(ClientStatus.NON_TRAITE);
-        client.setNMBRA(Branche.CASA_ANFA);
+        client.setNMBRA(Branche.CASA_AZHAR);
         client.setCreatedAt(LocalDateTime.now());
         client.setUpdatedAt(LocalDateTime.now());
 
@@ -90,7 +89,7 @@ public class TestConfiguration {
         Rappel rappel = new Rappel();
         rappel.setId(1L);
         rappel.setClient(createTestClient());
-        rappel.setUser(createTestUser());
+        //rappel.setUser(createTestUser());
         rappel.setDateRappel(LocalDateTime.now().plusDays(1));
         rappel.setNotes("Test rappel");
         rappel.setCompleted(false);
