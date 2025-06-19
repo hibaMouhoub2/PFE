@@ -54,6 +54,30 @@ public class ClientService {
         return clientRepository.findByStatusAndUpdatedAtBetweenOrderByUpdatedAtDesc(ClientStatus.CONTACTE, start, end);
     }
 
+    public List<Client> findUnassignedClientsByDirectionAndBranche(String directionCode, Branche branche, int limit) {
+        if (directionCode == null) {
+            return new ArrayList<>();
+        }
+
+        return clientRepository.findAll().stream()
+                .filter(client -> client.getAssignedUser() == null &&
+                        directionCode.equals(client.getNMDIR()) &&
+                        (branche == null || branche.equals(client.getNMBRA())))
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+    public long countUnassignedClientsByDirectionAndBranche(String directionCode, Branche branche) {
+        if (directionCode == null) {
+            return 0;
+        }
+
+        return clientRepository.findAll().stream()
+                .filter(client -> client.getAssignedUser() == null &&
+                        directionCode.equals(client.getNMDIR()) &&
+                        (branche == null || branche.equals(client.getNMBRA())))
+                .count();
+    }
+
     @Transactional
     public Client updateClientAndQuestionnaire(Long clientId, ClientDto dto, String userEmail) {
         System.out.println("DEBUG: Méthode updateClientAndQuestionnaire appelée");

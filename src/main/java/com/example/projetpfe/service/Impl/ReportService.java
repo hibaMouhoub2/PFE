@@ -22,6 +22,8 @@ public class ReportService {
     private AuditRepository auditRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private UserServiceImpl userService;
 
     @Autowired
     public ReportService(ClientRepository clientRepository) {
@@ -226,12 +228,12 @@ public class ReportService {
     /**
      * Obtient les statistiques de performance des agents basées sur les logs d'audit
      */
-    public Map<String, Map<String, Long>> getAgentPerformanceStats(LocalDateTime start, LocalDateTime end) {
+    public Map<String, Map<String, Long>> getAgentPerformanceStats(LocalDateTime start, LocalDateTime end, User currentUser) {
         // Initialiser le résultat
         Map<String, Map<String, Long>> result = new HashMap<>();
 
-        // Récupérer tous les utilisateurs avec rôle USER
-        List<User> agents = userRepository.findByRolesName("ROLE_USER");
+        // Récupérer les agents selon le type d'utilisateur connecté
+        List<User> agents = getFilteredAgents(currentUser);
 
         for (User agent : agents) {
             Map<String, Long> agentStats = new HashMap<>();
@@ -279,11 +281,11 @@ public class ReportService {
     /**
      * Obtient les actions quotidiennes des agents
      */
-    public Map<String, Object> getDailyAgentActivityStats(LocalDateTime start, LocalDateTime end) {
+    public Map<String, Object> getDailyAgentActivityStats(LocalDateTime start, LocalDateTime end, User currentUser) {
         Map<String, Object> result = new HashMap<>();
 
-        // Récupérer tous les agents
-        List<User> agents = userRepository.findByRolesName("ROLE_USER");
+        // Récupérer les agents selon le type d'utilisateur connecté
+        List<User> agents = getFilteredAgents(currentUser);
 
         // Pour chaque jour dans la période
         List<LocalDate> days = new ArrayList<>();
@@ -298,7 +300,6 @@ public class ReportService {
                 .map(d -> d.format(DateTimeFormatter.ofPattern("dd/MM")))
                 .collect(Collectors.toList());
 
-        // Changement ici - retourner les dates comme des chaînes
         result.put("dates", dateLabels);
 
         // Pour chaque agent, calculer le nombre d'actions par jour
@@ -318,6 +319,39 @@ public class ReportService {
 
         return result;
     }
+    private List<User> getFilteredAgents(User currentUser) {
+        // Si c'est un super admin, récupérer tous les agents
+        if (userService.isSuperAdmin(currentUser)) {
+            return userRepository.findByRolesName("ROLE_USER");
+        }
+
+        // Si c'est un directeur de direction
+        if (userService.isDirectionAdmin(currentUser) && currentUser.getDirection() != null) {
+            // Récupérer uniquement les agents de sa direction
+            List<User> allAgents = userRepository.findByRolesName("ROLE_USER");
+            return allAgents.stream()
+                    .filter(agent -> agent.getDirection() != null &&
+                            agent.getDirection().getId().equals(currentUser.getDirection().getId()))
+                    .collect(Collectors.toList());
+        }
+
+        // Si c'est un admin régional avec des régions assignées
+        if (!currentUser.getRegions().isEmpty()) {
+            List<String> regionCodes = currentUser.getRegions().stream()
+                    .map(Region::getCode)
+                    .collect(Collectors.toList());
+
+            List<User> allAgents = userRepository.findByRolesName("ROLE_USER");
+            return allAgents.stream()
+                    .filter(agent -> agent.getRegions().stream()
+                            .anyMatch(region -> regionCodes.contains(region.getCode())))
+                    .collect(Collectors.toList());
+        }
+
+        // Par défaut, retourner une liste vide
+        return new ArrayList<>();
+    }
+
 
     /**
      * Obtient les statistiques des raisons de non-renouvellement filtrées par région

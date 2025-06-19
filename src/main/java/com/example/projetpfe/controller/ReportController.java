@@ -605,6 +605,10 @@ public class ReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
+        // Récupérer l'utilisateur connecté
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(auth.getName());
+
         // Définir des dates par défaut si non fournies
         LocalDateTime start = startDate != null ?
                 startDate.atStartOfDay() : LocalDateTime.now().minusMonths(1);
@@ -612,8 +616,10 @@ public class ReportController {
                 endDate.atTime(LocalTime.MAX) : LocalDateTime.now();
 
         Map<String, Object> data = new HashMap<>();
-        data.put("agentPerformance", reportService.getAgentPerformanceStats(start, end));
-        data.put("dailyActivity", reportService.getDailyAgentActivityStats(start, end));
+
+
+        data.put("agentPerformance", reportService.getAgentPerformanceStats(start, end, currentUser));
+        data.put("dailyActivity", reportService.getDailyAgentActivityStats(start, end, currentUser));
 
         return data;
     }

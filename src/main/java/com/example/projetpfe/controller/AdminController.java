@@ -241,6 +241,7 @@ public class AdminController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = userRepository.findByEmail(auth.getName());
         boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
+        boolean isDirectionAdmin = userService.isDirectionAdmin(currentUser);
 
         List<Client> unassignedClients;
         List<UserDto> eligibleUsers;
@@ -268,10 +269,49 @@ public class AdminController {
         model.addAttribute("clients", unassignedClients);
         model.addAttribute("users", eligibleUsers);
 
-        // Ajouter les branches pour le filtrage
-        model.addAttribute("branches", Branche.values());
+        // *** MODIFICATION PRINCIPALE : Utiliser la même logique que ReportController ***
+        List<Branche> availableBranches = getFilteredBranchesForCurrentUser(currentUser);
+        model.addAttribute("branches", availableBranches);
 
         return "admin/unassigned-clients";
+    }
+    @GetMapping("/api/clients/count-by-branche")
+    @ResponseBody
+    public Map<String, Object> getClientCountByBranche(@RequestParam String branche) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(auth.getName());
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Branche brancheEnum = Branche.valueOf(branche);
+            String directionCode = null;
+
+            // Déterminer le code de direction selon le type d'utilisateur
+            if (userService.isSuperAdmin(currentUser)) {
+                // Super admin peut voir tous les clients
+                long count = clientService.findUnassignedClients().stream()
+                        .filter(client -> brancheEnum.equals(client.getNMBRA()))
+                        .count();
+                response.put("count", count);
+            } else if (userService.isDirectionAdmin(currentUser) && currentUser.getDirection() != null) {
+                directionCode = currentUser.getDirection().getCode();
+                long count = clientService.countUnassignedClientsByDirectionAndBranche(directionCode, brancheEnum);
+                response.put("count", count);
+            } else {
+                response.put("count", 0);
+            }
+
+            response.put("success", true);
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("error", "Branche invalide");
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", "Erreur lors du comptage");
+        }
+
+        return response;
     }
 
 
@@ -865,6 +905,61 @@ public class AdminController {
 
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
     }
+    private List<Branche> getFilteredBranchesForCurrentUser(User currentUser) {
+        try {
+            // Vérifier les rôles
+            boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
+            boolean isDirectionAdmin = userService.isDirectionAdmin(currentUser);
+
+            List<Branche> branches = new ArrayList<>();
+
+            // Si c'est un super admin, récupérer toutes les branches
+            if (isSuperAdmin) {
+                branches = Arrays.asList(Branche.values());
+            }
+            // Si c'est un admin de direction
+            else if (isDirectionAdmin) {
+                // Récupérer les régions associées à cet admin
+                List<Region> adminRegions = currentUser.getRegions();
+
+                // Si l'admin n'a pas de régions directement associées mais a une direction
+                if ((adminRegions == null || adminRegions.isEmpty()) && currentUser.getDirection() != null) {
+                    // Récupérer les régions associées à sa direction
+                    adminRegions = currentUser.getDirection().getRegions();
+                }
+
+                if (adminRegions != null && !adminRegions.isEmpty()) {
+                    // Extraire les codes de régions
+                    List<String> regionCodes = adminRegions.stream()
+                            .map(Region::getCode)
+                            .collect(Collectors.toList());
+
+                    System.out.println("Codes des régions de l'admin: " + regionCodes);
+
+                    // Filtrer les branches par ces codes de régions
+                    branches = Arrays.stream(Branche.values())
+                            .filter(branche -> {
+                                String brancheRegionCode = branche.getRegionCode();
+                                return brancheRegionCode != null && regionCodes.contains(brancheRegionCode);
+                            })
+                            .collect(Collectors.toList());
+                } else {
+                    // Par sécurité, si l'admin n'a aucune région, on lui donne toutes les branches
+                    branches = Arrays.asList(Branche.values());
+                }
+            }
+
+            System.out.println("Nombre de branches filtrées pour l'utilisateur: " + branches.size());
+            return branches;
+
+        } catch (Exception e) {
+            System.err.println("Erreur lors du filtrage des branches: " + e.getMessage());
+            e.printStackTrace();
+            // En cas d'erreur, retourner toutes les branches pour éviter une page cassée
+            return Arrays.asList(Branche.values());
+        }
+    }
+
 
     @Autowired
     private EmailService emailService;
@@ -1078,5 +1173,106 @@ public class AdminController {
                 .filter(client -> client.getAssignedUser() != null &&
                         client.getAssignedUser().getId().equals(currentUser.getId()))
                 .collect(Collectors.toList());
+    }
+    @PostMapping("/clients/assign-by-branche")
+    public String assignClientsByBranche(@RequestParam Long userId,
+                                         @RequestParam String branche,
+                                         @RequestParam int clientCount,
+                                         RedirectAttributes redirectAttributes) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            User currentUser = userRepository.findByEmail(auth.getName());
+
+            // Validations de base
+            if (clientCount <= 0 || clientCount > 1000) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Le nombre de clients doit être entre 1 et 1000");
+                return "redirect:/admin/unassigned-clients";
+            }
+
+            // Vérifier que l'utilisateur cible existe
+            User targetUser = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+            // Conversion de la branche
+            Branche brancheEnum;
+            try {
+                brancheEnum = Branche.valueOf(branche);
+            } catch (IllegalArgumentException e) {
+                redirectAttributes.addFlashAttribute("error", "Branche invalide");
+                return "redirect:/admin/unassigned-clients";
+            }
+
+            // Vérifications de sécurité selon le type d'utilisateur
+            List<Client> availableClients;
+            if (userService.isSuperAdmin(currentUser)) {
+                // Super admin peut assigner tous les clients
+                availableClients = clientService.findUnassignedClients().stream()
+                        .filter(client -> brancheEnum.equals(client.getNMBRA()))
+                        .limit(clientCount)
+                        .collect(Collectors.toList());
+            } else if (userService.isDirectionAdmin(currentUser) && currentUser.getDirection() != null) {
+                // Vérifications pour directeur de division
+                String directionCode = currentUser.getDirection().getCode();
+
+                // Vérifier que l'utilisateur cible appartient à la même direction
+                if (targetUser.getDirection() == null ||
+                        !targetUser.getDirection().getId().equals(currentUser.getDirection().getId())) {
+                    redirectAttributes.addFlashAttribute("error",
+                            "Vous ne pouvez assigner des clients qu'aux utilisateurs de votre direction");
+                    return "redirect:/admin/unassigned-clients";
+                }
+
+                // Vérifier la correspondance des branches
+                if (targetUser.getAssignedBranche() != null &&
+                        !targetUser.getAssignedBranche().equals(brancheEnum)) {
+                    redirectAttributes.addFlashAttribute("error",
+                            "L'agent sélectionné n'est pas assigné à la branche " + brancheEnum.getDisplayName());
+                    return "redirect:/admin/unassigned-clients";
+                }
+
+                // Récupérer les clients disponibles
+                availableClients = clientService.findUnassignedClientsByDirectionAndBranche(
+                        directionCode, brancheEnum, clientCount);
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Vous n'avez pas les droits nécessaires");
+                return "redirect:/admin/unassigned-clients";
+            }
+
+            // Vérifier qu'il y a assez de clients disponibles
+            if (availableClients.size() < clientCount) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Seulement " + availableClients.size() + " client(s) disponible(s) pour la branche " +
+                                brancheEnum.getDisplayName() + ". Demandé: " + clientCount);
+                return "redirect:/admin/unassigned-clients";
+            }
+
+            // Effectuer l'assignation
+            int assignedCount = 0;
+            for (Client client : availableClients) {
+                clientService.assignToUser(client.getId(), userId);
+                assignedCount++;
+            }
+
+            // Audit de l'assignation par branche
+            auditService.auditEvent(
+                    AuditType.CLIENTS_BULK_ASSIGNED,
+                    "Client",
+                    null,
+                    assignedCount + " clients de la branche " + brancheEnum.getDisplayName() +
+                            " assignés à " + targetUser.getName() , currentUser.getEmail()
+            );
+
+            redirectAttributes.addFlashAttribute("success",
+                    assignedCount + " client(s) de la branche " + brancheEnum.getDisplayName() +
+                            " assigné(s) avec succès à " + targetUser.getName());
+
+            return "redirect:/admin/unassigned-clients";
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Erreur lors de l'assignation par branche: " + e.getMessage());
+            return "redirect:/admin/unassigned-clients";
+        }
     }
 }

@@ -78,6 +78,32 @@
             width: 20px;
             height: 20px;
         }
+        .card-header.bg-dark {
+            background-color: var(--secondary-color) !important;
+        }
+
+        #bulkAssignSection .form-select-sm,
+        #bulkAssignSection .form-control-sm,
+        #bulkAssignSection .btn-sm {
+            height: 32px;
+        }
+
+        #bulkAssignSection .badge {
+            font-size: 0.75rem;
+            padding: 0.375rem 0.5rem;
+        }
+
+        /* Responsive - pour les écrans plus petits */
+        @media (max-width: 1400px) {
+            #bulkAssignSection {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            #bulkAssignSection > div {
+                margin-right: 0 !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -180,9 +206,10 @@
     <!-- Tableau des clients non assignés avec sélection multiple -->
     <form th:action="@{/admin/clients/assign-multiple}" method="post" id="assignMultipleForm">
         <div class="card">
-            <div class="card-header bg-primary-custom text-white d-flex justify-content-between align-items-center">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                 <span><i class="fas fa-list me-2"></i>Clients à assigner</span>
                 <div id="bulkAssignSection" class="d-flex align-items-center">
+                    <!-- Filtre par branche -->
                     <div class="me-2">
                         <select class="form-select form-select-sm" id="brancheFilter">
                             <option value="">Toutes les branches</option>
@@ -191,19 +218,57 @@
                                     th:text="${branche.displayName}">Branche</option>
                         </select>
                     </div>
-                    <!-- Bouton pour sélectionner par branche -->
-                    <button type="button" id="selectByBranche" class="btn btn-sm btn-info me-2">
-                        <i class="fas fa-filter me-1"></i>Sélectionner
-                    </button>
-                    <select class="form-select form-select-sm d-inline-block me-2" name="userId" id="bulkAssignUserId" style="width: 200px;" required>
-                        <option value="">-- Sélectionner un utilisateur --</option>
-                        <option th:each="user : ${users}" th:value="${user.id}" th:text="${user.firstName + ' ' + user.lastName}">
-                            Nom utilisateur
-                        </option>
-                    </select>
-                    <button type="submit" id="bulkAssignButton" class="btn btn-sm btn-warning">
-                        <i class="fas fa-user-plus me-1"></i>Assigner la sélection
-                    </button>
+
+                    <!-- Assignation par nombre -->
+                    <div class="me-2">
+                        <input type="number"
+                               class="form-control form-control-sm"
+                               id="clientCountInput"
+                               placeholder="Nombre"
+                               min="1"
+                               max="1000"
+                               style="width: 80px;"
+                               title="Nombre de clients à assigner">
+                    </div>
+
+                    <div class="me-2">
+            <span class="badge bg-info" id="availableCountBadge" style="display: none;">
+                <span id="availableCount">0</span> disponible(s)
+            </span>
+                    </div>
+
+                    <div class="me-2">
+                        <button type="button" id="assignByBrancheBtn" class="btn btn-sm btn-success" disabled>
+                            <i class="fas fa-list-ol me-1"></i>Assigner X de cette branche
+                        </button>
+                    </div>
+
+                    <!-- Séparateur visuel -->
+                    <div class="me-2" style="height: 25px; width: 1px; background-color: rgba(255,255,255,0.3);"></div>
+
+                    <!-- Sélection par branche -->
+                    <div class="me-2">
+                        <button type="button" id="selectByBranche" class="btn btn-sm btn-info">
+                            <i class="fas fa-filter me-1"></i>Sélectionner
+                        </button>
+                    </div>
+
+                    <!-- Sélection utilisateur -->
+                    <div class="me-2">
+                        <select class="form-select form-select-sm" name="userId" id="bulkAssignUserId" style="width: 200px;" required>
+                            <option value="">-- Sélectionner un utilisateur --</option>
+                            <option th:each="user : ${users}" th:value="${user.id}" th:text="${user.firstName + ' ' + user.lastName}">
+                                Nom utilisateur
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Assignation multiple -->
+                    <div>
+                        <button type="submit" id="bulkAssignButton" class="btn btn-sm btn-warning">
+                            <i class="fas fa-user-plus me-1"></i>Assigner la sélection
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -255,6 +320,11 @@
                 </div>
             </div>
         </div>
+    </form>
+    <form id="assignByBrancheForm" th:action="@{/admin/clients/assign-by-branche}" method="post" style="display: none;">
+        <input type="hidden" id="assignUserId" name="userId">
+        <input type="hidden" id="assignBranche" name="branche">
+        <input type="hidden" id="assignClientCount" name="clientCount">
     </form>
     <!-- Modal pour assigner un utilisateur -->
     <div th:each="client : ${clients}">
@@ -323,22 +393,27 @@
 
 <!-- Script pour la gestion des checkboxes et l'affichage du formulaire d'assignation multiple -->
 <script>
-    // Remplacez votre script JavaScript par celui-ci
     document.addEventListener('DOMContentLoaded', function() {
         const selectAll = document.getElementById('selectAll');
         const clientCheckboxes = document.querySelectorAll('.client-checkbox');
         const bulkAssignButton = document.getElementById('bulkAssignButton');
         const assignMultipleForm = document.getElementById('assignMultipleForm');
-        // Filtrage par branche
+
+        // Éléments pour la nouvelle fonctionnalité
         const brancheFilter = document.getElementById('brancheFilter');
         const selectByBranche = document.getElementById('selectByBranche');
+        const clientCountInput = document.getElementById('clientCountInput');
+        const assignByBrancheBtn = document.getElementById('assignByBrancheBtn');
+        const availableCountBadge = document.getElementById('availableCountBadge');
+        const availableCount = document.getElementById('availableCount');
+        const assignByBrancheForm = document.getElementById('assignByBrancheForm');
+        const bulkAssignUserId = document.getElementById('bulkAssignUserId');
 
-        // Fonction pour mettre à jour l'état du bouton
+        // Fonction pour mettre à jour l'état du bouton d'assignation multiple
         function updateBulkAssignButton() {
             const anyChecked = Array.from(clientCheckboxes).some(cb => cb.checked);
             bulkAssignButton.disabled = !anyChecked;
 
-            // Style visuel pour indiquer l'état
             if (anyChecked) {
                 bulkAssignButton.classList.add('btn-danger');
                 bulkAssignButton.classList.remove('btn-warning');
@@ -348,7 +423,55 @@
             }
         }
 
-        // Gérer la sélection de tous les clients
+        // Fonction pour mettre à jour l'état du bouton d'assignation par branche
+        function updateAssignByBrancheButton() {
+            const brancheSelected = brancheFilter.value !== '';
+            const userSelected = bulkAssignUserId.value !== '';
+            const countValid = clientCountInput.value && parseInt(clientCountInput.value) > 0;
+
+            assignByBrancheBtn.disabled = !(brancheSelected && userSelected && countValid);
+
+            // Mettre à jour le texte du bouton
+            if (countValid && brancheSelected) {
+                const count = parseInt(clientCountInput.value);
+                const brancheName = brancheFilter.options[brancheFilter.selectedIndex]?.text || 'cette branche';
+                assignByBrancheBtn.innerHTML = `<i class="fas fa-list-ol me-1"></i>Assigner ${count} de ${brancheName}`;
+            } else {
+                assignByBrancheBtn.innerHTML = '<i class="fas fa-list-ol me-1"></i>Assigner X de cette branche';
+            }
+        }
+
+        // Fonction pour récupérer le nombre de clients disponibles par branche
+        function fetchAvailableCount(branche) {
+            if (!branche) {
+                availableCountBadge.style.display = 'none';
+                return;
+            }
+
+            fetch(`/admin/api/clients/count-by-branche?branche=${encodeURIComponent(branche)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        availableCount.textContent = data.count;
+                        availableCountBadge.style.display = 'inline-block';
+
+                        // Mettre à jour la limite du champ input
+                        clientCountInput.max = data.count;
+                        if (parseInt(clientCountInput.value) > data.count) {
+                            clientCountInput.value = data.count;
+                        }
+                    } else {
+                        availableCountBadge.style.display = 'none';
+                        console.error('Erreur:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la récupération du nombre de clients:', error);
+                    availableCountBadge.style.display = 'none';
+                });
+        }
+
+        // Gestionnaires d'événements pour l'assignation multiple existante
         if (selectAll) {
             selectAll.addEventListener('change', function() {
                 clientCheckboxes.forEach(checkbox => {
@@ -358,18 +481,93 @@
             });
         }
 
-        // Gérer les sélections individuelles
         clientCheckboxes.forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 updateBulkAssignButton();
-                // Mettre à jour le selectAll
                 if (selectAll) {
                     selectAll.checked = Array.from(clientCheckboxes).every(cb => cb.checked);
                 }
             });
         });
 
-        // Vérifier que des clients sont sélectionnés avant soumission
+        // Gestionnaire pour la sélection par branche existante
+        if (selectByBranche && brancheFilter) {
+            selectByBranche.addEventListener('click', function() {
+                const selectedBranche = brancheFilter.value;
+                if (!selectedBranche) return;
+
+                clientCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+
+                clientCheckboxes.forEach(checkbox => {
+                    const row = checkbox.closest('tr');
+                    const brancheCell = row.querySelector('td[data-branche]');
+                    if (brancheCell && brancheCell.getAttribute('data-branche') === selectedBranche) {
+                        checkbox.checked = true;
+                    }
+                });
+
+                if (selectAll) {
+                    selectAll.checked = clientCheckboxes.length > 0 &&
+                        Array.from(clientCheckboxes).every(cb => cb.checked);
+                }
+                updateBulkAssignButton();
+            });
+        }
+
+        // Nouveaux gestionnaires pour l'assignation par branche et nombre
+        if (brancheFilter) {
+            brancheFilter.addEventListener('change', function() {
+                fetchAvailableCount(this.value);
+                updateAssignByBrancheButton();
+            });
+        }
+
+        if (clientCountInput) {
+            clientCountInput.addEventListener('input', function() {
+                // Validation simple
+                const value = parseInt(this.value);
+                if (value < 1) this.value = 1;
+                if (value > parseInt(this.max)) this.value = this.max;
+
+                updateAssignByBrancheButton();
+            });
+        }
+
+        if (bulkAssignUserId) {
+            bulkAssignUserId.addEventListener('change', function() {
+                updateAssignByBrancheButton();
+            });
+        }
+
+        // Gestionnaire pour le bouton d'assignation par branche
+        if (assignByBrancheBtn) {
+            assignByBrancheBtn.addEventListener('click', function() {
+                const branche = brancheFilter.value;
+                const userId = bulkAssignUserId.value;
+                const count = parseInt(clientCountInput.value);
+
+                if (!branche || !userId || !count) {
+                    alert('Veuillez sélectionner une branche, un utilisateur et spécifier le nombre de clients.');
+                    return;
+                }
+
+                // Confirmation
+                const brancheName = brancheFilter.options[brancheFilter.selectedIndex].text;
+                const userName = bulkAssignUserId.options[bulkAssignUserId.selectedIndex].text;
+
+                if (confirm(`Voulez-vous vraiment assigner ${count} client(s) de la branche "${brancheName}" à ${userName} ?`)) {
+                    // Remplir le formulaire caché et le soumettre
+                    document.getElementById('assignUserId').value = userId;
+                    document.getElementById('assignBranche').value = branche;
+                    document.getElementById('assignClientCount').value = count;
+                    assignByBrancheForm.submit();
+                }
+            });
+        }
+
+        // Validation du formulaire d'assignation multiple existant
         if (assignMultipleForm) {
             assignMultipleForm.addEventListener('submit', function(event) {
                 const checkedBoxes = document.querySelectorAll('.client-checkbox:checked');
@@ -380,42 +578,9 @@
             });
         }
 
-        // Initialiser l'état du bouton
+        // Initialiser l'état des boutons
         updateBulkAssignButton();
-
-        // Gestion du filtrage par branche
-        if (selectByBranche && brancheFilter) {
-            selectByBranche.addEventListener('click', function() {
-                const selectedBranche = brancheFilter.value;
-
-                // Si aucune branche n'est sélectionnée, ne rien faire
-                if (!selectedBranche) return;
-
-                // Décocher toutes les cases d'abord
-                clientCheckboxes.forEach(checkbox => {
-                    checkbox.checked = false;
-                });
-
-                // Cocher uniquement les clients de la branche sélectionnée
-                clientCheckboxes.forEach(checkbox => {
-                    const row = checkbox.closest('tr');
-                    const brancheCell = row.querySelector('td[data-branche]');
-
-                    if (brancheCell && brancheCell.getAttribute('data-branche') === selectedBranche) {
-                        checkbox.checked = true;
-                    }
-                });
-
-                // Mettre à jour l'état du bouton "Sélectionner tout"
-                if (selectAll) {
-                    selectAll.checked = clientCheckboxes.length > 0 &&
-                        Array.from(clientCheckboxes).every(cb => cb.checked);
-                }
-
-                // Mettre à jour l'état du bouton d'assignation
-                updateBulkAssignButton();
-            });
-        }
+        updateAssignByBrancheButton();
     });
 </script>
 </body>
