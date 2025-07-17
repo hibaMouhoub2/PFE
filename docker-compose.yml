@@ -1,5 +1,5 @@
 services:
-  # Service PostgreSQL
+
   postgres-db:
     image: postgres:15-alpine
     container_name: projetpfe-postgres
@@ -19,7 +19,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Service Application Spring Boot
+
   projetpfe-app:
     build:
       context: .
@@ -47,12 +47,12 @@ services:
       - projetpfe-network
     restart: unless-stopped
 
-# Volumes pour persister les données
+
 volumes:
   postgres_data:
     driver: local
 
-# Réseau pour la communication entre services
+
 networks:
   projetpfe-network:
     driver: bridge

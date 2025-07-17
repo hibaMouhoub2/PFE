@@ -17,13 +17,12 @@ import java.util.List;
 public class ExcelExportUtil {
 
     public byte[] exportClientsToExcel(List<Client> clients) throws IOException {
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Clients");
 
-            // Créer les styles
+
             CellStyle headerStyle = workbook.createCellStyle();
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
@@ -32,7 +31,7 @@ public class ExcelExportUtil {
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             headerStyle.setBorderBottom(BorderStyle.THIN);
 
-            // Créer l'en-tête avec tous les attributs de Client
+
             Row headerRow = sheet.createRow(0);
             String[] columns = {
                     "ID", "Nom", "Prénom", "CIN", "Téléphone", "Téléphone 2",
@@ -103,7 +102,7 @@ public class ExcelExportUtil {
                 setCellValue(row.createCell(colNum++), client.getAutresFacteurs());
                 setCellValue(row.createCell(colNum++), client.getAutresRaisons());
 
-                // Métadonnées et utilisateurs associés
+
 //                setCellValue(row.createCell(colNum++), client.getCreatedAt() != null ? client.getCreatedAt().format(dateTimeFormatter) : null);
                 setCellValue(row.createCell(colNum++), client.getUpdatedAt() != null ? client.getUpdatedAt().format(dateTimeFormatter) : null);
                 setCellValue(row.createCell(colNum++), client.getAssignedUser() != null ? client.getAssignedUser().getName() : "Non assigné");
@@ -111,7 +110,7 @@ public class ExcelExportUtil {
 //                setCellValue(row.createCell(colNum++), client.getUpdatedBy() != null ? client.getUpdatedBy().getName() : null);
             }
 
-            // Écrire le workbook dans un ByteArrayOutputStream
+
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             workbook.write(outputStream);
             return outputStream.toByteArray();
@@ -121,7 +120,7 @@ public class ExcelExportUtil {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Clients avec téléphone modifié");
 
-            // Créer les styles
+
             CellStyle headerStyle = workbook.createCellStyle();
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
@@ -130,7 +129,7 @@ public class ExcelExportUtil {
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             headerStyle.setBorderBottom(BorderStyle.THIN);
 
-            // Créer l'en-tête avec seulement les colonnes de base
+
             Row headerRow = sheet.createRow(0);
             String[] columns = {
                     "ID", "Nom", "Prénom", "CIN", "Téléphone Actuel", "Direction", "Région", "Branche"
@@ -160,14 +159,14 @@ public class ExcelExportUtil {
                 setCellValue(row.createCell(colNum++), client.getNMBRA() != null ? client.getNMBRA().getDisplayName() : null);
             }
 
-            // Écrire le workbook dans un ByteArrayOutputStream
+
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             workbook.write(outputStream);
             return outputStream.toByteArray();
         }
     }
 
-    // Méthode utilitaire pour définir les valeurs de cellule avec gestion des null
+
     private void setCellValue(Cell cell, Object value) {
         if (value == null) {
             cell.setCellValue("");
@@ -209,15 +208,15 @@ public class ExcelExportUtil {
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             headerStyle.setBorderBottom(BorderStyle.THIN);
 
-            // Créer le style pour les dates
+
             CellStyle dateStyle = workbook.createCellStyle();
             dateStyle.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat("dd/mm/yyyy"));
 
-            // Créer le style pour les heures
+
             CellStyle timeStyle = workbook.createCellStyle();
             timeStyle.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat("hh:mm"));
 
-            // Créer l'en-tête avec les colonnes pertinentes pour les rendez-vous
+
             Row headerRow = sheet.createRow(0);
             String[] columns = {
                     "Agence", "Nom", "Prénom", "CIN", "Téléphone", "Téléphone 2",
@@ -275,7 +274,7 @@ public class ExcelExportUtil {
                             client.getActiviteClient().getDisplayName() :
                             (client.getActiviteActuelle() != null ? client.getActiviteActuelle() : ""));
 
-                    // Conseiller assigné
+                    // Agent assigné
                     row.createCell(colNum++).setCellValue(client.getAssignedUser() != null ?
                             client.getAssignedUser().getName() : "Non assigné");
 
@@ -293,12 +292,12 @@ public class ExcelExportUtil {
                 }
             }
 
-            // Auto-ajuster la largeur des colonnes basée sur le contenu
+
             for (int i = 0; i < columns.length; i++) {
                 sheet.autoSizeColumn(i);
             }
 
-            // Écrire le workbook dans un ByteArrayOutputStream
+
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             workbook.write(outputStream);
             return outputStream.toByteArray();

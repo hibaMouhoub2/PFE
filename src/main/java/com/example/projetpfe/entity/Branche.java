@@ -25,14 +25,14 @@ public enum Branche {
         return regionCode;
     }
 
-    // Méthode utilitaire pour trouver une branche par région
-    public static List<Branche> findByRegionCode(String regionCode) {
-        List<Branche> branches = new ArrayList<>();
-        for (Branche branche : Branche.values()) {
-            if (branche.getRegionCode().equals(regionCode)) {
-                branches.add(branche);
-            }
-        }
-        return branches;
-    }
+
+//    public static List<Branche> findByRegionCode(String regionCode) {
+//        List<Branche> branches = new ArrayList<>();
+//        for (Branche branche : Branche.values()) {
+//            if (branche.getRegionCode().equals(regionCode)) {
+//                branches.add(branche);
+//            }
+//        }
+//        return branches;
+//    }
 }

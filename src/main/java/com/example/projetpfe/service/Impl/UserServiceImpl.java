@@ -51,9 +51,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'ID: " + id));
     }
 
-    /**
-     * Méthode générique pour maintenir la compatibilité
-     */
+
     @Override
     @Transactional
     public void saveUser(UserDto userDto, String roleName) {
@@ -114,9 +112,6 @@ public class UserServiceImpl implements UserService {
                 adminEmail);
     }
 
-    /**
-     * Création d'un utilisateur par un admin régional
-     */
     @Override
     @Transactional
     public void saveUserByAdmin(UserDto userDto, String adminEmail) {
