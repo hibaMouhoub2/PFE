@@ -346,7 +346,7 @@
               <select id="agence" th:field="*{NMBRA}" class="form-select" required onchange="toggleAutresCriteres()">
                 <option value="">-- Sélectionnez une option --</option>
                 <option th:each="b : ${branche}"
-                        th:value="${branche}"
+                        th:value="${b.id}"
                         th:text="${b.displayname}">Branche</option>
               </select>
             </div>

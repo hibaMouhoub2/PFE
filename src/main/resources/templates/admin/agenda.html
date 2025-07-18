@@ -233,16 +233,16 @@
                         <i class="fas fa-cogs me-1"></i>Administration
                     </a>
                     <ul class="dropdown-menu">
-<!--                        <li sec:authorize="hasRole('SUPER_ADMIN')">-->
-<!--                            <a class="dropdown-item" th:href="@{/admin/directions}">-->
-<!--                                <i class="fas fa-building me-1"></i>Directions-->
-<!--                            </a>-->
-<!--                        </li>-->
-<!--                        <li sec:authorize="hasRole('SUPER_ADMIN')">-->
-<!--                            <a class="dropdown-item" th:href="@{/admin/regions}">-->
-<!--                                <i class="fas fa-map me-1"></i>Régions-->
-<!--                            </a>-->
-<!--                        </li>-->
+                        <li sec:authorize="hasRole('SUPER_ADMIN')">
+                            <a class="dropdown-item" th:href="@{/admin/directions}">
+                                <i class="fas fa-building me-1"></i>Directions
+                            </a>
+                        </li>
+                        <li sec:authorize="hasRole('SUPER_ADMIN')">
+                            <a class="dropdown-item" th:href="@{/admin/regions}">
+                                <i class="fas fa-map me-1"></i>Régions
+                            </a>
+                        </li>
                         <li class="dropdown-divider" sec:authorize="hasRole('SUPER_ADMIN')"></li>
                         <li sec:authorize="hasAnyRole('ADMIN','SUPER_ADMIN')">
                             <a class="dropdown-item" th:href="@{/users}">

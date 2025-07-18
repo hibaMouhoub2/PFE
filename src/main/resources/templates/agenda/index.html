@@ -450,7 +450,7 @@
                                 <td th:text="${client.cin ?: '-'}">XX111111</td>
                                 <td th:text="${client.telephone}">+212 600000000</td>
                                 <td th:text="${client.telephone2}">+212 600000000</td>
-                                <td th:data-branche="${client.NMBRA}" th:text="${client.NMBRA?.displayName ?: '-'}">Branche</td>
+                                <td th:text="${client.NMBRA != null ? client.NMBRA.getDisplayname() : 'Aucune branche'}">Branche</td>
                                 <td th:text="${client.DTFINC}">01/01/2020</td>
                                 <td>
                                     <a th:href="@{'/clients/' + ${client.id}}" class="btn btn-sm btn-primary">

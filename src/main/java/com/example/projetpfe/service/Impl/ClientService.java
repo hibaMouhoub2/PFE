@@ -475,13 +475,14 @@ public class ClientService {
                 System.out.println("Processing row - CIN: " + cin + ", NMDIR: " + nmdir);
 
                 // Vérifier les autorisations de direction
+
                 boolean directionMatches = false;
                 if (isSuperAdmin) {
                     directionMatches = true;
                 } else if (userDirectionCode != null && nmdir != null) {
-                    // Vérifier si la direction correspond
-                    directionMatches = nmdir.equals(userDirectionCode);
-                    System.out.println("Direction match check: " + nmdir + " vs " + userDirectionCode + " = " + directionMatches);
+                    // Utilisons la méthode de comparaison normalisée
+                    directionMatches = codesMatch(nmdir, userDirectionCode);
+                    System.out.println("Direction match check: '" + nmdir + "' vs '" + userDirectionCode + "' = " + directionMatches);
                 }
 
                 if (!directionMatches) {
@@ -595,24 +596,58 @@ public class ClientService {
         // Modifier la classe ImportResult pour inclure les clients mis à jour
         return new ImportResult(importedCount, updatedCount, skippedCount, skippedCins, updatedCins, skippedForDirection);
     }
+    private String normalizeCode(String code) {
+        if (code == null) return null;
+        return code.trim()
+                .toUpperCase()
+                .replace(" ", "_")
+                .replace("-", "_")
+                .replaceAll("_+", "_")  // Remplace plusieurs underscores consécutifs par un seul
+                .replaceAll("^_|_$", ""); // Supprime les underscores au début et à la fin
+    }
+    private boolean codesMatch(String code1, String code2) {
+        if (code1 == null || code2 == null) return false;
+        return normalizeCode(code1).equals(normalizeCode(code2));
+    }
 
     // Méthode auxiliaire pour mettre à jour les informations de base d'un client
     private void updateClientBaseInfo(Client client, Row row) {
-        client.setNMDIR(getCellValueAsString(row.getCell(0)));
-        client.setNMREG(getCellValueAsString(row.getCell(1)));
+        // Normaliser NMDIR lors de l'importation
+        String nmdir = getCellValueAsString(row.getCell(0));
+        if (nmdir != null) {
+            nmdir = normalizeCode(nmdir);
+        }
+        client.setNMDIR(nmdir);
 
-        // Pour NMBRA (enum), conversion nécessaire
+        // Normaliser NMREG lors de l'importation
+        String nmreg = getCellValueAsString(row.getCell(1));
+        if (nmreg != null) {
+            nmreg = normalizeCode(nmreg);
+        }
+        client.setNMREG(nmreg);
+
         // Pour NMBRA (entité), conversion nécessaire
         String nmbraStr = getCellValueAsString(row.getCell(2));
         if (nmbraStr != null && !nmbraStr.isEmpty()) {
-            // Essayer de trouver par code
-            Branche branche = brancheRepository.findByCode(nmbraStr).orElse(null);
+            // Normaliser aussi le code de branche pour la recherche
+            String normalizedBrancheCode = normalizeCode(nmbraStr);
 
-            // Si pas trouvé par code, essayer par displayName
+            // Essayer de trouver par code normalisé
+            Branche branche = brancheRepository.findByCode(normalizedBrancheCode).orElse(null);
+
+            // Si pas trouvé par code normalisé, essayer avec le code original
+            if (branche == null) {
+                branche = brancheRepository.findByCode(nmbraStr).orElse(null);
+            }
+
+            // Si toujours pas trouvé, essayer par displayName
             if (branche == null) {
                 List<Branche> allBranches = brancheRepository.findAll();
+                final String originalBrancheStr = nmbraStr;
                 for (Branche b : allBranches) {
-                    if (b.getDisplayname().equalsIgnoreCase(nmbraStr)) {
+                    if (b.getDisplayname() != null &&
+                            (b.getDisplayname().equalsIgnoreCase(originalBrancheStr) ||
+                                    normalizeCode(b.getDisplayname()).equals(normalizedBrancheCode))) {
                         branche = b;
                         break;
                     }
@@ -620,55 +655,74 @@ public class ClientService {
             }
 
             client.setNMBRA(branche);
+
+            // Log pour debug
+            if (branche != null) {
+                System.out.println("Branche trouvée: " + nmbraStr + " -> " + branche.getDisplayname());
+            } else {
+                System.out.println("Branche non trouvée pour: " + nmbraStr);
+            }
         }
 
+        // CIN
         client.setCin(getCellValueAsString(row.getCell(3)));
+
+        // Nom
         client.setNom(getCellValueAsString(row.getCell(4)));
+
+        // Prénom
         client.setPrenom(getCellValueAsString(row.getCell(5)));
 
-        // Pour DTFINC (date)
+        // Pour DTFINC (date de fin de contrat)
         Cell dtfincCell = row.getCell(6);
         if (dtfincCell != null && dtfincCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dtfincCell)) {
             client.setDTFINC(dtfincCell.getDateCellValue());
         }
 
+        // Téléphone principal
         client.setTelephone(getCellValueAsString(row.getCell(7)));
+
+        // Téléphone secondaire
         client.setTelephone2(getCellValueAsString(row.getCell(8)));
+
+        // Activité actuelle
         client.setActiviteActuelle(getCellValueAsString(row.getCell(9)));
+
+        // BAREM
         client.setBAREM(getCellValueAsString(row.getCell(10)));
 
-        // Pour date_deb (date)
+        // Pour DTDEBC (date de début de contrat)
         Cell dtdebcCell = row.getCell(11);
         if (dtdebcCell != null && dtdebcCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dtdebcCell)) {
             client.setDTDEBC(dtdebcCell.getDateCellValue());
         }
 
-        // Pour mnt_deb (double)
+        // Pour MNTDEB (montant de début - double)
         Cell mntDebCell = row.getCell(12);
         if (mntDebCell != null && mntDebCell.getCellType() == CellType.NUMERIC) {
             client.setMNTDEB(mntDebCell.getNumericCellValue());
         }
 
-        // Pour nbre_inc (integer)
+        // Pour NBINC (nombre d'incidents - integer)
         Cell nbreIncCell = row.getCell(13);
         if (nbreIncCell != null && nbreIncCell.getCellType() == CellType.NUMERIC) {
             client.setNBINC((int) nbreIncCell.getNumericCellValue());
         }
 
-        // Pour age_clt (integer)
+        // Pour AgeClient (âge du client - integer)
         Cell ageCell = row.getCell(14);
         if (ageCell != null && ageCell.getCellType() == CellType.NUMERIC) {
             client.setAgeClient((int) ageCell.getNumericCellValue());
         }
 
-        // Pour nbre_prets (integer)
-        Cell nbrePretsCell = row.getCell(15);
-        if (nbrePretsCell != null && nbrePretsCell.getCellType() == CellType.NUMERIC) {
-            client.setNBPRETS((int) nbrePretsCell.getNumericCellValue());
+        // Pour NBPRETS (nombre de prêts - integer)
+        Cell nbPretsCell = row.getCell(15);
+        if (nbPretsCell != null && nbPretsCell.getCellType() == CellType.NUMERIC) {
+            client.setNBPRETS((int) nbPretsCell.getNumericCellValue());
         }
     }
 
-    
+
     // Classe pour retourner les résultats de l'importation
     public static class ImportResult {
         private final int importedCount;

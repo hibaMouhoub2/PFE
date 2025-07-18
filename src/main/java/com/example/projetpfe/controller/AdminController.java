@@ -1183,6 +1183,18 @@ public class AdminController {
                                          @RequestParam int clientCount,
                                          RedirectAttributes redirectAttributes) {
         try {
+            // DEBUG : Afficher ce qui est reçu
+            System.out.println("DEBUG - Assignation par branche:");
+            System.out.println("DEBUG - userId: " + userId);
+            System.out.println("DEBUG - branche reçue: '" + branche + "'");
+            System.out.println("DEBUG - clientCount: " + clientCount);
+
+            // DEBUG : Afficher toutes les branches disponibles
+            List<Branche> allBranches = brancheRepository.findAll();
+            System.out.println("DEBUG - Branches disponibles dans DB:");
+            for (Branche b : allBranches) {
+                System.out.println("  - Code: '" + b.getCode() + "', Display: '" + b.getDisplayname() + "'");
+            }
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             User currentUser = userRepository.findByEmail(auth.getName());
 

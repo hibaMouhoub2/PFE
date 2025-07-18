@@ -527,6 +527,21 @@
             'rgba(155, 89, 182, 1)'
         ]
     };
+    function transformBrancheData(data) {
+        if (!data || !Array.isArray(data)) return {};
+
+        const transformed = {};
+        data.forEach(item => {
+            if (item.branche && item.branche.displayname) {
+                // Utiliser le displayname comme label et stocker le code pour l'export
+                transformed[item.branche.code] = item.count;
+            } else if (item.branche && typeof item.branche === 'string') {
+                // Fallback si la branche est juste une string
+                transformed[item.branche] = item.count;
+            }
+        });
+        return transformed;
+    }
 
     // Fonction pour charger les données et initialiser les graphiques
     async function initCharts(startDate = null, endDate = null) {
@@ -579,7 +594,10 @@
             createInteractiveBarChart('facteursChart', data.facteurInfluence, 'Facteurs d\'influence', 'facteur');
             createInteractivePieChart('profilChart', data.profil, 'Profil des clients', 'profil');
             createInteractiveBarChart('activiteChart', data.activiteClient, 'Activité des clients', 'activite');
-            createInteractiveBarChart('brancheChart', data.branche, 'Répartition par agence', 'branche');
+            if (data.branche) {
+                const transformedBrancheData = transformBrancheData(data.branche);
+                createInteractiveBarChart('brancheChart', transformedBrancheData, 'Répartition par agence', 'branche');
+            }
 
             // Charger les données de performance des agents
             loadAgentPerformanceData();
@@ -706,8 +724,10 @@
                     // Ajouter les nouvelles options
                     branches.forEach(branche => {
                         const option = document.createElement('option');
-                        option.value = branche.value;
-                        option.textContent = branche.label;
+                        // Utiliser le code de la branche comme valeur
+                        option.value = branche.code || branche.value;
+                        // Utiliser le displayname comme texte affiché
+                        option.textContent = branche.displayname || branche.label;
                         option.dataset.regionCode = branche.regionCode;
                         brancheFilter.appendChild(option);
                     });
@@ -1033,13 +1053,19 @@
                     const index = elements[0].index;
                     const label = labels[index];
 
-                    // Convertir l'étiquette en valeur d'enum (majuscules, underscore)
-                    let enumValue = label.toUpperCase()
-                        .replace(/[^A-Z0-9]/g, '_')  // Remplace tout ce qui n'est pas une lettre ou un chiffre par _
-                        .replace(/_+/g, '_')         // Remplace les séquences de plusieurs _ par un seul _
-                        .replace(/^_|_$/g, '')       // Supprime les _ au début et à la fin
-                        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
+                    let enumValue;
+                    if (dataKey === 'branche') {
+                        // Pour les branches, utiliser le code de l'entité
+                        enumValue = label; // Le label est déjà le code de la branche
+                    } else {
+                        // Pour les autres (enums), garder la logique existante
+                        enumValue = label.toUpperCase()
+                            .replace(/[^A-Z0-9]/g, '_')
+                            .replace(/_+/g, '_')
+                            .replace(/^_|_$/g, '')
+                            .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    }
                     // URL pour télécharger
                     const downloadUrl = `/admin/reports/api/export/${exportType}/${enumValue}`;
 
@@ -1165,11 +1191,18 @@
                     const label = labels[index];
 
                     // Même logique que pour le graphique en barres
-                    let enumValue = label.toUpperCase()
-                        .replace(/[^A-Z0-9]/g, '_')  // Remplace tout ce qui n'est pas une lettre ou un chiffre par _
-                        .replace(/_+/g, '_')         // Remplace les séquences de plusieurs _ par un seul _
-                        .replace(/^_|_$/g, '')       // Supprime les _ au début et à la fin
-                        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    let enumValue;
+                    if (exportType === 'branche') {
+                        // Pour les branches, utiliser le code de l'entité
+                        enumValue = label; // Le label est déjà le code de la branche
+                    } else {
+                        // Pour les autres (enums), garder la logique existante
+                        enumValue = label.toUpperCase()
+                            .replace(/[^A-Z0-9]/g, '_')
+                            .replace(/_+/g, '_')
+                            .replace(/^_|_$/g, '')
+                            .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    }
 
                     const downloadUrl = `/admin/reports/api/export/${exportType}/${enumValue}`;
 
