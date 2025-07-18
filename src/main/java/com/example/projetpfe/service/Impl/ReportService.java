@@ -2,6 +2,7 @@ package com.example.projetpfe.service.Impl;
 
 import com.example.projetpfe.entity.*;
 import com.example.projetpfe.repository.AuditRepository;
+import com.example.projetpfe.repository.BrancheRepository;
 import com.example.projetpfe.repository.ClientRepository;
 import com.example.projetpfe.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,8 @@ public class ReportService {
     private UserRepository userRepository;
     @Autowired
     private UserServiceImpl userService;
+    @Autowired
+    private BrancheRepository brancheRepository;
 
     @Autowired
     public ReportService(ClientRepository clientRepository) {
@@ -93,9 +96,10 @@ public class ReportService {
 
     public Map<String, Long> getBrancheStats() {
         Map<String, Long> stats = new LinkedHashMap<>();
-        for (Branche branche : Branche.values()) {
+        List<Branche> branches = brancheRepository.findAll();
+        for (Branche branche : branches) {
             long count = clientRepository.countByNMBRA(branche);
-            stats.put(branche.getDisplayName(), count);
+            stats.put(branche.getDisplayname(), count);
         }
         return stats;
     }
@@ -183,9 +187,10 @@ public class ReportService {
 
     public Map<String, Long> getBrancheStats(LocalDateTime start, LocalDateTime end) {
         Map<String, Long> stats = new LinkedHashMap<>();
-        for (Branche branche : Branche.values()) {
+        List<Branche> branches = brancheRepository.findAll();
+        for (Branche branche : branches) {
             long count = clientRepository.countByNMBRAAndUpdatedAtBetween(branche, start, end);
-            stats.put(branche.getDisplayName(), count);
+            stats.put(branche.getDisplayname(), count);
         }
         return stats;
     }
@@ -508,14 +513,15 @@ public class ReportService {
         Map<String, Long> stats = new LinkedHashMap<>();
         String regionCode = region.getCode();
 
-        for (Branche branche : Branche.values()) {
+        List<Branche> branches = brancheRepository.findAll();
+        for (Branche branche : branches) {
             long count = clientRepository.findAll().stream()
-                    .filter(client -> branche.equals(client.getNMBRA())
+                    .filter(client -> Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null)
                             && client.getNMREG() != null
                             && matchesRegion(client.getNMREG(), regionCode))
                     .count();
 
-            stats.put(branche.getDisplayName(), count);
+            stats.put(branche.getDisplayname(), count);
         }
 
         return stats;
@@ -708,9 +714,10 @@ public class ReportService {
         Map<String, Long> stats = new LinkedHashMap<>();
         String regionCode = region.getCode();
 
-        for (Branche branche : Branche.values()) {
+        List<Branche> branches = brancheRepository.findAll();
+        for (Branche branche : branches) {
             long count = clientRepository.findAll().stream()
-                    .filter(client -> branche.equals(client.getNMBRA())
+                    .filter(client -> Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null)
                             && client.getNMREG() != null
                             && matchesRegion(client.getNMREG(), regionCode)
                             && client.getUpdatedAt() != null
@@ -718,7 +725,7 @@ public class ReportService {
                             && client.getUpdatedAt().isBefore(end))
                     .count();
 
-            stats.put(branche.getDisplayName(), count);
+            stats.put(branche.getDisplayname(), count);
         }
 
         return stats;
@@ -799,7 +806,7 @@ public class ReportService {
         for (RaisonNonRenouvellement raison : RaisonNonRenouvellement.values()) {
             long count = clientRepository.findAll().stream()
                     .filter(client -> raison.equals(client.getRaisonNonRenouvellement())
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
             stats.put(raison.getDisplayName(), count);
         }
@@ -811,7 +818,7 @@ public class ReportService {
         for (QualiteService qualite : QualiteService.values()) {
             long count = clientRepository.findAll().stream()
                     .filter(client -> qualite.equals(client.getQualiteService())
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
             stats.put(qualite.getDisplayName(), count);
         }
@@ -823,7 +830,7 @@ public class ReportService {
         for (InteretCredit interet : InteretCredit.values()) {
             long count = clientRepository.findAll().stream()
                     .filter(client -> interet.equals(client.getInteretNouveauCredit())
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
             stats.put(interet.getDisplayName(), count);
         }
@@ -835,7 +842,7 @@ public class ReportService {
         for (FacteurInfluence facteur : FacteurInfluence.values()) {
             long count = clientRepository.findAll().stream()
                     .filter(client -> facteur.equals(client.getFacteurInfluence())
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
             stats.put(facteur.getDisplayName(), count);
         }
@@ -847,7 +854,7 @@ public class ReportService {
         for (Profil profil : Profil.values()) {
             long count = clientRepository.findAll().stream()
                     .filter(client -> profil.equals(client.getProfil())
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
             stats.put(profil.getDisplayName(), count);
         }
@@ -859,7 +866,7 @@ public class ReportService {
         for (ActiviteClient activite : ActiviteClient.values()) {
             long count = clientRepository.findAll().stream()
                     .filter(client -> activite.equals(client.getActiviteClient())
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
             stats.put(activite.getDisplayName(), count);
         }
@@ -870,11 +877,11 @@ public class ReportService {
         Map<String, Long> stats = new LinkedHashMap<>();
         long countOui = clientRepository.findAll().stream()
                 .filter(client -> Boolean.TRUE.equals(client.getRendezVousAgence())
-                        && branche.equals(client.getNMBRA()))
+                        && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                 .count();
         long countNon = clientRepository.findAll().stream()
                 .filter(client -> Boolean.FALSE.equals(client.getRendezVousAgence())
-                        && branche.equals(client.getNMBRA()))
+                        && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                 .count();
         stats.put("Oui", countOui);
         stats.put("Non", countNon);
@@ -896,7 +903,7 @@ public class ReportService {
                             && client.getUpdatedAt() != null
                             && client.getUpdatedAt().isAfter(start)
                             && client.getUpdatedAt().isBefore(end)
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
 
             stats.put(monthYear, contactedCount);
@@ -916,7 +923,7 @@ public class ReportService {
                     .filter(client -> raison.equals(client.getRaisonNonRenouvellement())
                             && client.getNMREG() != null
                             && matchesRegion(client.getNMREG(), regionCode)
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
             stats.put(raison.getDisplayName(), count);
         }
@@ -932,7 +939,7 @@ public class ReportService {
                     .filter(client -> qualite.equals(client.getQualiteService())
                             && client.getNMREG() != null
                             && matchesRegion(client.getNMREG(), regionCode)
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
             stats.put(qualite.getDisplayName(), count);
         }
@@ -948,7 +955,7 @@ public class ReportService {
                     .filter(client -> interet.equals(client.getInteretNouveauCredit())
                             && client.getNMREG() != null
                             && matchesRegion(client.getNMREG(), regionCode)
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
             stats.put(interet.getDisplayName(), count);
         }
@@ -964,7 +971,7 @@ public class ReportService {
                     .filter(client -> facteur.equals(client.getFacteurInfluence())
                             && client.getNMREG() != null
                             && matchesRegion(client.getNMREG(), regionCode)
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
             stats.put(facteur.getDisplayName(), count);
         }
@@ -980,7 +987,7 @@ public class ReportService {
                     .filter(client -> profil.equals(client.getProfil())
                             && client.getNMREG() != null
                             && matchesRegion(client.getNMREG(), regionCode)
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
             stats.put(profil.getDisplayName(), count);
         }
@@ -996,7 +1003,7 @@ public class ReportService {
                     .filter(client -> activite.equals(client.getActiviteClient())
                             && client.getNMREG() != null
                             && matchesRegion(client.getNMREG(), regionCode)
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
             stats.put(activite.getDisplayName(), count);
         }
@@ -1012,7 +1019,7 @@ public class ReportService {
                 .filter(client -> Boolean.TRUE.equals(client.getRendezVousAgence())
                         && client.getNMREG() != null
                         && matchesRegion(client.getNMREG(), regionCode)
-                        && branche.equals(client.getNMBRA()))
+                        && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                 .count();
 
         // Pour les clients sans rendez-vous
@@ -1020,7 +1027,7 @@ public class ReportService {
                 .filter(client -> Boolean.FALSE.equals(client.getRendezVousAgence())
                         && client.getNMREG() != null
                         && matchesRegion(client.getNMREG(), regionCode)
-                        && branche.equals(client.getNMBRA()))
+                        && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                 .count();
 
         stats.put("Oui", countOui);
@@ -1072,7 +1079,7 @@ public class ReportService {
                 .filter(client -> Boolean.TRUE.equals(client.getRendezVousAgence())
                         && client.getNMREG() != null
                         && matchesRegion(client.getNMREG(), regionCode)
-                        && branche.equals(client.getNMBRA())
+                        && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null)
                         && client.getUpdatedAt() != null
                         && client.getUpdatedAt().isAfter(start)
                         && client.getUpdatedAt().isBefore(end))
@@ -1083,7 +1090,7 @@ public class ReportService {
                 .filter(client -> Boolean.FALSE.equals(client.getRendezVousAgence())
                         && client.getNMREG() != null
                         && matchesRegion(client.getNMREG(), regionCode)
-                        && branche.equals(client.getNMBRA())
+                        && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null)
                         && client.getUpdatedAt() != null
                         && client.getUpdatedAt().isAfter(start)
                         && client.getUpdatedAt().isBefore(end))
@@ -1159,15 +1166,16 @@ public class ReportService {
     public Map<String, Long> getBrancheStatsByDate(LocalDateTime start, LocalDateTime end) {
         Map<String, Long> stats = new LinkedHashMap<>();
 
-        for (Branche branche : Branche.values()) {
+        List<Branche> branches = brancheRepository.findAll();
+        for (Branche branche : branches) {
             long count = clientRepository.findAll().stream()
-                    .filter(client -> branche.equals(client.getNMBRA())
+                    .filter(client -> Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null)
                             && client.getUpdatedAt() != null
                             && client.getUpdatedAt().isAfter(start)
                             && client.getUpdatedAt().isBefore(end))
                     .count();
 
-            stats.put(branche.getDisplayName(), count);
+            stats.put(branche.getDisplayname(), count);
         }
 
         return stats;
@@ -1263,7 +1271,7 @@ public class ReportService {
         for (RaisonNonRenouvellement raison : RaisonNonRenouvellement.values()) {
             long count = clientRepository.findAll().stream()
                     .filter(client -> raison.equals(client.getRaisonNonRenouvellement())
-                            && branche.equals(client.getNMBRA())
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null)
                             && client.getUpdatedAt() != null
                             && client.getUpdatedAt().isAfter(start)
                             && client.getUpdatedAt().isBefore(end))
@@ -1278,7 +1286,7 @@ public class ReportService {
         for (QualiteService qualite : QualiteService.values()) {
             long count = clientRepository.findAll().stream()
                     .filter(client -> qualite.equals(client.getQualiteService())
-                            && branche.equals(client.getNMBRA())
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null)
                             && client.getUpdatedAt() != null
                             && client.getUpdatedAt().isAfter(start)
                             && client.getUpdatedAt().isBefore(end))
@@ -1293,7 +1301,7 @@ public class ReportService {
         for (InteretCredit interet : InteretCredit.values()) {
             long count = clientRepository.findAll().stream()
                     .filter(client -> interet.equals(client.getInteretNouveauCredit())
-                            && branche.equals(client.getNMBRA())
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null)
                             && client.getUpdatedAt() != null
                             && client.getUpdatedAt().isAfter(start)
                             && client.getUpdatedAt().isBefore(end))
@@ -1308,7 +1316,7 @@ public class ReportService {
         for (FacteurInfluence facteur : FacteurInfluence.values()) {
             long count = clientRepository.findAll().stream()
                     .filter(client -> facteur.equals(client.getFacteurInfluence())
-                            && branche.equals(client.getNMBRA())
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null)
                             && client.getUpdatedAt() != null
                             && client.getUpdatedAt().isAfter(start)
                             && client.getUpdatedAt().isBefore(end))
@@ -1323,7 +1331,7 @@ public class ReportService {
         for (Profil profil : Profil.values()) {
             long count = clientRepository.findAll().stream()
                     .filter(client -> profil.equals(client.getProfil())
-                            && branche.equals(client.getNMBRA())
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null)
                             && client.getUpdatedAt() != null
                             && client.getUpdatedAt().isAfter(start)
                             && client.getUpdatedAt().isBefore(end))
@@ -1338,7 +1346,7 @@ public class ReportService {
         for (ActiviteClient activite : ActiviteClient.values()) {
             long count = clientRepository.findAll().stream()
                     .filter(client -> activite.equals(client.getActiviteClient())
-                            && branche.equals(client.getNMBRA())
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null)
                             && client.getUpdatedAt() != null
                             && client.getUpdatedAt().isAfter(start)
                             && client.getUpdatedAt().isBefore(end))
@@ -1354,7 +1362,7 @@ public class ReportService {
         // Pour les clients avec rendez-vous
         long countOui = clientRepository.findAll().stream()
                 .filter(client -> Boolean.TRUE.equals(client.getRendezVousAgence())
-                        && branche.equals(client.getNMBRA())
+                        && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null)
                         && client.getUpdatedAt() != null
                         && client.getUpdatedAt().isAfter(start)
                         && client.getUpdatedAt().isBefore(end))
@@ -1363,7 +1371,7 @@ public class ReportService {
         // Pour les clients sans rendez-vous
         long countNon = clientRepository.findAll().stream()
                 .filter(client -> Boolean.FALSE.equals(client.getRendezVousAgence())
-                        && branche.equals(client.getNMBRA())
+                        && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null)
                         && client.getUpdatedAt() != null
                         && client.getUpdatedAt().isAfter(start)
                         && client.getUpdatedAt().isBefore(end))
@@ -1405,7 +1413,7 @@ public class ReportService {
                             && client.getUpdatedAt() != null
                             && client.getUpdatedAt().isAfter(finalMonthStart)
                             && client.getUpdatedAt().isBefore(finalMonthEnd)
-                            && branche.equals(client.getNMBRA()))
+                            && Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))
                     .count();
 
             stats.put(monthYear, contactedCount);

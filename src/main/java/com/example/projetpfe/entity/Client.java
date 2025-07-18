@@ -19,14 +19,14 @@ public class Client {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String nom;
     private String prenom;
     private String telephone;
     private String cin;
     private String NMDIR;
     private String NMREG;
-    @Enumerated(EnumType.STRING)
+    @ManyToOne
+    @JoinColumn(name = "branche_id")
     private Branche NMBRA;
     private Date DTFINC;
     private Date DTDEBC;

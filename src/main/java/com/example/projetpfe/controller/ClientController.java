@@ -3,6 +3,7 @@ package com.example.projetpfe.controller;
 import com.example.projetpfe.dto.ClientDto;
 import com.example.projetpfe.dto.UserDto;
 import com.example.projetpfe.entity.*;
+import com.example.projetpfe.repository.BrancheRepository;
 import com.example.projetpfe.repository.RappelRepository;
 import com.example.projetpfe.service.Impl.ClientService;
 import com.example.projetpfe.service.Impl.RappelService;
@@ -34,6 +35,8 @@ public class ClientController {
     private final UserService userService;
     @Autowired
     private RappelRepository rappelRepository;
+    @Autowired
+    private BrancheRepository brancheRepository;
 
     @Autowired
     public ClientController(UserService userService,ClientService clientService, RappelService rappelService) {
@@ -72,7 +75,7 @@ public class ClientController {
         model.addAttribute("activitesClient", ActiviteClient.values());
         model.addAttribute("interetsCredit", InteretCredit.values());
         model.addAttribute("profil", Profil.values());
-        model.addAttribute("branche", Branche.values());
+        model.addAttribute("branche", brancheRepository.findAll());
         model.addAttribute("facteursInfluence", FacteurInfluence.values());
         model.addAttribute("isEditMode", true);
 
@@ -103,7 +106,7 @@ public class ClientController {
             model.addAttribute("activitesClient", ActiviteClient.values());
             model.addAttribute("interetsCredit", InteretCredit.values());
             model.addAttribute("profil", Profil.values());
-            model.addAttribute("branche", Branche.values());
+            model.addAttribute("branche", brancheRepository.findAll());
             model.addAttribute("facteursInfluence", FacteurInfluence.values());
             model.addAttribute("isEditMode", true);
             return "clients/edit";
@@ -238,7 +241,7 @@ public class ClientController {
         model.addAttribute("qualitesService", QualiteService.values());
         model.addAttribute("activitesClient", ActiviteClient.values());
         model.addAttribute("profil", Profil.values());
-        model.addAttribute("branche", Branche.values());
+        model.addAttribute("branche", brancheRepository.findAll());
         model.addAttribute("interetsCredit", InteretCredit.values());
         model.addAttribute("facteursInfluence", FacteurInfluence.values());
 
@@ -281,7 +284,7 @@ public class ClientController {
                 model.addAttribute("activitesClient", ActiviteClient.values());
                 model.addAttribute("interetsCredit", InteretCredit.values());
                 model.addAttribute("profil", Profil.values());
-                model.addAttribute("branche", Branche.values());
+                model.addAttribute("branche", brancheRepository.findAll());
                 model.addAttribute("facteursInfluence", FacteurInfluence.values());
                 return "clients/questionnaire";
             }
@@ -320,7 +323,7 @@ public class ClientController {
             model.addAttribute("activitesClient", ActiviteClient.values());
             model.addAttribute("interetsCredit", InteretCredit.values());
             model.addAttribute("profil", Profil.values());
-            model.addAttribute("branche", Branche.values());
+            model.addAttribute("branche", brancheRepository.findAll());
             model.addAttribute("facteursInfluence", FacteurInfluence.values());
 
             return "clients/questionnaire";

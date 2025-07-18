@@ -61,7 +61,7 @@ public class EmailService {
                     body.append("<td>").append(client.getPrenom()).append("</td>");
                     body.append("<td>").append(client.getTelephone()).append("</td>");
                     body.append("<td>").append(client.getDateHeureRendezVous().format(DateTimeFormatter.ofPattern("HH:mm"))).append("</td>");
-                    body.append("<td>").append(client.getNMBRA() != null ? client.getNMBRA().getDisplayName() : "N/A").append("</td>");
+                    body.append("<td>").append(client.getNMBRA() != null ? client.getNMBRA().getDisplayname() : "N/A").append("</td>");
                     body.append("</tr>");
                 }
             }

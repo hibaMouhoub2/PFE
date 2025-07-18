@@ -215,7 +215,7 @@
                             <option value="">Toutes les branches</option>
                             <option th:each="branche : ${branches}"
                                     th:value="${branche}"
-                                    th:text="${branche.displayName}">Branche</option>
+                                    th:text="${branche.displayname}">Branche</option>
                         </select>
                     </div>
 
@@ -301,7 +301,7 @@
                             <td th:text="${client.prenom}">Prénom</td>
                             <td th:text="${client.telephone2}">+212 600000000</td>
                             <td th:text="${client.cin ?: '-'}">XX111111</td>
-                            <td th:data-branche="${client.NMBRA}" th:text="${client.NMBRA?.displayName ?: '-'}">Branche</td>
+                            <td th:text="${client.NMBRA != null ? client.NMBRA.getDisplayname()+ ' (ID: ' + client.NMBRA.id + ')' : 'Aucune branche'}">Branche</td>
                             <td th:text="${#temporals.format(client.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2023 10:00</td>
                             <td>
                                 <div class="btn-group">

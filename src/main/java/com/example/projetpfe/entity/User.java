@@ -73,8 +73,9 @@ public class User
     private Direction direction;
 
 
-    // la branche assignée (puisque c'est un enum)
-    @Enumerated(EnumType.STRING)
+    // la branche assignée
+    @ManyToOne
+    @JoinColumn(name = "assigned_branche_id")
     private Branche assignedBranche;
 
 }

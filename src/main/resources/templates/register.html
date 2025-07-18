@@ -398,8 +398,8 @@
                         <select th:field="*{assignedBranche}" class="form-select">
                             <option value="">-- Sélectionner une branche --</option>
                             <option th:each="branche : ${branches}"
-                                    th:value="${branche}"
-                                    th:text="${branche.displayName}">Branche</option>
+                                    th:value="${branche.id}"
+                                    th:text="${branche.displayname}">Branche</option>
                         </select>
                         <small class="text-muted">Sélectionnez la branche à laquelle cet agent sera assigné</small>
                     </div>

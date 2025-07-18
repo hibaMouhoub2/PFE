@@ -1,38 +1,26 @@
 package com.example.projetpfe.entity;
 
-import java.util.ArrayList;
-import java.util.List;
 
-public enum Branche {
-    CASA_AZHAR("Casa Azhar", "SUP_BERNOUSSI_ZENATA"),
-    CASA_DIAR_EL_JADIDA("Casa Diar El jadida", "SUP_FIDAA_SIDI_BELYOUT"),
-    CASA_HAY_FARAH("Casa Hay Farah", "SUP_BENMSIK_SIDI_OTHMANE"),
-    CASA_KOREA("Casa Koréa", "SUP_FIDAA_SIDI_BELYOUT");
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-    private final String displayName;
-    private final String regionCode; // Code NMREG auquel cette branche appartient
+@Entity
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+public class Branche {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String code;
+    private String Displayname;
+    private String regionCode;
 
-    Branche(String displayName, String regionCode) {
-        this.displayName = displayName;
-        this.regionCode = regionCode;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public String getRegionCode() {
-        return regionCode;
-    }
-
-
-//    public static List<Branche> findByRegionCode(String regionCode) {
-//        List<Branche> branches = new ArrayList<>();
-//        for (Branche branche : Branche.values()) {
-//            if (branche.getRegionCode().equals(regionCode)) {
-//                branches.add(branche);
-//            }
-//        }
-//        return branches;
-//    }
 }

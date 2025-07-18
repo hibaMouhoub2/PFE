@@ -368,9 +368,9 @@
               <label for="agence" class="form-label">Agence:</label>
               <select id="agence" th:field="*{NMBRA}" class="form-select" onchange="toggleAutresCriteres()">
                 <option value="">-- Sélectionnez une option --</option>
-                <option th:each="b : ${branche}"
-                        th:value="${b}"
-                        th:text="${b.displayName}"></option>
+                <option th:each="branche : ${branche}"
+                        th:value="${branche.id}"
+                        th:text="${branche.displayname}">Branche</option>
               </select>
             </div>
           </div>

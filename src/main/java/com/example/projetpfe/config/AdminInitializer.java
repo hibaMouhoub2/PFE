@@ -29,15 +29,15 @@ public class AdminInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        // Vérifier/créer les rôles
+        // créer les rôles
         long AdminCount = userRepository.countByRolesName("ROLE_ADMIN");
         if (AdminCount == 0) {
             Role adminRole = createRoleIfNotFound("ROLE_ADMIN");
             Role userRole = createRoleIfNotFound("ROLE_USER");
             User admin = new User();
             admin.setName("Admin User");
-            admin.setEmail("admin@example.com");
-            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setEmail("admin@gmail.com");
+            admin.setPassword(passwordEncoder.encode("adminfondation"));
             admin.setEnabled(true);
             admin.setCreatedAt(LocalDateTime.now());
 

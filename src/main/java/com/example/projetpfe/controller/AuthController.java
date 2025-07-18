@@ -5,6 +5,7 @@ import com.example.projetpfe.entity.Branche;
 import com.example.projetpfe.entity.Direction;
 import com.example.projetpfe.entity.Region;
 import com.example.projetpfe.entity.User;
+import com.example.projetpfe.repository.BrancheRepository;
 import com.example.projetpfe.repository.DirectionRepository;
 import com.example.projetpfe.repository.UserRepository;
 import com.example.projetpfe.security.LoginAttemptService;
@@ -25,10 +26,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,6 +46,9 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BrancheRepository brancheRepository;
 
     @Autowired
     private LoginAttemptService loginAttemptService;
@@ -71,13 +73,27 @@ public class AuthController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User admin = userRepository.findByEmail(auth.getName());
 
-        // Ajouter les branches disponibles
-        // Si l'admin est associé à une direction, filtrer les branches correspondantes
+        // Filtrer les branches selon la direction de l'admin
+        List<Branche> branches;
         if (admin.getDirection() != null) {
-            model.addAttribute("branches", Arrays.asList(Branche.values()));
+            // Récupérer les codes de régions de la direction
+            List<String> regionCodes = admin.getDirection().getRegions().stream()
+                    .map(Region::getCode)
+                    .collect(Collectors.toList());
+
+            // Filtrer les branches par ces codes de régions
+            branches = brancheRepository.findAll().stream()
+                    .filter(branche -> {
+                        String brancheRegionCode = branche.getRegionCode();
+                        return brancheRegionCode != null && regionCodes.contains(brancheRegionCode);
+                    })
+                    .collect(Collectors.toList());
         } else {
-            model.addAttribute("branches", Arrays.asList(Branche.values()));
+            // Si pas de direction, donner toutes les branches
+            branches = brancheRepository.findAll();
         }
+
+        model.addAttribute("branches", branches);
 
         // Régions gérées par l'admin
         List<Region> adminRegions = admin.getRegions();

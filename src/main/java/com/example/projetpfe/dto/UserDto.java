@@ -36,6 +36,8 @@ public class UserDto
     // Région unique pour les utilisateurs standard
     private Long regionId;
     private String regionName;
+    private Long assignedBrancheId;
+    private Branche assignedBranche;
 
     // Liste de régions pour les administrateurs régionaux
     private List<Long> regionIds = new ArrayList<>();
@@ -43,6 +45,5 @@ public class UserDto
     // ID de l'administrateur qui a créé cet utilisateur
     private Long createdByAdminId;
     private String createdByAdminName;
-    @Enumerated(EnumType.STRING)
-    private Branche assignedBranche;
+
 }

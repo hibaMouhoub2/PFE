@@ -2,6 +2,7 @@ package com.example.projetpfe.service.Impl;
 
 import com.example.projetpfe.dto.ClientDto;
 import com.example.projetpfe.entity.*;
+import com.example.projetpfe.repository.BrancheRepository;
 import com.example.projetpfe.repository.ClientRepository;
 import com.example.projetpfe.repository.RappelRepository;
 import com.example.projetpfe.repository.UserRepository;
@@ -18,10 +19,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,18 +29,21 @@ public class ClientService {
     private final RappelRepository rappelRepository;
     private final AuditService auditService;
     private final UserService userService;
+    private final BrancheRepository brancheRepository;
 
     @Autowired
     public ClientService(ClientRepository clientRepository,
                          UserRepository userRepository,
                          RappelRepository rappelRepository,
                          AuditService auditService,
-                         UserService userService) {
+                         UserService userService,
+                         BrancheRepository brancheRepository) {
         this.clientRepository = clientRepository;
         this.userRepository = userRepository;
         this.rappelRepository = rappelRepository;
         this.auditService = auditService;
         this.userService = userService;
+        this.brancheRepository = brancheRepository;
     }
 
     public List<Client> findAll() {
@@ -74,8 +75,7 @@ public class ClientService {
         return clientRepository.findAll().stream()
                 .filter(client -> client.getAssignedUser() == null &&
                         directionCode.equals(client.getNMDIR()) &&
-                        (branche == null || branche.equals(client.getNMBRA())))
-                .count();
+                        (branche == null || Objects.equals(branche.getId(), client.getNMBRA() != null ? client.getNMBRA().getId() : null))).count();
     }
 
     @Transactional
@@ -602,19 +602,24 @@ public class ClientService {
         client.setNMREG(getCellValueAsString(row.getCell(1)));
 
         // Pour NMBRA (enum), conversion nécessaire
+        // Pour NMBRA (entité), conversion nécessaire
         String nmbraStr = getCellValueAsString(row.getCell(2));
         if (nmbraStr != null && !nmbraStr.isEmpty()) {
-            try {
-                client.setNMBRA(Branche.valueOf(nmbraStr));
-            } catch (IllegalArgumentException e) {
-                // Tentative de trouver une correspondance par displayName
-                for (Branche branche : Branche.values()) {
-                    if (branche.getDisplayName().equalsIgnoreCase(nmbraStr)) {
-                        client.setNMBRA(branche);
+            // Essayer de trouver par code
+            Branche branche = brancheRepository.findByCode(nmbraStr).orElse(null);
+
+            // Si pas trouvé par code, essayer par displayName
+            if (branche == null) {
+                List<Branche> allBranches = brancheRepository.findAll();
+                for (Branche b : allBranches) {
+                    if (b.getDisplayname().equalsIgnoreCase(nmbraStr)) {
+                        branche = b;
                         break;
                     }
                 }
             }
+
+            client.setNMBRA(branche);
         }
 
         client.setCin(getCellValueAsString(row.getCell(3)));
@@ -663,29 +668,7 @@ public class ClientService {
         }
     }
 
-    // Méthode auxiliaire pour parser NMBRA
-    private Branche parseNMBRA(String value) {
-        if (value == null || value.isEmpty()) {
-            return null;
-        }
-
-        // Essayer de convertir directement
-        try {
-            return Branche.valueOf(value);
-        } catch (IllegalArgumentException e) {
-            // Essayer de trouver par displayName
-            for (Branche branche : Branche.values()) {
-                if (branche.getDisplayName().equalsIgnoreCase(value)) {
-                    return branche;
-                }
-            }
-        }
-
-        System.out.println("Could not parse branch: " + value);
-        return null;
-    }
-
-    // Classe pour retourner les résultats de l'importation
+    
     // Classe pour retourner les résultats de l'importation
     public static class ImportResult {
         private final int importedCount;

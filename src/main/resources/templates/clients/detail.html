@@ -309,7 +309,7 @@
         <p><span class="info-label">Région:</span> <span th:text="${client.NMREG ?: '-'}">-</span></p>
       </div>
       <div class="col-md-6">
-        <p><span class="info-label">Branche:</span> <span th:text="${client.NMBRA?.displayName ?: '-'}">-</span></p>
+        <p><span class="info-label">Branche:</span> <span th:text="${client.NMBRA?.displayname ?: '-'}">-</span></p>
         <p><span class="info-label">Conseiller assigné:</span> <span th:text="${client.assignedUser?.name ?: 'Non assigné'}">-</span></p>
       </div>
     </div>

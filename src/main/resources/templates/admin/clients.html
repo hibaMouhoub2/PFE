@@ -303,11 +303,9 @@
                     <label for="brancheRdvExport" class="form-label">Agence (optionnel)</label>
                     <select id="brancheRdvExport" name="branche" class="form-select">
                         <option value="">Toutes les agences</option>
-                        <option th:each="b : ${T(com.example.projetpfe.entity.Branche).values()}"
-                                th:value="${b}"
-                                th:text="${b.displayName}">
-                            Branche
-                        </option>
+                        <option th:each="branche : ${branches}"
+                                th:value="${branche.code}"
+                                th:text="${branche.displayname}">Branche</option>
                     </select>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">

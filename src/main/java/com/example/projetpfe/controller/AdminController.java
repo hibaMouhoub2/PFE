@@ -3,6 +3,7 @@ package com.example.projetpfe.controller;
 import com.example.projetpfe.dto.ClientDto;
 import com.example.projetpfe.dto.UserDto;
 import com.example.projetpfe.entity.*;
+import com.example.projetpfe.repository.BrancheRepository;
 import com.example.projetpfe.repository.ClientRepository;
 import com.example.projetpfe.repository.DirectionRepository;
 import com.example.projetpfe.repository.UserRepository;
@@ -43,6 +44,9 @@ public class AdminController {
     private ExcelExportUtil excelExportUtil;
     @Autowired
     private ClientRepository clientRepository;
+
+    @Autowired
+    private BrancheRepository brancheRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -97,11 +101,11 @@ public class AdminController {
             System.out.println("DEBUG - Statut invalide: " + status);
         }
 
-        // Conversion de la branche en enum
         Branche brancheEnum = null;
+
         try {
             if (branche != null && !branche.isEmpty()) {
-                brancheEnum = Branche.valueOf(branche);
+                brancheEnum = brancheRepository.findByCode(branche).orElse(null);
                 System.out.println("DEBUG - Branche: " + brancheEnum);
             }
         } catch (IllegalArgumentException e) {
@@ -202,6 +206,7 @@ public class AdminController {
         model.addAttribute("selectedStatus", status);
         model.addAttribute("selectedUserId", userId);
         model.addAttribute("rdvDate", rdvDate);
+        model.addAttribute("branches", brancheRepository.findAll());
         model.addAttribute("selectedBranche", brancheEnum);
 
         System.out.println("DEBUG - Nombre final de clients affichés: " + clients.size());
@@ -284,7 +289,12 @@ public class AdminController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Branche brancheEnum = Branche.valueOf(branche);
+            Branche brancheEnum = brancheRepository.findByCode(branche).orElse(null);
+            if (brancheEnum == null) {
+                response.put("success", false);
+                response.put("error", "Branche invalide");
+                return response;
+            }
             String directionCode = null;
 
             // Déterminer le code de direction selon le type d'utilisateur
@@ -393,7 +403,7 @@ public class AdminController {
                         !client.getNMBRA().equals(targetUser.getAssignedBranche())) {
                     redirectAttributes.addFlashAttribute("error",
                             "Vous ne pouvez assigner ce client qu'à un agent de la branche " +
-                                    client.getNMBRA().getDisplayName());
+                                    client.getNMBRA().getDisplayname());
                     return "redirect:/admin/clients";
                 }
             }
@@ -854,11 +864,7 @@ public class AdminController {
         // Convertir la chaîne de branche en enum si nécessaire
         Branche brancheEnum = null;
         if (branche != null && !branche.isEmpty()) {
-            try {
-                brancheEnum = Branche.valueOf(branche);
-            } catch (IllegalArgumentException e) {
-                // Gérer l'erreur si la branche n'est pas valide
-            }
+            brancheEnum = brancheRepository.findByCode(branche).orElse(null);
         }
 
         // Récupérer tous les clients avec rendez-vous pour cette plage de dates et cette branche
@@ -878,7 +884,7 @@ public class AdminController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = auth.getName();
 
-        String brancheInfo = brancheEnum != null ? " pour la branche " + brancheEnum.getDisplayName() : " pour toutes les agences";
+        String brancheInfo = brancheEnum != null ? " pour la branche " + brancheEnum.getDisplayname() : " pour toutes les agences";
         String dateInfo = defaultStartDate.equals(defaultEndDate) ?
                 " du " + defaultStartDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) :
                 " du " + defaultStartDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) +
@@ -896,7 +902,7 @@ public class AdminController {
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
 
         // Définir le nom du fichier
-        String brancheStr = brancheEnum != null ? "_" + brancheEnum.name() : "_TOUTES_AGENCES";
+        String brancheStr = brancheEnum != null ? "_" + brancheEnum.getCode() : "_TOUTES_AGENCES";
         String filename = "rendez_vous" +
                 "_du_" + defaultStartDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) +
                 "_au_" + defaultEndDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) +
@@ -915,7 +921,7 @@ public class AdminController {
 
             // Si c'est un super admin, récupérer toutes les branches
             if (isSuperAdmin) {
-                branches = Arrays.asList(Branche.values());
+                branches = brancheRepository.findAll();
             }
             // Si c'est un admin de direction
             else if (isDirectionAdmin) {
@@ -937,7 +943,8 @@ public class AdminController {
                     System.out.println("Codes des régions de l'admin: " + regionCodes);
 
                     // Filtrer les branches par ces codes de régions
-                    branches = Arrays.stream(Branche.values())
+                    List<Branche> allBranches = brancheRepository.findAll();
+                    branches = allBranches.stream()
                             .filter(branche -> {
                                 String brancheRegionCode = branche.getRegionCode();
                                 return brancheRegionCode != null && regionCodes.contains(brancheRegionCode);
@@ -945,7 +952,7 @@ public class AdminController {
                             .collect(Collectors.toList());
                 } else {
                     // Par sécurité, si l'admin n'a aucune région, on lui donne toutes les branches
-                    branches = Arrays.asList(Branche.values());
+                    branches = brancheRepository.findAll();
                 }
             }
 
@@ -956,7 +963,7 @@ public class AdminController {
             System.err.println("Erreur lors du filtrage des branches: " + e.getMessage());
             e.printStackTrace();
             // En cas d'erreur, retourner toutes les branches pour éviter une page cassée
-            return Arrays.asList(Branche.values());
+            return brancheRepository.findAll();
         }
     }
 
@@ -978,11 +985,7 @@ public class AdminController {
             // Convertir la chaîne de branche en enum si nécessaire
             Branche brancheEnum = null;
             if (branche != null && !branche.isEmpty()) {
-                try {
-                    brancheEnum = Branche.valueOf(branche);
-                } catch (IllegalArgumentException e) {
-                    // Gérer l'erreur si la branche n'est pas valide
-                }
+                brancheEnum = brancheRepository.findByCode(branche).orElse(null);
             }
 
             // Récupérer les clients avec rendez-vous pour cette date
@@ -998,7 +1001,7 @@ public class AdminController {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String userEmail = auth.getName();
 
-            String brancheInfo = brancheEnum != null ? " pour la branche " + brancheEnum.getDisplayName() : " pour toutes les agences";
+            String brancheInfo = brancheEnum != null ? " pour la branche " + brancheEnum.getDisplayname() : " pour toutes les agences";
 
             auditService.auditEvent(AuditType.EMAIL_EXPORT,
                     "RendezVous",
@@ -1195,10 +1198,9 @@ public class AdminController {
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
             // Conversion de la branche
-            Branche brancheEnum;
-            try {
-                brancheEnum = Branche.valueOf(branche);
-            } catch (IllegalArgumentException e) {
+            // Conversion de la branche
+            Branche brancheEnum = brancheRepository.findByCode(branche).orElse(null);
+            if (brancheEnum == null) {
                 redirectAttributes.addFlashAttribute("error", "Branche invalide");
                 return "redirect:/admin/unassigned-clients";
             }
@@ -1227,7 +1229,7 @@ public class AdminController {
                 if (targetUser.getAssignedBranche() != null &&
                         !targetUser.getAssignedBranche().equals(brancheEnum)) {
                     redirectAttributes.addFlashAttribute("error",
-                            "L'agent sélectionné n'est pas assigné à la branche " + brancheEnum.getDisplayName());
+                            "L'agent sélectionné n'est pas assigné à la branche " + brancheEnum.getDisplayname());
                     return "redirect:/admin/unassigned-clients";
                 }
 
@@ -1243,7 +1245,7 @@ public class AdminController {
             if (availableClients.size() < clientCount) {
                 redirectAttributes.addFlashAttribute("error",
                         "Seulement " + availableClients.size() + " client(s) disponible(s) pour la branche " +
-                                brancheEnum.getDisplayName() + ". Demandé: " + clientCount);
+                                brancheEnum.getDisplayname() + ". Demandé: " + clientCount);
                 return "redirect:/admin/unassigned-clients";
             }
 
@@ -1259,12 +1261,12 @@ public class AdminController {
                     AuditType.CLIENTS_BULK_ASSIGNED,
                     "Client",
                     null,
-                    assignedCount + " clients de la branche " + brancheEnum.getDisplayName() +
+                    assignedCount + " clients de la branche " + brancheEnum.getDisplayname() +
                             " assignés à " + targetUser.getName() , currentUser.getEmail()
             );
 
             redirectAttributes.addFlashAttribute("success",
-                    assignedCount + " client(s) de la branche " + brancheEnum.getDisplayName() +
+                    assignedCount + " client(s) de la branche " + brancheEnum.getDisplayname() +
                             " assigné(s) avec succès à " + targetUser.getName());
 
             return "redirect:/admin/unassigned-clients";

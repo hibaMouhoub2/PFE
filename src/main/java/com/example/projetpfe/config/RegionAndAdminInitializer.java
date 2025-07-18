@@ -49,16 +49,16 @@ public class RegionAndAdminInitializer implements CommandLineRunner {
             UserDto superAdmin = new UserDto();
             superAdmin.setFirstName("Super");
             superAdmin.setLastName("Admin");
-            superAdmin.setEmail("superadmin@example.com");
-            superAdmin.setPassword("superadmin123");
+            superAdmin.setEmail("superadmin@gmail.com");
+            superAdmin.setPassword("superadminfondation");
             superAdmin.setEnabled(true);
 
             // Enregistrer le super admin
             userService.saveSuperAdmin(superAdmin);
 
             System.out.println("Super Admin créé avec succès !");
-            System.out.println("Email: superadmin@example.com");
-            System.out.println("Mot de passe: superadmin123");
+            System.out.println("Email: superadmin@gmail.com");
+            System.out.println("Mot de passe: superadminfondation");
         }
     }
 }

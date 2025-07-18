@@ -2,6 +2,7 @@ package com.example.projetpfe.controller;
 
 
 import com.example.projetpfe.entity.*;
+import com.example.projetpfe.repository.BrancheRepository;
 import com.example.projetpfe.repository.ClientRepository;
 import com.example.projetpfe.repository.UserRepository;
 import com.example.projetpfe.service.Impl.ClientService;
@@ -51,6 +52,8 @@ public class ReportController {
     private RegionService regionService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private BrancheRepository brancheRepository;
 
     @Autowired
     public ReportController(ReportService reportService) {
@@ -94,11 +97,7 @@ public class ReportController {
         }
         Branche selectedBranche = null;
         if (brancheCode != null && !brancheCode.isEmpty()) {
-            try {
-                selectedBranche = Branche.valueOf(brancheCode);
-            } catch (IllegalArgumentException e) {
-                // Ignorer si le code n'est pas valide
-            }
+           selectedBranche= brancheRepository.findByCode(brancheCode).orElse(null);
         }
 
         // Utiliser le reste du code existant pour traiter les données
@@ -315,17 +314,17 @@ public class ReportController {
         return stats;
     }
 
-    // Calcule les statistiques par branche
-    private Map<String, Long> calculateBrancheStats(List<Client> clients) {
-        Map<String, Long> stats = new LinkedHashMap<>();
-        for (Branche branche : Branche.values()) {
-            long count = clients.stream()
-                    .filter(client -> branche.equals(client.getNMBRA()))
-                    .count();
-            stats.put(branche.getDisplayName(), count);
-        }
-        return stats;
-    }
+//    // Calcule les statistiques par branche
+//    private Map<String, Long> calculateBrancheStats(List<Client> clients) {
+//        Map<String, Long> stats = new LinkedHashMap<>();
+//        for (Branche branche : Branche.values()) {
+//            long count = clients.stream()
+//                    .filter(client -> branche.equals(client.getNMBRA()))
+//                    .count();
+//            stats.put(branche.getDisplayName(), count);
+//        }
+//        return stats;
+//    }
 
     // Calcule les statistiques de progression par mois
     private Map<String, Long> calculateProgressionStats(List<Client> clients) {
@@ -551,10 +550,8 @@ public class ReportController {
 
     @GetMapping("/api/export/branche/{brancheValue}")
     public ResponseEntity<byte[]> exportClientsByBranche(@PathVariable String brancheValue) throws IOException {
-        Branche branche;
-        try{
-            branche = Branche.valueOf(brancheValue);
-        }catch(IllegalArgumentException e){
+        Branche branche = brancheRepository.findByCode(brancheValue).orElse(null);
+        if (branche == null) {
             return ResponseEntity.badRequest().build();
         }
         List<Client> clients = clientRepository.findByNMBRA(branche);
@@ -666,7 +663,7 @@ public class ReportController {
 
             // Si c'est un super admin, récupérer toutes les branches
             if (isSuperAdmin) {
-                branches = Arrays.asList(Branche.values());
+                branches = brancheRepository.findAll();
             }
             // Si c'est un admin normal
             else if (isAdmin) {
@@ -687,7 +684,8 @@ public class ReportController {
                     System.out.println("Codes des régions de l'admin: " + regionCodes);
 
                     // Filtrer les branches par ces codes de régions
-                    branches = Arrays.stream(Branche.values())
+                    List<Branche> allBranches = brancheRepository.findAll();
+                    branches = allBranches.stream()
                             .filter(branche -> {
                                 String brancheRegionCode = branche.getRegionCode();
                                 return brancheRegionCode != null && regionCodes.contains(brancheRegionCode);
@@ -695,7 +693,7 @@ public class ReportController {
                             .collect(Collectors.toList());
                 } else {
                     // Par sécurité, si l'admin n'a aucune région, on lui donne toutes les branches
-                    branches = Arrays.asList(Branche.values());
+                    branches = brancheRepository.findAll();
                 }
             }
 
@@ -705,8 +703,8 @@ public class ReportController {
             return branches.stream()
                     .map(branche -> {
                         Map<String, Object> brancheMap = new HashMap<>();
-                        brancheMap.put("value", branche.name());
-                        brancheMap.put("label", branche.getDisplayName());
+                        brancheMap.put("value", branche.getCode());
+                        brancheMap.put("label", branche.getDisplayname());
                         brancheMap.put("regionCode", branche.getRegionCode());
                         return brancheMap;
                     })

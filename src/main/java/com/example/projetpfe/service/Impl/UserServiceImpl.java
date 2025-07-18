@@ -2,10 +2,7 @@ package com.example.projetpfe.service.Impl;
 
 import com.example.projetpfe.dto.UserDto;
 import com.example.projetpfe.entity.*;
-import com.example.projetpfe.repository.DirectionRepository;
-import com.example.projetpfe.repository.RegionRepository;
-import com.example.projetpfe.repository.RoleRepository;
-import com.example.projetpfe.repository.UserRepository;
+import com.example.projetpfe.repository.*;
 import com.example.projetpfe.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -18,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +28,7 @@ public class UserServiceImpl implements UserService {
     private RegionRepository regionRepository;
     private boolean passwordChanged = false;
     private AuditService auditService;
+    private BrancheRepository brancheRepository;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository,
@@ -37,20 +36,21 @@ public class UserServiceImpl implements UserService {
                            PasswordEncoder passwordEncoder,
                            DirectionRepository directionRepository,
                            RegionRepository regionRepository,
-                           AuditService auditService) {
+                           AuditService auditService,
+                           BrancheRepository brancheRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.directionRepository = directionRepository;
         this.regionRepository = regionRepository;
         this.auditService = auditService;
+        this.brancheRepository = brancheRepository;
     }
 
     public User findById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'ID: " + id));
     }
-
 
     @Override
     @Transactional
@@ -148,11 +148,12 @@ public class UserServiceImpl implements UserService {
         if (userDto.getAssignedBranche() != null) {
             user.setAssignedBranche(userDto.getAssignedBranche());
             String regionCode = userDto.getAssignedBranche().getRegionCode();
-            Region region = regionRepository.findByCode(regionCode);
-            if (region != null) {
-                user.setRegion(region);
+            if (regionCode != null) {
+                Region region = regionRepository.findByCode(regionCode);
+                if (region != null) {
+                    user.setRegion(region);
+                }
             }
-
         }
 
         userRepository.save(user);
@@ -312,6 +313,11 @@ public class UserServiceImpl implements UserService {
             userDto.setCreatedByAdminName(user.getCreatedByAdmin().getName());
         }
 
+        // Ajouter les informations de branche assignée
+        if (user.getAssignedBranche() != null) {
+            userDto.setAssignedBranche(user.getAssignedBranche());
+        }
+
         // Pour les administrateurs, ajouter les régions gérées
         if (isRegionalAdmin(user) && user.getRegions() != null) {
             userDto.setRegionIds(user.getRegions().stream()
@@ -339,8 +345,8 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'ID: " + id));
 
         // Vérifier le rôle de l'utilisateur pour déterminer le type d'audit
-        boolean isSuperAdmin = isSuperAdmin(user);
-        boolean isAdmin = isRegionalAdmin(user);
+        boolean isSuperAdminUser = isSuperAdmin(user);
+        boolean isAdminUser = isRegionalAdmin(user);
 
         // Vérifier si l'utilisateur a des utilisateurs créés
         if (!user.getCreatedUsers().isEmpty()) {
@@ -364,9 +370,9 @@ public class UserServiceImpl implements UserService {
 
         // Audit de la suppression d'utilisateur
         AuditType auditType;
-        if (isSuperAdmin) {
+        if (isSuperAdminUser) {
             auditType = AuditType.ADMIN_DELETED;
-        } else if (isAdmin) {
+        } else if (isAdminUser) {
             auditType = AuditType.ADMIN_DELETED;
         } else {
             auditType = AuditType.USER_DELETED;
@@ -431,14 +437,14 @@ public class UserServiceImpl implements UserService {
         if (!oldEmail.equals(user.getEmail())) {
             changes.append("Email modifié: ").append(oldEmail).append(" -> ").append(user.getEmail()).append(", ");
         }
-        if (oldEnabled != user.getEnabled()) {
+        if (!Objects.equals(oldEnabled, user.getEnabled())) {
             changes.append("Statut modifié: ").append(oldEnabled ? "Actif" : "Inactif")
                     .append(" -> ").append(user.getEnabled() ? "Actif" : "Inactif").append(", ");
         }
         if (passwordChanged) {
             changes.append("Mot de passe modifié, ");
         }
-        if (oldRegion != user.getRegion()) {
+        if (!Objects.equals(oldRegion, user.getRegion())) {
             String oldRegionName = oldRegion != null ? oldRegion.getName() : "aucune";
             String newRegionName = user.getRegion() != null ? user.getRegion().getName() : "aucune";
             changes.append("Région modifiée: ").append(oldRegionName).append(" -> ").append(newRegionName).append(", ");
@@ -615,8 +621,9 @@ public class UserServiceImpl implements UserService {
         }
 
         // Si l'utilisateur est un agent, vérifier s'il est assigné à ce client
-        return user.getId().equals(client.getAssignedUser().getId());
+        return client.getAssignedUser() != null && user.getId().equals(client.getAssignedUser().getId());
     }
+
     @Override
     public List<UserDto> findUsersByDirection(Long directionId) {
         Direction direction = directionRepository.findById(directionId)

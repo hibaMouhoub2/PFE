@@ -73,7 +73,7 @@ public class ExcelExportUtil {
                 // Informations d'agence
                 setCellValue(row.createCell(colNum++), client.getNMDIR());
                 setCellValue(row.createCell(colNum++), client.getNMREG());
-                setCellValue(row.createCell(colNum++), client.getNMBRA() != null ? client.getNMBRA().getDisplayName() : null);
+                setCellValue(row.createCell(colNum++), client.getNMBRA() != null ? client.getNMBRA().getDisplayname() : null);
 
                 // Informations de crédit
                 setCellValue(row.createCell(colNum++), client.getDTFINC());
@@ -156,7 +156,7 @@ public class ExcelExportUtil {
                 setCellValue(row.createCell(colNum++), client.getTelephone());
                 setCellValue(row.createCell(colNum++), client.getNMDIR());
                 setCellValue(row.createCell(colNum++), client.getNMREG());
-                setCellValue(row.createCell(colNum++), client.getNMBRA() != null ? client.getNMBRA().getDisplayName() : null);
+                setCellValue(row.createCell(colNum++), client.getNMBRA() != null ? client.getNMBRA().getDisplayname() : null);
             }
 
 
@@ -244,7 +244,7 @@ public class ExcelExportUtil {
 
                     // Informations sur l'agence
                     Cell agenceCell = row.createCell(colNum++);
-                    agenceCell.setCellValue(client.getNMBRA() != null ? client.getNMBRA().getDisplayName() : "");
+                    agenceCell.setCellValue(client.getNMBRA() != null ? client.getNMBRA().getDisplayname() : "");
 
                     // Informations de base du client
                     row.createCell(colNum++).setCellValue(client.getNom() != null ? client.getNom() : "");
