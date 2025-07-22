@@ -115,16 +115,13 @@
 <!-- Navigation Bar -->
 <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
-        <!--        <a class="navbar-brand" href="#">-->
-        <!--            <i class="fas fa-landmark me-2"></i>ATTAWFIQ MICRO-FINANCE-->
-        <!--        </a>-->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')">
-                    <a class="nav-link active" th:href="@{/admin/agenda}">
+                    <a class="nav-link" th:href="@{/admin/agenda}">
                         <i class="fas fa-chart-pie me-1"></i>Tableau de bord
                     </a>
                 </li>
@@ -138,46 +135,45 @@
                         <i class="fas fa-user-plus me-1"></i>A assigner
                     </a>
                 </li>
-                <!--                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','SUPER_ADMIN')">-->
-                <!--                    <a class="nav-link" th:href="@{/users}">-->
-                <!--                        <i class="fas fa-users-cog me-1"></i>Utilisateurs-->
-                <!--                    </a>-->
-                <!--                </li>-->
                 <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-cogs me-1"></i>Administration
                     </a>
                     <ul class="dropdown-menu">
-<!--                        <li sec:authorize="hasRole('SUPER_ADMIN')">-->
-<!--                            <a class="dropdown-item" th:href="@{/admin/directions}">-->
-<!--                                <i class="fas fa-building me-1"></i>Directions-->
-<!--                            </a>-->
-<!--                        </li>-->
-<!--                        <li sec:authorize="hasRole('SUPER_ADMIN')">-->
-<!--                            <a class="dropdown-item" th:href="@{/admin/regions}">-->
-<!--                                <i class="fas fa-map me-1"></i>Régions-->
-<!--                            </a>-->
-<!--                        </li>-->
+                        <li sec:authorize="hasRole('SUPER_ADMIN')">
+                            <a class="dropdown-item" th:href="@{/admin/directions}">
+                                <i class="fas fa-building me-1"></i>Directions
+                            </a>
+                        </li>
+                        <li sec:authorize="hasRole('SUPER_ADMIN')">
+                            <a class="dropdown-item" th:href="@{/admin/regions}">
+                                <i class="fas fa-map me-1"></i>Supervisions
+                            </a>
+                        </li>
+                        <li sec:authorize="hasRole('SUPER_ADMIN')">
+                            <a class="dropdown-item" th:href="@{/admin/branches}">
+                                <i class="fas fa-code-branch me-1"></i>Branches
+                            </a>
+                        </li>
                         <li class="dropdown-divider" sec:authorize="hasRole('SUPER_ADMIN')"></li>
-                        <li sec:authorize="hasAnyRole('ADMIN','SUPER_ADMIN')">
+                        <li sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')">
                             <a class="dropdown-item" th:href="@{/users}">
                                 <i class="fas fa-users-cog me-1"></i>Utilisateurs
                             </a>
                         </li>
                     </ul>
                 </li>
-                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','SUPER_ADMIN')">
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')">
                     <a class="nav-link" th:href="@{/admin/reports/questionnaire}">
                         <i class="fas fa-chart-bar me-1"></i>Rapports
                     </a>
                 </li>
-
-                <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
-                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-user-circle me-1"></i>
                         <span th:text="${#authentication.principal.name}">Nom Utilisateur</span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                    <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" th:href="@{/logout}"><i class="fas fa-sign-out-alt me-2"></i>Déconnexion</a></li>
                     </ul>
                 </li>
@@ -185,6 +181,7 @@
         </div>
     </div>
 </nav>
+
 <div class="container mt-4">
     <h2><i class="fas fa-chart-bar me-2"></i>Rapport du questionnaire client</h2>
     <p class="text-muted">Analyse des réponses collectées auprès des clients</p>
@@ -728,7 +725,7 @@
                         option.value = branche.code || branche.value;
                         // Utiliser le displayname comme texte affiché
                         option.textContent = branche.displayname || branche.label;
-                        option.dataset.regionCode = branche.regionCode;
+                        option.dataset.regionCode = branche.region ? branche.region.code : '';
                         brancheFilter.appendChild(option);
                     });
                 })

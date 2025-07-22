@@ -147,7 +147,7 @@ public class UserServiceImpl implements UserService {
         // Si une branche est spécifiée, l'assigner à l'agent
         if (userDto.getAssignedBranche() != null) {
             user.setAssignedBranche(userDto.getAssignedBranche());
-            String regionCode = userDto.getAssignedBranche().getRegionCode();
+            String regionCode = userDto.getAssignedBranche().getRegion().getCode();
             if (regionCode != null) {
                 Region region = regionRepository.findByCode(regionCode);
                 if (region != null) {

@@ -230,9 +230,7 @@ public class ReportService {
         return stats;
     }
 
-    /**
-     * Obtient les statistiques de performance des agents basées sur les logs d'audit
-     */
+
     public Map<String, Map<String, Long>> getAgentPerformanceStats(LocalDateTime start, LocalDateTime end, User currentUser) {
         // Initialiser le résultat
         Map<String, Map<String, Long>> result = new HashMap<>();

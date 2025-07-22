@@ -28,19 +28,25 @@ public enum AuditType {
     ADMIN_ASSIGNED_REGION("Association admin-région"),
     ADMIN_REMOVED_REGION("Dissociation admin-région"),
     CLIENT_PHONE_CHANGED("Modification du téléphone client"),
+
     // Actions sur les régions
     REGION_CREATED("Création de région"),
     REGION_UPDATED("Mise à jour de région"),
     REGION_DELETED("Suppression de région"),
 
-    // Actions de rappel
-    RAPPEL_CREATED("Rappel créé"),
-    RAPPEL_COMPLETED("Rappel complété"),
     // Actions sur les directions
     DIRECTION_CREATED("Création de direction"),
     DIRECTION_UPDATED("Mise à jour de direction"),
-    DIRECTION_DELETED("Suppression de direction");
+    DIRECTION_DELETED("Suppression de direction"),
 
+    // Actions sur les branches - NOUVEAU
+    BRANCHE_CREATED("Création de branche"),
+    BRANCHE_UPDATED("Mise à jour de branche"),
+    BRANCHE_DELETED("Suppression de branche"),
+
+    // Actions de rappel
+    RAPPEL_CREATED("Rappel créé"),
+    RAPPEL_COMPLETED("Rappel complété");
 
     private final String displayName;
 

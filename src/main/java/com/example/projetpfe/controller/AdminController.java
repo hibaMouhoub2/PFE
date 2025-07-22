@@ -946,7 +946,7 @@ public class AdminController {
                     List<Branche> allBranches = brancheRepository.findAll();
                     branches = allBranches.stream()
                             .filter(branche -> {
-                                String brancheRegionCode = branche.getRegionCode();
+                                String brancheRegionCode = branche.getRegion().getCode();
                                 return brancheRegionCode != null && regionCodes.contains(brancheRegionCode);
                             })
                             .collect(Collectors.toList());

@@ -687,8 +687,7 @@ public class ReportController {
                     List<Branche> allBranches = brancheRepository.findAll();
                     branches = allBranches.stream()
                             .filter(branche -> {
-                                String brancheRegionCode = branche.getRegionCode();
-                                return brancheRegionCode != null && regionCodes.contains(brancheRegionCode);
+                                return branche.getRegion() != null && regionCodes.contains(branche.getRegion().getCode());
                             })
                             .collect(Collectors.toList());
                 } else {
@@ -705,7 +704,7 @@ public class ReportController {
                         Map<String, Object> brancheMap = new HashMap<>();
                         brancheMap.put("value", branche.getCode());
                         brancheMap.put("label", branche.getDisplayname());
-                        brancheMap.put("regionCode", branche.getRegionCode());
+                        brancheMap.put("regionCode", branche.getRegion() != null ? branche.getRegion().getCode() : null);
                         return brancheMap;
                     })
                     .collect(Collectors.toList());

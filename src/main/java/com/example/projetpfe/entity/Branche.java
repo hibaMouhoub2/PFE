@@ -20,6 +20,8 @@ public class Branche {
     private Long id;
     private String code;
     private String displayname;
-    private String regionCode;
+    @ManyToOne
+    @JoinColumn(name = "region_id")
+    private Region region;
 
 }

@@ -27,7 +27,7 @@ public class Direction {
     @Column(nullable = false, unique = true)
     private String code; // NMDIR code
 
-    // Relation avec les régions (une direction a plusieurs régions)
+
     @OneToMany(mappedBy = "direction", cascade = CascadeType.ALL)
     private List<Region> regions = new ArrayList<>();
 

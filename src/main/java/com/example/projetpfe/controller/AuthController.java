@@ -84,7 +84,7 @@ public class AuthController {
             // Filtrer les branches par ces codes de régions
             branches = brancheRepository.findAll().stream()
                     .filter(branche -> {
-                        String brancheRegionCode = branche.getRegionCode();
+                        String brancheRegionCode = branche.getRegion().getCode();
                         return brancheRegionCode != null && regionCodes.contains(brancheRegionCode);
                     })
                     .collect(Collectors.toList());
