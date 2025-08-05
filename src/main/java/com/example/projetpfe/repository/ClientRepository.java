@@ -110,4 +110,6 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     List<Client> findClientsWithPhoneChanges(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
     // Recherche par multiple directions
     List<Client> findByNMDIRInOrderByUpdatedAtDesc(List<String> nmdirs);
+
+    long countByAssignedUserIsNull();
     }

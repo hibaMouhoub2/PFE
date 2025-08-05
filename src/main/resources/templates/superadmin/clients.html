@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Clients - Super Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+          rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #FF8C00;
+            --secondary-color: #222;
+            --accent-color: #FF6B00;
+            --light-color: #f8f9fa;
+            --dark-color: #111;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: var(--secondary-color);
+        }
+
+        .navbar {
+            background-color: var(--secondary-color) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color) !important;
+        }
+
+        .nav-link {
+            color: #fff !important;
+            font-weight: 500;
+            margin: 0 10px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary-color) !important;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .import-section {
+            background-color: var(--secondary-color);
+            color: white;
+            border-radius: 10px;
+        }
+
+        .stats-card {
+            border-left: 4px solid var(--primary-color);
+            background: var(--light-color);
+        }
+
+        .client-table {
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+        }
+
+        .page-header {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-outline-secondary {
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .badge.bg-info {
+            background-color: var(--primary-color) !important;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(255, 140, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/agenda}">
+                        <i class="fas fa-chart-pie me-1"></i>Tableau de bord
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/clients}">
+                        <i class="fas fa-users me-1"></i>Clients
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('SUPER_ADMIN')">
+                    <a class="nav-link" th:href="@{/superadmin/clients}">
+                        <i class="fas fa-users me-1"></i>Clients
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/unassigned-clients}">
+                        <i class="fas fa-user-plus me-1"></i>A assigner
+                    </a>
+                </li>
+                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-cogs me-1"></i>Administration
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li sec:authorize="hasRole('SUPER_ADMIN')">
+                            <a class="dropdown-item" th:href="@{/admin/directions}">
+                                <i class="fas fa-building me-1"></i>Directions
+                            </a>
+                        </li>
+                        <li sec:authorize="hasRole('SUPER_ADMIN')">
+                            <a class="dropdown-item" th:href="@{/admin/regions}">
+                                <i class="fas fa-map me-1"></i>Supérvisions
+                            </a>
+                        </li>
+                        <li sec:authorize="hasRole('SUPER_ADMIN')">
+                            <a class="dropdown-item" th:href="@{/admin/branches}">
+                                <i class="fas fa-code-branch me-1"></i>Branches
+                            </a>
+                        </li>
+                        <li class="dropdown-divider" sec:authorize="hasRole('SUPER_ADMIN')"></li>
+                        <li sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')">
+                            <a class="dropdown-item" th:href="@{/users}">
+                                <i class="fas fa-users-cog me-1"></i>Utilisateurs
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/reports/questionnaire}">
+                        <i class="fas fa-chart-bar me-1"></i>Rapports
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        <span th:text="${#authentication.principal.name}">Nom Utilisateur</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" th:href="@{/logout}"><i class="fas fa-sign-out-alt me-2"></i>Déconnexion</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <!-- Messages d'alerte -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Section Import -->
+    <div class="card import-section mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h6 class="mb-1" th:text="${totalClients}">0</h6>
+                            <small class="opacity-75">Total Clients</small>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="mb-1" th:text="${unassignedClients}">0</h6>
+                            <small class="opacity-75">Non Assignés</small>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="mb-1" th:text="${clientCount}">0</h6>
+                            <small class="opacity-75">Affichés</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <form th:action="@{/superadmin/clients/import}" method="post"
+                          enctype="multipart/form-data" class="d-flex align-items-center">
+                        <div class="flex-grow-1 me-3">
+                            <input type="file" name="file" accept=".xlsx,.xls"
+                                   class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-2"></i>Importer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Filtres et Liste -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h6 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtres et Liste des Clients
+                    </h6>
+                </div>
+                <div class="col-lg-4">
+                    <form th:action="@{/superadmin/clients}" method="get" class="d-flex">
+                        <select name="direction" class="form-select form-select-sm me-2">
+                            <option value="">Toutes les directions</option>
+                            <option th:each="dir : ${directions}"
+                                    th:value="${dir}"
+                                    th:text="${dir}"
+                                    th:selected="${dir == selectedDirection}"></option>
+                        </select>
+
+                        <select name="status" class="form-select form-select-sm me-2">
+                            <option value="">Tous les statuts</option>
+                            <option th:each="stat : ${statuses}"
+                                    th:value="${stat}"
+                                    th:text="${stat.displayName}"
+                                    th:selected="${stat.toString() == selectedStatus}"></option>
+                        </select>
+
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <!-- Tableau des clients -->
+            <div class="table-responsive">
+                <table class="table table-hover client-table mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th width="5%">#</th>
+                        <th width="15%">Nom & Prénom</th>
+                        <th width="10%">CIN</th>
+                        <th width="12%">Téléphone</th>
+                        <th width="10%">Direction</th>
+                        <th width="10%">Branche</th>
+                        <th width="12%">Statut</th>
+                        <th width="15%">Agent Assigné</th>
+                        <th width="11%">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${clients == null or #lists.isEmpty(clients)}">
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <br>Aucun client trouvé avec les filtres sélectionnés
+                        </td>
+                    </tr>
+                    <tr th:each="client, iterStat : ${clients}">
+                        <td class="text-muted small" th:text="${iterStat.count}">1</td>
+                        <td>
+                            <strong th:text="${client.nom + ' ' + client.prenom}">Nom Prénom</strong>
+                            <br>
+                            <small class="text-muted" th:text="${client.NMREG}">Région</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark" th:text="${client.cin}">CIN</span>
+                        </td>
+                        <td>
+                            <span th:text="${client.telephone}">Téléphone</span>
+                            <br>
+                            <small class="text-muted" th:if="${client.telephone2}" th:text="${client.telephone2}">Tel2</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info text-white" th:text="${client.NMDIR}">Direction</span>
+                        </td>
+                        <td>
+                            <span th:if="${client.NMBRA}" th:text="${client.NMBRA.displayname}">Branche</span>
+                            <span th:unless="${client.NMBRA}" class="text-muted">-</span>
+                        </td>
+                        <td>
+                                <span class="badge status-badge"
+                                      th:classappend="${client.status?.name() == 'NON_TRAITE'} ? 'bg-secondary' :
+                                                     (${client.status?.name() == 'CONTACTE'} ? 'bg-success' :
+                                                     (${client.status?.name() == 'INJOIGNABLE'} ? 'bg-warning' :
+                                                     (${client.status?.name() == 'NUMERO_ERRONE'} ? 'bg-danger' :
+                                                     (${client.status?.name() == 'REFUSE'} ? 'bg-dark' : 'bg-primary'))))"
+                                      th:text="${client.status?.displayName}">Statut</span>
+                        </td>
+                        <td>
+                                <span th:if="${client.assignedUser}"
+                                      class="badge bg-primary"
+                                      th:text="${client.assignedUser.name}">Agent</span>
+                            <span th:unless="${client.assignedUser}"
+                                  class="text-muted small">Non assigné</span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a th:href="@{/clients/{id}/detail(id=${client.id})}"
+                                   class="btn btn-outline-primary btn-sm"
+                                   title="Voir détails">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button type="button"
+                                        class="btn btn-outline-warning btn-sm"
+                                        th:onclick="'showReassignModal(' + ${client.id} + ')'"
+                                        title="Réassigner"
+                                        th:if="${client.assignedUser}">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer avec pagination/statistiques -->
+        <div class="card-footer bg-light">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        Affichage de <strong th:text="${clientCount}">0</strong> client(s)
+                        <span th:if="${not #strings.isEmpty(selectedDirection) or not #strings.isEmpty(selectedStatus)}">
+    avec filtres appliqués
+</span>
+                    </small>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a th:href="@{/superadmin/clients}" class="btn btn-outline-secondary"
+                           th:if="${not #strings.isEmpty(selectedDirection) or not #strings.isEmpty(selectedStatus)}">
+                            <i class="fas fa-times me-1"></i>Effacer filtres
+                        </a>
+                        <button type="button" class="btn btn-outline-primary" onclick="refreshPage()">
+                            <i class="fas fa-sync-alt me-1"></i>Actualiser
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de réassignation (optionnel pour le SuperAdmin) -->
+<div class="modal fade" id="reassignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Réassigner le client</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Fonctionnalité disponible - permet au SuperAdmin de réassigner un client si nécessaire.</p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Les clients sont automatiquement visibles par leur direction régionale pour assignation normale.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+
+<script>
+    function refreshPage() {
+        window.location.reload();
+    }
+
+    function showReassignModal(clientId) {
+        // Afficher le modal de réassignation
+        const modal = new bootstrap.Modal(document.getElementById('reassignModal'));
+        modal.show();
+    }
+
+    // Auto-submit des filtres au changement
+    document.addEventListener('DOMContentLoaded', function() {
+        const selects = document.querySelectorAll('select[name="direction"], select[name="status"]');
+        selects.forEach(select => {
+            select.addEventListener('change', function() {
+                this.form.submit();
+            });
+        });
+
+        // Animation pour le compteur de clients
+        const counter = document.querySelector('[th\\:text="${clientCount}"]');
+        if (counter) {
+            let count = 0;
+            const target = parseInt(counter.textContent);
+            const increment = target / 20;
+
+            const timer = setInterval(() => {
+                count += increment;
+                if (count >= target) {
+                    count = target;
+                    clearInterval(timer);
+                }
+                counter.textContent = Math.floor(count);
+            }, 50);
+        }
+    });
+</script>
+
+</body>
+</html>

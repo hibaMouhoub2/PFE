@@ -805,49 +805,27 @@ public class AdminController {
     }
 
     @PostMapping("/clients/import")
-    public String importClientsFromExcel(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
-        if (file.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Veuillez sélectionner un fichier à importer");
-            return "redirect:/admin/unassigned-clients";
+    public String importClientsFromExcel(@RequestParam("file") MultipartFile file,
+                                         RedirectAttributes redirectAttributes) {
+
+        // Récupérer l'utilisateur connecté
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(auth.getName());
+
+        // Vérifier si c'est un SuperAdmin
+        if (userService.isSuperAdmin(currentUser)) {
+            // Rediriger vers le contrôleur SuperAdmin
+            redirectAttributes.addFlashAttribute("info",
+                    "L'importation des clients doit être effectuée depuis l'interface SuperAdmin");
+            return "redirect:/superadmin/import-clients";
         }
 
-        try {
-            // Récupérer l'email de l'utilisateur connecté
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String userEmail = auth.getName();
+        // Bloquer l'importation pour les admins de direction
+        redirectAttributes.addFlashAttribute("error",
+                "L'importation des clients est désormais réservée aux super administrateurs. " +
+                        "Contactez votre super administrateur pour importer de nouveaux clients.");
 
-            ClientService.ImportResult result = clientService.importClientsFromExcel(file, userEmail);
-
-            StringBuilder message = new StringBuilder();
-            message.append(result.getImportedCount()).append(" client(s) importé(s) avec succès");
-
-            if (result.getUpdatedCount() > 0) {
-                message.append(", ").append(result.getUpdatedCount())
-                        .append(" client(s) mis à jour avec une date de fin de contrat plus récente");
-            }
-
-            if (result.getSkippedCount() > 0) {
-                int skippedForRegion = result.getSkippedForRegion().size();
-                int skippedForDuplicate = result.getSkippedCins().size();
-
-                if (skippedForDuplicate > 0) {
-                    message.append(". ").append(skippedForDuplicate)
-                            .append(" client(s) ignoré(s) car leur CIN existe déjà et la date de fin n'est pas plus récente");
-                }
-
-                if (skippedForRegion > 0) {
-                    message.append(". ").append(skippedForRegion)
-                            .append(" client(s) ignoré(s) car ils n'appartiennent pas à votre région");
-                }
-            }
-
-            redirectAttributes.addFlashAttribute("success", message.toString());
-            return "redirect:/admin/clients";
-        } catch (Exception e) {
-            e.printStackTrace(); // Ajouter pour le débogage
-            redirectAttributes.addFlashAttribute("error", "Erreur lors de l'importation: " + e.getMessage());
-            return "redirect:/admin/unassigned-clients";
-        }
+        return "redirect:/admin/unassigned-clients";
     }
 
     @GetMapping("/export/rendez-vous")

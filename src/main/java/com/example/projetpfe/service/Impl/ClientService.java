@@ -16,11 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
 
 @Service
 public class ClientService {
@@ -882,6 +884,157 @@ public class ClientService {
 
     public List<Client> findClientsWithPhoneChanges(LocalDateTime startDate, LocalDateTime endDate) {
         return clientRepository.findClientsWithPhoneChanges(startDate, endDate);
+    }
+
+    @Transactional
+    public ImportResult importClientsFromExcelBySuperAdmin(MultipartFile file, String userEmail) throws IOException {
+        int importedCount = 0;
+        int skippedCount = 0;
+        int updatedCount = 0;
+        List<String> skippedCins = new ArrayList<>();
+        List<String> updatedCins = new ArrayList<>();
+
+        System.out.println("Starting SuperAdmin import for user: " + userEmail);
+
+        // Récupérer l'utilisateur connecté
+        User currentUser = userRepository.findByEmail(userEmail);
+
+        // Vérification de sécurité supplémentaire
+        if (!userService.isSuperAdmin(currentUser)) {
+            throw new SecurityException("Seuls les super administrateurs peuvent importer des clients");
+        }
+
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // Skip header row
+            Iterator<Row> rowIterator = sheet.iterator();
+            if (rowIterator.hasNext()) {
+                rowIterator.next(); // Skip header
+            }
+
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+
+                try {
+                    // Récupérer le CIN pour vérifier l'existence
+                    String cin = getCellValueAsString(row.getCell(4)); // Colonne CIN
+                    if (cin == null || cin.trim().isEmpty()) {
+                        skippedCount++;
+                        continue;
+                    }
+
+                    // Vérifier si le client existe déjà
+                    Client existingClient = clientRepository.findByCin(cin);
+
+                    if (existingClient != null) {
+                        // Logique de mise à jour basée sur la date de fin de contrat
+                        Date newEndDate = getCellValueAsDate(row.getCell(9)); // DTFINC
+                        if (newEndDate != null && existingClient.getDTFINC() != null) {
+                            if (newEndDate.after(existingClient.getDTFINC())) {
+                                // Mettre à jour avec les nouvelles informations
+                                updateClientBaseInfo(existingClient, row);
+                                clientRepository.save(existingClient);
+                                updatedCount++;
+                                updatedCins.add(cin);
+                                System.out.println("Updated client: " + cin);
+                            } else {
+                                // Date plus ancienne, ignorer
+                                skippedCount++;
+                                skippedCins.add(cin);
+                            }
+                        } else {
+                            skippedCount++;
+                            skippedCins.add(cin);
+                        }
+                    } else {
+                        // Nouveau client - PAS de filtre par direction pour SuperAdmin
+                        Client client = new Client();
+                        updateClientBaseInfo(client, row);
+
+                        // Définir les informations d'audit
+                        client.setCreatedBy(currentUser);
+                        client.setUpdatedBy(currentUser);
+
+                        clientRepository.save(client);
+                        importedCount++;
+                        System.out.println("Imported new client: " + cin);
+                    }
+
+                } catch (Exception e) {
+                    System.err.println("Error processing row: " + e.getMessage());
+                    skippedCount++;
+                }
+            }
+
+            System.out.println("SuperAdmin Import summary - Imported: " + importedCount +
+                    ", Updated: " + updatedCount +
+                    ", Skipped: " + skippedCount);
+
+            // Audit de l'importation par SuperAdmin
+            String auditMessage = "Importation Excel par SuperAdmin: " + importedCount + " clients importés, " +
+                    updatedCount + " clients mis à jour, " +
+                    skippedCount + " ignorés";
+
+            auditService.auditEvent(AuditType.EXCEL_IMPORT,
+                    "System",
+                    null,
+                    auditMessage,
+                    userEmail);
+        }
+
+        return new ImportResult(importedCount, updatedCount, skippedCount, skippedCins, updatedCins, new ArrayList<>());
+    }
+
+    public long getTotalClientsCount() {
+        return clientRepository.count();
+    }
+
+    public long getUnassignedClientsCount() {
+        return clientRepository.countByAssignedUserIsNull();
+    }
+
+    private Date getCellValueAsDate(Cell cell) {
+        if (cell == null) {
+            return null;
+        }
+
+        try {
+            switch (cell.getCellType()) {
+                case NUMERIC:
+                    if (DateUtil.isValidExcelDate(cell.getNumericCellValue())) {
+                        return cell.getDateCellValue();
+                    }
+                    break;
+                case STRING:
+                    // Si c'est une chaîne, essayer de la parser
+                    String dateStr = cell.getStringCellValue().trim();
+                    if (!dateStr.isEmpty()) {
+                        // Ajouter ici les formats de date que vous utilisez
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                        return sdf.parse(dateStr);
+                    }
+                    break;
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la conversion de date: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    public List<Client> findAllClients() {
+        return clientRepository.findAll();
+    }
+
+
+    public List<String> getUniqueDirections() {
+        return clientRepository.findAll().stream()
+                .map(Client::getNMDIR)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
     }
 
 }
