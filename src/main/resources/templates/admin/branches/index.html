@@ -92,6 +92,11 @@
                         <i class="fas fa-users me-1"></i>Clients
                     </a>
                 </li>
+                <li class="nav-item" sec:authorize="hasRole('SUPER_ADMIN')">
+                    <a class="nav-link" th:href="@{/superadmin/clients}">
+                        <i class="fas fa-users me-1"></i>Clients
+                    </a>
+                </li>
                 <li class="nav-item" sec:authorize="hasRole('ADMIN')">
                     <a class="nav-link" th:href="@{/admin/unassigned-clients}">
                         <i class="fas fa-user-plus me-1"></i>A assigner
@@ -109,7 +114,7 @@
                         </li>
                         <li sec:authorize="hasRole('SUPER_ADMIN')">
                             <a class="dropdown-item" th:href="@{/admin/regions}">
-                                <i class="fas fa-map me-1"></i>Supervisions
+                                <i class="fas fa-map me-1"></i>Supérvisions
                             </a>
                         </li>
                         <li sec:authorize="hasRole('SUPER_ADMIN')">
@@ -143,7 +148,6 @@
         </div>
     </div>
 </nav>
-
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="fas fa-code-branch me-2" style="color: var(--primary-color);"></i>Gestion des Branches</h2>

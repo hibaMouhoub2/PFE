@@ -49,47 +49,45 @@ public class AuditController {
             @RequestParam(required = false, defaultValue = "20") int size,
             Model model) {
 
-        // Définir des dates par défaut si non fournies
+
         LocalDateTime start = startDate != null ?
                 startDate.atStartOfDay() : LocalDateTime.now().minusMonths(1);
         LocalDateTime end = endDate != null ?
                 endDate.atTime(LocalTime.MAX) : LocalDateTime.now();
 
-        // Paramètres de pagination
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
 
-        // Recherche avec filtres
+
         Page<Audit> auditLogs;
         if (type != null && !type.isEmpty()) {
             try {
                 AuditType auditType = AuditType.valueOf(type);
                 auditLogs = auditService.findByTypeAndDateRange(auditType, start, end, pageable);
             } catch (IllegalArgumentException e) {
-                // Si le type n'est pas valide, ignorer le filtre
+
                 auditLogs = auditService.findAllPaged(start, end, pageable);
             }
         } else {
             auditLogs = auditService.findAllPaged(start, end, pageable);
         }
 
-        // Filtrer par utilisateur si spécifié
+
         if (userId != null) {
             User user = userRepository.findById(userId).orElse(null);
             if (user != null) {
                 List<Audit> userLogs = auditService.findByUser(user);
-                // Note: cette approche n'est pas optimale pour la pagination, mais suffisante pour un exemple
                 auditLogs = filterAndPage(userLogs, pageable);
             }
         }
 
-        // Filtrer par entité si spécifiée
+
         if (entityType != null && !entityType.isEmpty() && entityId != null) {
             List<Audit> entityLogs = auditService.findByEntity(entityType, entityId);
-            // Même remarque sur la pagination
             auditLogs = filterAndPage(entityLogs, pageable);
         }
 
-        // Préparer le modèle
+
         model.addAttribute("auditLogs", auditLogs);
         model.addAttribute("startDate", startDate);
         model.addAttribute("endDate", endDate);
@@ -105,7 +103,7 @@ public class AuditController {
     }
 
     private Page<Audit> filterAndPage(List<Audit> logs, Pageable pageable) {
-        // Implémentation simplifiée de la pagination manuelle
+
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), logs.size());
 
@@ -119,7 +117,7 @@ public class AuditController {
     }
 
     private List<String> getAvailableEntityTypes() {
-        // Liste des types d'entités disponibles dans votre système
+
         return List.of("Client", "User", "Rappel", "System");
     }
 }

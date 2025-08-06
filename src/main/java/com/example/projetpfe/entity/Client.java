@@ -25,7 +25,7 @@ public class Client {
     private String cin;
     private String NMDIR;
     private String NMREG;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "branche_id")
     private Branche NMBRA;
     private Date DTFINC;
@@ -49,7 +49,7 @@ public class Client {
     public String getAssignedUserName() {
         return assignedUser != null ? assignedUser.getName() : "Non assigné";
     }
-    // Champs du questionnaire
+
     @Enumerated(EnumType.STRING)
     private RaisonNonRenouvellement raisonNonRenouvellement;
 

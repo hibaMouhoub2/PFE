@@ -76,6 +76,11 @@
             <i class="fas fa-users me-1"></i>Clients
           </a>
         </li>
+        <li class="nav-item" sec:authorize="hasRole('SUPER_ADMIN')">
+          <a class="nav-link" th:href="@{/superadmin/clients}">
+            <i class="fas fa-users me-1"></i>Clients
+          </a>
+        </li>
         <li class="nav-item" sec:authorize="hasRole('ADMIN')">
           <a class="nav-link" th:href="@{/admin/unassigned-clients}">
             <i class="fas fa-user-plus me-1"></i>A assigner
@@ -127,7 +132,6 @@
     </div>
   </div>
 </nav>
-
 
 <div class="container mt-4">
   <div class="row justify-content-center">

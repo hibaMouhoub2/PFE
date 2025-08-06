@@ -691,7 +691,7 @@ public class ReportController {
                             })
                             .collect(Collectors.toList());
                 } else {
-                    // Par sécurité, si l'admin n'a aucune région, on lui donne toutes les branches
+
                     branches = brancheRepository.findAll();
                 }
             }

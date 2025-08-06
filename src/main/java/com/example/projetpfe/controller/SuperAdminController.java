@@ -1,9 +1,14 @@
 package com.example.projetpfe.controller;
 
+import com.example.projetpfe.dto.UserDto;
+import com.example.projetpfe.entity.Branche;
 import com.example.projetpfe.entity.Client;
 import com.example.projetpfe.entity.ClientStatus;
+import com.example.projetpfe.repository.BrancheRepository;
+import com.example.projetpfe.repository.ClientRepository;
 import com.example.projetpfe.service.Impl.ClientService;
 import com.example.projetpfe.service.Impl.AuditService;
+import com.example.projetpfe.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -24,7 +29,14 @@ public class SuperAdminController {
 
     @Autowired
     private ClientService clientService;
+    @Autowired
+    private BrancheRepository brancheRepository;
 
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private ClientRepository clientRepository;
 
 
 
@@ -38,11 +50,11 @@ public class SuperAdminController {
         }
 
         try {
-            // Récupérer l'email de l'utilisateur connecté (SuperAdmin)
+
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String userEmail = auth.getName();
 
-            // Importer les clients (logique simplifiée pour SuperAdmin - pas de filtres par direction)
+
             ClientService.ImportResult result = clientService.importClientsFromExcelBySuperAdmin(file, userEmail);
 
             StringBuilder message = new StringBuilder();
@@ -60,7 +72,7 @@ public class SuperAdminController {
 
             redirectAttributes.addFlashAttribute("success", message.toString());
 
-            // Rediriger vers une page de confirmation ou dashboard SuperAdmin
+
             return "/superadmin/clients";
 
         } catch (Exception e) {
@@ -73,46 +85,84 @@ public class SuperAdminController {
         return clientService.getUniqueDirections();
     }
 
+
     @GetMapping("/clients")
     public String listAllClients(
-            @RequestParam(required = false) String direction,
+            @RequestParam(required = false) String q,           // Ajout des paramètres manquants
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long userId,        // Ajout pour filtrage par utilisateur
+            @RequestParam(required = false) String branche,     // Ajout pour filtrage par branche
+            @RequestParam(required = false) String direction,   // Garder le paramètre existant
             Model model) {
 
-        // Récupérer TOUS les clients (SuperAdmin voit tout)
-        List<Client> clients = clientService.findAllClients();
 
-        // Filtre par direction si sélectionnée
+        ClientStatus statusEnum = null;
+        try {
+            if (status != null && !status.isEmpty()) {
+                statusEnum = ClientStatus.valueOf(status);
+                System.out.println("DEBUG SuperAdmin - Statut: " + statusEnum);
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("DEBUG SuperAdmin - Statut invalide: " + status);
+        }
+
+
+        Branche brancheEnum = null;
+        try {
+            if (branche != null && !branche.isEmpty()) {
+                brancheEnum = brancheRepository.findByCode(branche).orElse(null);
+                System.out.println("DEBUG SuperAdmin - Branche: " + brancheEnum);
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("DEBUG SuperAdmin - Branche invalide: " + branche);
+        }
+
+        List<Client> clients;
+
+        // *** UTILISER LA MÊME REQUÊTE QUE AdminController ***
+        System.out.println("DEBUG SuperAdmin - Mode super admin: récupération avec findByFiltersWithBranche");
+        clients = clientRepository.findByFiltersWithBranche(q, statusEnum, userId, brancheEnum);
+
+        // Filtre par direction si spécifié (pour maintenir la compatibilité avec l'ancien code)
         if (direction != null && !direction.isEmpty()) {
+            final String finalDirection = direction;
             clients = clients.stream()
-                    .filter(client -> direction.equals(client.getNMDIR()))
+                    .filter(client -> finalDirection.equals(client.getNMDIR()))
                     .collect(Collectors.toList());
         }
 
-        // Filtre par statut si sélectionné
-        if (status != null && !status.isEmpty()) {
-            ClientStatus clientStatus = ClientStatus.valueOf(status);
-            clients = clients.stream()
-                    .filter(client -> clientStatus.equals(client.getStatus()))
-                    .collect(Collectors.toList());
-        }
-
-        // Données pour les filtres
-        model.addAttribute("directions", getUniqueDirections()); // Toutes les directions
+        // *** AJOUTER LES ATTRIBUTS POUR LES FILTRES (manquants dans l'ancien code) ***
         model.addAttribute("statuses", ClientStatus.values());
+
+        // Pour le filtre utilisateur - récupérer tous les utilisateurs
+        List<UserDto> users = userService.findAllUsers();
+        model.addAttribute("users", users);
+
+        // Pour le filtre branche - récupérer toutes les branches
+        List<Branche> branches = brancheRepository.findAll();
+        model.addAttribute("branches", branches);
+
+        // Données pour les filtres existants
+        model.addAttribute("directions", getUniqueDirections());
 
         // Données pour la liste
         model.addAttribute("clients", clients);
         model.addAttribute("selectedDirection", direction != null ? direction : "");
         model.addAttribute("selectedStatus", status != null ? status : "");
+        model.addAttribute("selectedUserId", userId);
+        model.addAttribute("selectedBranche", branche != null ? branche : "");
+        model.addAttribute("searchQuery", q != null ? q : "");
         model.addAttribute("clientCount", clients.size());
 
         // Statistiques pour l'import
         model.addAttribute("totalClients", clientService.getTotalClientsCount());
         model.addAttribute("unassignedClients", clientService.getUnassignedClientsCount());
 
-        return "/superadmin/clients";
+        return "superadmin/clients";
     }
+
+
+
 
 
 }

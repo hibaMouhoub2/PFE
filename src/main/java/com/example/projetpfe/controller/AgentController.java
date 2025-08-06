@@ -43,9 +43,7 @@ public class AgentController {
     @Autowired
     private UserRepository userRepository;
 
-    /**
-     * Compte les rendez-vous de l'agent pour une période donnée (AJAX)
-     */
+
     @GetMapping("/count-rendez-vous")
     public ResponseEntity<Map<String, Object>> countRendezVous(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -53,7 +51,7 @@ public class AgentController {
 
         Map<String, Object> response = new HashMap<>();
 
-        // Validation de la période (max 2 mois)
+
         long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
         if (daysBetween > 60) {
             response.put("error", "La période ne peut pas dépasser 2 mois");
@@ -65,7 +63,7 @@ public class AgentController {
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Récupérer l'utilisateur connecté
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = auth.getName();
 
@@ -77,31 +75,27 @@ public class AgentController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Export Excel des rendez-vous de l'agent (RÉUTILISE la logique existante)
-     */
+
     @GetMapping("/export/rendez-vous")
     public ResponseEntity<byte[]> exportMyRendezVous(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) throws IOException {
 
-        // Validation de la période
+
         long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
         if (daysBetween > 60) {
             return ResponseEntity.badRequest().build();
         }
 
-        // Récupérer l'utilisateur connecté
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = auth.getName();
 
-        // Récupérer MES rendez-vous uniquement
         List<Client> myRendezVous = getMyRendezVousForPeriod(userEmail, startDate, endDate);
 
-        // RÉUTILISER la même méthode d'export Excel que les admins
+
         byte[] excelContent = excelExportUtil.exportClientsToExcel(myRendezVous);
 
-        // Audit
         String dateInfo = startDate.equals(endDate) ?
                 " du " + startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) :
                 " du " + startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) +
@@ -114,7 +108,7 @@ public class AgentController {
                         " (agent: " + userEmail + ", " + myRendezVous.size() + " rendez-vous)",
                 userEmail);
 
-        // RÉUTILISER la même logique de réponse HTTP
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
 
@@ -126,10 +120,7 @@ public class AgentController {
         return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
     }
 
-    /**
-     * Méthode privée pour récupérer les rendez-vous de l'agent
-     * RÉUTILISE la logique métier existante avec filtrage par agent
-     */
+
     private List<Client> getMyRendezVousForPeriod(String userEmail, LocalDate startDate, LocalDate endDate) {
         // Récupérer l'utilisateur
         User currentUser = userRepository.findByEmail(userEmail);
@@ -137,15 +128,15 @@ public class AgentController {
             return List.of();
         }
 
-        // RÉUTILISER la méthode existante du service pour chaque jour
+
         List<Client> allMyRendezVous = List.of();
         LocalDate current = startDate;
 
         while (!current.isAfter(endDate)) {
-            // Utiliser la méthode existante et filtrer par agent assigné
+
             List<Client> dayRendezVous = clientService.findClientsWithRendezVousForDateAndBranche(current, null);
 
-            // Filtrer pour ne garder que MES clients
+
             List<Client> myDayRendezVous = dayRendezVous.stream()
                     .filter(client -> client.getAssignedUser() != null &&
                             client.getAssignedUser().getId().equals(currentUser.getId()))

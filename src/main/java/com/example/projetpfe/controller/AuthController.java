@@ -57,10 +57,7 @@ public class AuthController {
         this.userService = userService;
     }
 
-    @GetMapping("index")
-    public String home(){
-        return "index";
-    }
+
 
     // Méthode pour enregistrer un utilisateur standard - accessible uniquement aux admins régionaux
     @GetMapping("register")
@@ -69,19 +66,18 @@ public class AuthController {
         UserDto user = new UserDto();
         model.addAttribute("user", user);
 
-        // Récupérer l'authentification correctement
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User admin = userRepository.findByEmail(auth.getName());
 
-        // Filtrer les branches selon la direction de l'admin
+
         List<Branche> branches;
         if (admin.getDirection() != null) {
-            // Récupérer les codes de régions de la direction
             List<String> regionCodes = admin.getDirection().getRegions().stream()
                     .map(Region::getCode)
                     .collect(Collectors.toList());
 
-            // Filtrer les branches par ces codes de régions
+
             branches = brancheRepository.findAll().stream()
                     .filter(branche -> {
                         String brancheRegionCode = branche.getRegion().getCode();
@@ -89,13 +85,13 @@ public class AuthController {
                     })
                     .collect(Collectors.toList());
         } else {
-            // Si pas de direction, donner toutes les branches
+
             branches = brancheRepository.findAll();
         }
 
         model.addAttribute("branches", branches);
 
-        // Régions gérées par l'admin
+
         List<Region> adminRegions = admin.getRegions();
         model.addAttribute("regions", adminRegions);
 
@@ -108,14 +104,14 @@ public class AuthController {
         UserDto admin = new UserDto();
         model.addAttribute("admin", admin);
 
-        // Au lieu de charger les régions, charger les directions
+
         List<Direction> directions = directionRepository.findAll();
         model.addAttribute("directions", directions);
 
         return "register-admin";
     }
 
-    // Méthode pour enregistrer un super admin - accessible uniquement aux super admins
+
     @GetMapping("register-super-admin")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public String showSuperAdminRegistrationForm(Model model){
@@ -138,19 +134,19 @@ public class AuthController {
         }
 
         if (result.hasErrors()) {
-            // Récupérer les régions gérées par l'admin connecté en cas d'erreur
+
             User admin = userService.findByEmail(authentication.getName());
             List<Region> adminRegions = admin.getRegions();
             model.addAttribute("regions", adminRegions);
             return "register";
         }
 
-        // Enregistrer l'utilisateur via l'admin connecté
+
         userService.saveUserByAdmin(user, authentication.getName());
         return "redirect:/users";
     }
 
-    // Traitement de l'enregistrement d'un admin régional
+
     @PostMapping("/register-admin/save")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public String registerAdmin(@Valid @ModelAttribute("admin") UserDto admin,
@@ -174,7 +170,7 @@ public class AuthController {
             return "register-admin";
         }
 
-        // Utiliser la direction au lieu de la région
+
         userService.saveDirectionAdmin(admin, selectedDirection);
         return "redirect:/users";
     }
@@ -195,7 +191,7 @@ public class AuthController {
             return "register-super-admin";
         }
 
-        // Enregistrer le super admin
+
         userService.saveSuperAdmin(superAdmin);
         return "redirect:/users";
     }
@@ -203,12 +199,11 @@ public class AuthController {
     @GetMapping("/users")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public String listRegisteredUsers(Model model, Authentication authentication){
-        // Différencier l'affichage en fonction du rôle
         boolean isSuperAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
 
         if (isSuperAdmin) {
-            // Le super admin voit tous les utilisateurs
+
             List<UserDto> users = userService.findAllUsers();
             model.addAttribute("users", users);
         } else {
@@ -254,13 +249,22 @@ public class AuthController {
     public String loginForm(Model model, HttpServletRequest request, Authentication authentication) {
         // Si déjà authentifié, rediriger
         if (authentication != null && authentication.isAuthenticated()) {
-            return "redirect:/index";
+            Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+            List<String> roles = authorities.stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
+            if (roles.contains("ROLE_SUPER_ADMIN")) {
+                return "redirect:/admin/agenda";
+            } else if (roles.contains("ROLE_ADMIN")) {
+                return "redirect:/admin/agenda";
+            } else {
+                return "redirect:/agenda/index";
+            }
         }
 
         String ip = getClientIP(request);
 
-        logger.debug("Accès à la page de login - Query string: {}", request.getQueryString());
-        logger.debug("Vérification du blocage pour l'IP: {}", ip);
+
 
         if (loginAttemptService.isBlocked(ip)) {
             long remainingMinutes = loginAttemptService.getRemainingBlockTimeInMinutes(ip);

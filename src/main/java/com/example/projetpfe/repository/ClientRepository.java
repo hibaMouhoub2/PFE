@@ -61,20 +61,21 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
                                @Param("status") ClientStatus status,
                                @Param("userId") Long userId);
 
-    @Query("SELECT c FROM Client c WHERE " +
+
+    @Query("SELECT c FROM Client c " +
+            "LEFT JOIN FETCH c.NMBRA " +
+            "WHERE " +
             "(:query IS NULL OR LOWER(c.nom) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
             "LOWER(c.prenom) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
             "LOWER(c.cin) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
             "(:status IS NULL OR c.status = :status) AND " +
             "(:userId IS NULL OR c.assignedUser.id = :userId) AND " +
-            "(:branche IS NULL OR c.NMBRA = :branche)" +
-            "ORDER BY c.updatedAt DESC"
-    )
+            "(:branche IS NULL OR c.NMBRA = :branche) " +
+            "ORDER BY c.updatedAt DESC")
     List<Client> findByFiltersWithBranche(@Param("query") String query,
                                           @Param("status") ClientStatus status,
                                           @Param("userId") Long userId,
                                           @Param("branche") Branche branche);
-
 
 
     long countByRaisonNonRenouvellementAndUpdatedAtBetween(RaisonNonRenouvellement raison, LocalDateTime start, LocalDateTime end);

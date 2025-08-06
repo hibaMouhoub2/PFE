@@ -323,7 +323,7 @@
                             <span class="badge bg-info text-white" th:text="${client.NMDIR}">Direction</span>
                         </td>
                         <td>
-                            <span th:if="${client.NMBRA}" th:text="${client.NMBRA.displayname}">Branche</span>
+                            <span th:if="${client.NMBRA}" th:text="${client.NMBRA.getDisplayname()}">Branche</span>
                             <span th:unless="${client.NMBRA}" class="text-muted">-</span>
                         </td>
                         <td>
@@ -344,18 +344,11 @@
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm" role="group">
-                                <a th:href="@{/clients/{id}/detail(id=${client.id})}"
+                                <a th:href="@{'/clients/' + ${client.id}}"
                                    class="btn btn-outline-primary btn-sm"
                                    title="Voir détails">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <button type="button"
-                                        class="btn btn-outline-warning btn-sm"
-                                        th:onclick="'showReassignModal(' + ${client.id} + ')'"
-                                        title="Réassigner"
-                                        th:if="${client.assignedUser}">
-                                    <i class="fas fa-exchange-alt"></i>
-                                </button>
                             </div>
                         </td>
                     </tr>
@@ -364,7 +357,7 @@
             </div>
         </div>
 
-        <!-- Footer avec pagination/statistiques -->
+
         <div class="card-footer bg-light">
             <div class="row align-items-center">
                 <div class="col-md-6">
@@ -391,7 +384,7 @@
     </div>
 </div>
 
-<!-- Modal de réassignation (optionnel pour le SuperAdmin) -->
+
 <div class="modal fade" id="reassignModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
