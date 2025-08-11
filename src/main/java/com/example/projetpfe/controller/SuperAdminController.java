@@ -46,7 +46,7 @@ public class SuperAdminController {
                                          RedirectAttributes redirectAttributes) {
         if (file.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Veuillez sélectionner un fichier à importer");
-            return "/superadmin/clients";
+            return "redirect:/superadmin/clients";
         }
 
         try {
@@ -73,12 +73,12 @@ public class SuperAdminController {
             redirectAttributes.addFlashAttribute("success", message.toString());
 
 
-            return "/superadmin/clients";
+            return "redirect:/superadmin/clients";
 
         } catch (Exception e) {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", "Erreur lors de l'importation: " + e.getMessage());
-            return "/superadmin/clients";
+            return "redirect:/superadmin/clients";
         }
     }
     private List<String> getUniqueDirections() {
