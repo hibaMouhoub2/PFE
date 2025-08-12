@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -784,18 +785,61 @@ public class ClientService {
     }
 
     private String getCellValueAsString(Cell cell) {
-        if (cell == null) return null;
+        if (cell == null) {
+            return null;
+        }
 
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue();
-            case NUMERIC:
-                if (DateUtil.isCellDateFormatted(cell)) {
-                    return cell.getLocalDateTimeCellValue().toString();
-                }
-                return String.valueOf((int) cell.getNumericCellValue());
-            default:
-                return null;
+        try {
+            switch (cell.getCellType()) {
+                case STRING:
+                    return cell.getStringCellValue().trim();
+                case NUMERIC:
+                    if (DateUtil.isCellDateFormatted(cell)) {
+                        Date date = cell.getDateCellValue();
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                        return sdf.format(date);
+                    } else {
+                        double numericValue = cell.getNumericCellValue();
+                        // Pour les nombres entiers, éviter la notation scientifique
+                        if (numericValue == (long) numericValue) {
+                            return String.valueOf((long) numericValue);
+                        } else {
+                            return String.valueOf(numericValue);
+                        }
+                    }
+                case BOOLEAN:
+                    return String.valueOf(cell.getBooleanCellValue());
+                case FORMULA:
+                    // Évaluer la formule et retourner le résultat
+                    FormulaEvaluator evaluator = cell.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
+                    CellValue cellValue = evaluator.evaluate(cell);
+
+                    switch (cellValue.getCellType()) {
+                        case STRING:
+                            return cellValue.getStringValue().trim();
+                        case NUMERIC:
+                            double numValue = cellValue.getNumberValue();
+                            if (numValue == (long) numValue) {
+                                return String.valueOf((long) numValue);
+                            } else {
+                                return String.valueOf(numValue);
+                            }
+                        case BOOLEAN:
+                            return String.valueOf(cellValue.getBooleanValue());
+                        default:
+                            return null;
+                    }
+                case BLANK:
+                case _NONE:
+                    return null;
+                default:
+                    System.err.println("Type de cellule non supporté: " + cell.getCellType());
+                    return null;
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la lecture de la cellule (" +
+                    cell.getRowIndex() + "," + cell.getColumnIndex() + "): " + e.getMessage());
+            return null;
         }
     }
 
@@ -915,9 +959,10 @@ public class ClientService {
 
             while (rowIterator.hasNext()) {
                 Row row = rowIterator.next();
+                int currentRowNum = row.getRowNum();
 
                 try {
-                    // Récupérer le CIN pour vérifier l'existence
+
                     String cin = getCellValueAsString(row.getCell(4)); // Colonne CIN
                     if (cin == null || cin.trim().isEmpty()) {
                         skippedCount++;
@@ -962,7 +1007,8 @@ public class ClientService {
                     }
 
                 } catch (Exception e) {
-                    System.err.println("Error processing row: " + e.getMessage());
+                    System.err.println("❌ ERREUR ligne " + currentRowNum + ": " + e.getMessage());
+                    e.printStackTrace();
                     skippedCount++;
                 }
             }
@@ -1035,6 +1081,164 @@ public class ClientService {
                 .distinct()
                 .sorted()
                 .collect(Collectors.toList());
+    }
+
+    public String validateExcelFile(MultipartFile file) throws IOException {
+        StringBuilder validationReport = new StringBuilder();
+        List<String> errors = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
+
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // Vérifier l'en-tête
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) {
+                errors.add("Ligne d'en-tête manquante");
+                return "ERREUR: " + String.join(", ", errors);
+            }
+
+            // Vérifier le nombre de colonnes attendues
+            int expectedColumns = 15; // Ajustez selon vos besoins
+            if (headerRow.getLastCellNum() < expectedColumns) {
+                warnings.add("Nombre de colonnes insuffisant: " + headerRow.getLastCellNum() + " au lieu de " + expectedColumns);
+            }
+
+            // Analyser chaque ligne de données
+            Iterator<Row> rowIterator = sheet.iterator();
+            if (rowIterator.hasNext()) {
+                rowIterator.next(); // Skip header
+            }
+
+            int rowNum = 1;
+            int validRows = 0;
+            int invalidRows = 0;
+
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+                rowNum++;
+
+                try {
+                    // Validation ligne par ligne
+                    List<String> rowErrors = validateRow(row, rowNum);
+                    if (rowErrors.isEmpty()) {
+                        validRows++;
+                    } else {
+                        invalidRows++;
+                        errors.addAll(rowErrors);
+                    }
+
+                    // Limiter le nombre d'erreurs affichées
+                    if (errors.size() > 50) {
+                        errors.add("... et " + (sheet.getLastRowNum() - rowNum) + " autres erreurs potentielles");
+                        break;
+                    }
+
+                } catch (Exception e) {
+                    errors.add("Ligne " + rowNum + ": Erreur de traitement - " + e.getMessage());
+                    invalidRows++;
+                }
+            }
+
+            // Construire le rapport
+            validationReport.append("=== RAPPORT DE VALIDATION ===\n");
+            validationReport.append("Lignes valides: ").append(validRows).append("\n");
+            validationReport.append("Lignes invalides: ").append(invalidRows).append("\n");
+
+            if (!warnings.isEmpty()) {
+                validationReport.append("\n--- AVERTISSEMENTS ---\n");
+                warnings.forEach(w -> validationReport.append("⚠️ ").append(w).append("\n"));
+            }
+
+            if (!errors.isEmpty()) {
+                validationReport.append("\n--- ERREURS ---\n");
+                errors.forEach(e -> validationReport.append("❌ ").append(e).append("\n"));
+            }
+
+            return validationReport.toString();
+        }
+    }
+
+    private List<String> validateRow(Row row, int rowNum) {
+        List<String> errors = new ArrayList<>();
+
+        try {
+            // Validation CIN (obligatoire)
+            String cin = getCellValueAsString(row.getCell(4));
+            if (cin == null || cin.trim().isEmpty()) {
+                errors.add("Ligne " + rowNum + ": CIN manquant");
+            } else if (cin.length() < 6 || cin.length() > 12) {
+                errors.add("Ligne " + rowNum + ": CIN invalide (longueur incorrecte): " + cin);
+            }
+
+            // Validation Nom (obligatoire)
+            String nom = getCellValueAsString(row.getCell(5));
+            if (nom == null || nom.trim().isEmpty()) {
+                errors.add("Ligne " + rowNum + ": Nom manquant");
+            }
+
+            // Validation Prénom (obligatoire)
+            String prenom = getCellValueAsString(row.getCell(6));
+            if (prenom == null || prenom.trim().isEmpty()) {
+                errors.add("Ligne " + rowNum + ": Prénom manquant");
+            }
+
+            // Validation Téléphone
+            String telephone = getCellValueAsString(row.getCell(7));
+            if (telephone != null && !telephone.trim().isEmpty()) {
+                telephone = telephone.replaceAll("[^0-9+]", "");
+                if (telephone.length() < 10) {
+                    errors.add("Ligne " + rowNum + ": Téléphone invalide: " + getCellValueAsString(row.getCell(7)));
+                }
+            }
+
+            // Validation Date de fin de contrat
+            Cell dtfincCell = row.getCell(6);
+            if (dtfincCell != null) {
+                try {
+                    if (dtfincCell.getCellType() == CellType.STRING) {
+                        String dateStr = dtfincCell.getStringCellValue().trim();
+                        if (!dateStr.isEmpty()) {
+                            // Test de parsing de la date
+                            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                            sdf.setLenient(false);
+                            sdf.parse(dateStr);
+                        }
+                    } else if (dtfincCell.getCellType() == CellType.NUMERIC) {
+                        if (!DateUtil.isCellDateFormatted(dtfincCell)) {
+                            errors.add("Ligne " + rowNum + ": Date de fin de contrat mal formatée");
+                        }
+                    }
+                } catch (ParseException e) {
+                    errors.add("Ligne " + rowNum + ": Date de fin de contrat invalide - " + e.getMessage());
+                }
+            }
+
+            // Validation Direction
+            String nmdir = getCellValueAsString(row.getCell(0));
+            if (nmdir == null || nmdir.trim().isEmpty()) {
+                errors.add("Ligne " + rowNum + ": Direction manquante");
+            }
+
+            // Validation Branche
+            String nmbraStr = getCellValueAsString(row.getCell(2));
+            if (nmbraStr != null && !nmbraStr.trim().isEmpty()) {
+                // Vérifier si la branche existe
+                String normalizedBrancheCode = normalizeCode(nmbraStr);
+                Branche branche = brancheRepository.findByCode(normalizedBrancheCode).orElse(null);
+                if (branche == null) {
+                    branche = brancheRepository.findByCode(nmbraStr).orElse(null);
+                }
+                if (branche == null) {
+                    errors.add("Ligne " + rowNum + ": Branche non trouvée: " + nmbraStr);
+                }
+            }
+
+        } catch (Exception e) {
+            errors.add("Ligne " + rowNum + ": Erreur de validation - " + e.getMessage());
+        }
+
+        return errors;
     }
 
 }

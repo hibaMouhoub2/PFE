@@ -10,6 +10,7 @@ import com.example.projetpfe.service.Impl.ClientService;
 import com.example.projetpfe.service.Impl.AuditService;
 import com.example.projetpfe.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -83,6 +84,21 @@ public class SuperAdminController {
     }
     private List<String> getUniqueDirections() {
         return clientService.getUniqueDirections();
+    }
+
+    @PostMapping("/clients/validate")
+    @ResponseBody
+    public ResponseEntity<String> validateExcelFile(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("Fichier vide");
+        }
+
+        try {
+            String validationReport = clientService.validateExcelFile(file);
+            return ResponseEntity.ok(validationReport);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erreur lors de la validation: " + e.getMessage());
+        }
     }
 
 

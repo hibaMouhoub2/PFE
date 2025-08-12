@@ -231,15 +231,37 @@
                 </div>
                 <div class="col-lg-4">
                     <form th:action="@{/superadmin/clients/import}" method="post"
-                          enctype="multipart/form-data" class="d-flex align-items-center">
+                          enctype="multipart/form-data" class="d-flex align-items-center" id="importForm">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                         <div class="flex-grow-1 me-3">
                             <input type="file" name="file" accept=".xlsx,.xls"
-                                   class="form-control" required>
+                                   class="form-control" required id="excelFile">
                         </div>
+                        <button type="button" class="btn btn-warning me-2" id="validateBtn">
+                            <i class="fas fa-search me-2"></i>Valider d'abord
+                        </button>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-upload me-2"></i>Importer
+                            <i class="fas fa-upload me-2"></i>Importer directement
                         </button>
                     </form>
+                </div>
+                <div class="card validation-section mb-4" style="display: none;" id="validationSection">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-check-circle me-2"></i>Validation du fichier Excel
+                        </h6>
+                        <div id="validationResults" class="mt-3">
+                            <!-- Les résultats de validation apparaîtront ici -->
+                        </div>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-success me-2" id="proceedImport" style="display: none;">
+                                <i class="fas fa-upload me-2"></i>Procéder à l'importation
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="cancelValidation">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -446,6 +468,81 @@
                 counter.textContent = Math.floor(count);
             }, 50);
         }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const validateBtn = document.getElementById('validateBtn');
+        const validationSection = document.getElementById('validationSection');
+        const validationResults = document.getElementById('validationResults');
+        const proceedImport = document.getElementById('proceedImport');
+        const cancelValidation = document.getElementById('cancelValidation');
+        const importForm = document.getElementById('importForm');
+        const excelFile = document.getElementById('excelFile');
+
+        validateBtn.addEventListener('click', function() {
+            const file = excelFile.files[0];
+            if (!file) {
+                alert('Veuillez sélectionner un fichier Excel');
+                return;
+            }
+
+            validateFile(file);
+        });
+
+        function validateFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Ajouter le token CSRF
+            const csrfToken = document.querySelector('input[name="_csrf"]').value;
+            formData.append('_csrf', csrfToken);
+
+            validationResults.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Validation en cours...</div>';
+            validationSection.style.display = 'block';
+
+            fetch('/superadmin/clients/validate', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+                .then(response => response.text())
+                .then(data => {
+                    displayValidationResults(data);
+                })
+                .catch(error => {
+                    validationResults.innerHTML = '<div class="alert alert-danger">Erreur lors de la validation: ' + error.message + '</div>';
+                });
+        }
+
+        function displayValidationResults(results) {
+            // Analyser les résultats pour déterminer si l'import peut continuer
+            const hasErrors = results.includes('❌') || results.includes('ERREUR');
+
+            let htmlContent = '<div class="alert ' + (hasErrors ? 'alert-danger' : 'alert-success') + '">';
+            htmlContent += '<h6>' + (hasErrors ? 'Problèmes détectés' : 'Validation réussie') + '</h6>';
+            htmlContent += '<pre style="white-space: pre-wrap; font-family: monospace; font-size: 0.9em;">' + results + '</pre>';
+            htmlContent += '</div>';
+
+            validationResults.innerHTML = htmlContent;
+
+            if (!hasErrors) {
+                proceedImport.style.display = 'inline-block';
+            } else {
+                proceedImport.style.display = 'none';
+            }
+        }
+
+        proceedImport.addEventListener('click', function() {
+            // Soumettre le formulaire d'import
+            importForm.submit();
+        });
+
+        cancelValidation.addEventListener('click', function() {
+            validationSection.style.display = 'none';
+            excelFile.value = '';
+        });
     });
 </script>
 
