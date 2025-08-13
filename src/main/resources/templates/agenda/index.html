@@ -390,7 +390,7 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="absents-tab" data-bs-toggle="tab" data-bs-target="#absents" type="button" role="tab" aria-controls="absents" aria-selected="false">
                 <i class="fas fa-phone-alt me-1"></i>À rappeler
-                <span th:if="${stats.todayRappelsCount > 0}" class="badge bg-danger ms-1" th:text="${stats.todayRappelsCount}">0</span>
+                <span th:if="${todayRappels.size() > 0}" class="badge bg-danger ms-1" th:text="${stats.todayRappelsCount}">0</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -463,6 +463,25 @@
                             </tr>
                             </tbody>
                         </table>
+                        <div th:if="${hasNextPage}" class="text-center mt-3">
+                            <div class="btn-group" role="group">
+                                <a th:if="${currentPage > 0}"
+                                   th:href="@{/agenda/index(page=${currentPage - 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-chevron-left me-1"></i>Précédent
+                                </a>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    Page <span th:text="${currentPage + 1}">1</span>
+                                </button>
+                                <a th:if="${hasNextPage}"
+                                   th:href="@{/agenda/index(page=${currentPage + 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    Suivant<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+
+
                     </div>
                 </div>
             </div>
@@ -530,6 +549,24 @@
                             </tr>
                             </tbody>
                         </table>
+                        <div th:if="${hasNextPage}" class="text-center mt-3">
+                            <div class="btn-group" role="group">
+                                <a th:if="${currentPage > 0}"
+                                   th:href="@{/agenda/index(page=${currentPage - 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-chevron-left me-1"></i>Précédent
+                                </a>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    Page <span th:text="${currentPage + 1}">1</span>
+                                </button>
+                                <a th:if="${hasNextPage}"
+                                   th:href="@{/agenda/index(page=${currentPage + 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    Suivant<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -588,6 +625,23 @@
                             </tr>
                             </tbody>
                         </table>
+                        <div th:if="${hasNextPage}" class="text-center mt-3">
+                            <div class="btn-group" role="group">
+                                <a th:if="${currentPage > 0}"
+                                   th:href="@{/agenda/index(page=${currentPage - 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-chevron-left me-1"></i>Précédent
+                                </a>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    Page <span th:text="${currentPage + 1}">1</span>
+                                </button>
+                                <a th:if="${hasNextPage}"
+                                   th:href="@{/agenda/index(page=${currentPage + 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    Suivant<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -647,6 +701,23 @@
                             </tr>
                             </tbody>
                         </table>
+                        <div th:if="${hasNextPage}" class="text-center mt-3">
+                            <div class="btn-group" role="group">
+                                <a th:if="${currentPage > 0}"
+                                   th:href="@{/agenda/index(page=${currentPage - 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-chevron-left me-1"></i>Précédent
+                                </a>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    Page <span th:text="${currentPage + 1}">1</span>
+                                </button>
+                                <a th:if="${hasNextPage}"
+                                   th:href="@{/agenda/index(page=${currentPage + 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    Suivant<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -703,6 +774,23 @@
                             </tr>
                             </tbody>
                         </table>
+                        <div th:if="${hasNextPage}" class="text-center mt-3">
+                            <div class="btn-group" role="group">
+                                <a th:if="${currentPage > 0}"
+                                   th:href="@{/agenda/index(page=${currentPage - 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-chevron-left me-1"></i>Précédent
+                                </a>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    Page <span th:text="${currentPage + 1}">1</span>
+                                </button>
+                                <a th:if="${hasNextPage}"
+                                   th:href="@{/agenda/index(page=${currentPage + 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    Suivant<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -760,6 +848,23 @@
                             </tr>
                             </tbody>
                         </table>
+                        <div th:if="${hasNextPage}" class="text-center mt-3">
+                            <div class="btn-group" role="group">
+                                <a th:if="${currentPage > 0}"
+                                   th:href="@{/agenda/index(page=${currentPage - 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-chevron-left me-1"></i>Précédent
+                                </a>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    Page <span th:text="${currentPage + 1}">1</span>
+                                </button>
+                                <a th:if="${hasNextPage}"
+                                   th:href="@{/agenda/index(page=${currentPage + 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    Suivant<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

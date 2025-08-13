@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -104,11 +105,13 @@ public class SuperAdminController {
 
     @GetMapping("/clients")
     public String listAllClients(
-            @RequestParam(required = false) String q,           // Ajout des paramètres manquants
+            @RequestParam(required = false) String q,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long userId,        // Ajout pour filtrage par utilisateur
-            @RequestParam(required = false) String branche,     // Ajout pour filtrage par branche
-            @RequestParam(required = false) String direction,   // Garder le paramètre existant
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String branche,
+            @RequestParam(required = false) String direction,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
             Model model) {
 
 
@@ -162,7 +165,14 @@ public class SuperAdminController {
         model.addAttribute("directions", getUniqueDirections());
 
         // Données pour la liste
-        model.addAttribute("clients", clients);
+        int startIndex = page * size;
+        List<Client> pagedClients = getPagedList(clients, startIndex, size);
+
+        model.addAttribute("clients", pagedClients);
+        model.addAttribute("allClientsCount", clients.size());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("hasNextPage", hasNextPageForList(clients, startIndex, size));
         model.addAttribute("selectedDirection", direction != null ? direction : "");
         model.addAttribute("selectedStatus", status != null ? status : "");
         model.addAttribute("selectedUserId", userId);
@@ -177,8 +187,30 @@ public class SuperAdminController {
         return "superadmin/clients";
     }
 
+    private List<Client> getPagedList(List<Client> fullList, int startIndex, int size) {
+        if (fullList == null || fullList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        int endIndex = Math.min(startIndex + size, fullList.size());
+        if (startIndex >= fullList.size()) {
+            return new ArrayList<>();
+        }
+        return fullList.subList(startIndex, endIndex);
+    }
 
+    // Méthode pour vérifier s'il y a une page suivante pour UNE liste
+    private boolean hasNextPageForList(List<Client> list, int startIndex, int size) {
+        return list != null && (startIndex + size) < list.size();
+    }
 
-
+    // Méthode pour vérifier s'il y a une page suivante pour PLUSIEURS listes
+    private boolean hasNextPageForAnyList(int startIndex, int size, List<Client>... lists) {
+        for (List<Client> list : lists) {
+            if (list != null && (startIndex + size) < list.size()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

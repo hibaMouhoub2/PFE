@@ -76,6 +76,8 @@ public class AdminController {
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String branche,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate rdvDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
             Model model) {
 
         System.out.println("DEBUG - Entrée dans listAllClients");
@@ -199,7 +201,14 @@ public class AdminController {
         }
         System.out.println("DEBUG - Nombre d'utilisateurs disponibles: " + users.size());
 
-        model.addAttribute("clients", clients);
+
+        int startIndex = page * size;
+        List<Client> pagedClients = getPagedList(clients, startIndex, size);
+        model.addAttribute("clients", pagedClients);
+        model.addAttribute("allClientsCount", clients.size());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("hasNextPage", hasNextPageForList(clients, startIndex, size));
         model.addAttribute("users", users);
         model.addAttribute("searchQuery", q);
         model.addAttribute("clientCount", clients.size());
@@ -241,7 +250,8 @@ public class AdminController {
     }
 
     @GetMapping("/unassigned-clients")
-    public String listUnassignedClients(Model model) {
+    public String listUnassignedClients(Model model,@RequestParam(defaultValue = "0") int page,
+                                        @RequestParam(defaultValue = "50") int size) {
         // Récupérer l'utilisateur connecté
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = userRepository.findByEmail(auth.getName());
@@ -271,7 +281,16 @@ public class AdminController {
             }
         }
 
-        model.addAttribute("clients", unassignedClients);
+        int startIndex = page * size;
+        List<Client> pagedClients = getPagedList(unassignedClients, startIndex, size);
+
+        model.addAttribute("clients", pagedClients);
+        model.addAttribute("allClientsCount", unassignedClients.size());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("hasNextPage", hasNextPageForList(unassignedClients, startIndex, size));
+
+
         model.addAttribute("users", eligibleUsers);
 
         // *** MODIFICATION PRINCIPALE : Utiliser la même logique que ReportController ***
@@ -521,76 +540,66 @@ public class AdminController {
 //        return "admin/export";
 //    }
     @GetMapping("/agenda")
-    public String viewAdminAgenda(Model model) {
-        // Récupérer l'utilisateur connecté
+    public String viewAdminAgenda(Model model,
+                                  @RequestParam(defaultValue = "0") int page,
+                                  @RequestParam(defaultValue = "50") int size) {
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = auth.getName();
         User currentUser = userRepository.findByEmail(userEmail);
 
-        // Vérifier si l'utilisateur est un super admin ou un admin régional/directeur
         boolean isSuperAdmin = userService.isSuperAdmin(currentUser);
         boolean isDirectionAdmin = userService.isDirectionAdmin(currentUser);
 
-        System.out.println("User: " + currentUser.getName());
-        System.out.println("Is Super Admin: " + isSuperAdmin);
-        System.out.println("Is Direction Admin: " + isDirectionAdmin);
-        if (isDirectionAdmin && currentUser.getDirection() != null) {
-            System.out.println("Direction: " + currentUser.getDirection().getName() +
-                    ", Code: " + currentUser.getDirection().getCode());
-        }
+        // Récupérer TOUTES les données (logique existante conservée)
+        List<Client> allClientsNonTraites;
+        List<Client> allClientsAbsents;
+        List<Client> allClientsContactes;
+        List<Client> allClientsRefus;
+        List<Client> allClientsInjoignables;
+        List<Client> allClientsNumeroErrone;
 
-        List<Client> clientsNonTraites;
-        List<Client> clientsAbsents;
-        List<Client> clientsContactes;
-        List<Client> clientsRefus;
-        List<Client> clientsInjoignables;
-        List<Client> clientsNumeroErrone;
-
-        // Pour un super admin, récupérer tous les clients
         if (isSuperAdmin) {
-            clientsNonTraites = clientService.findByStatus(ClientStatus.NON_TRAITE);
-            clientsAbsents = clientService.findByStatus(ClientStatus.ABSENT);
-            clientsContactes = clientService.findByStatus(ClientStatus.CONTACTE);
-            clientsRefus = clientService.findByStatus(ClientStatus.REFUS);
-            clientsInjoignables = clientService.findByStatus(ClientStatus.INJOIGNABLE);
-            clientsNumeroErrone = clientService.findByStatus(ClientStatus.NUMERO_ERRONE);
+            allClientsNonTraites = clientService.findByStatus(ClientStatus.NON_TRAITE);
+            allClientsAbsents = clientService.findByStatus(ClientStatus.ABSENT);
+            allClientsContactes = clientService.findByStatus(ClientStatus.CONTACTE);
+            allClientsRefus = clientService.findByStatus(ClientStatus.REFUS);
+            allClientsInjoignables = clientService.findByStatus(ClientStatus.INJOIGNABLE);
+            allClientsNumeroErrone = clientService.findByStatus(ClientStatus.NUMERO_ERRONE);
         }
-        // Pour un directeur de division
         else if (isDirectionAdmin && currentUser.getDirection() != null) {
             String directionCode = currentUser.getDirection().getCode();
-            System.out.println("Filtering by direction code: " + directionCode);
-
-            clientsNonTraites = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.NON_TRAITE);
-            clientsAbsents = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.ABSENT);
-            clientsContactes = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.CONTACTE);
-            clientsRefus = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.REFUS);
-            clientsInjoignables = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.INJOIGNABLE);
-            clientsNumeroErrone = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.NUMERO_ERRONE);
+            allClientsNonTraites = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.NON_TRAITE);
+            allClientsAbsents = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.ABSENT);
+            allClientsContactes = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.CONTACTE);
+            allClientsRefus = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.REFUS);
+            allClientsInjoignables = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.INJOIGNABLE);
+            allClientsNumeroErrone = clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, ClientStatus.NUMERO_ERRONE);
         }
-        // Pour un admin régional, utiliser la méthode de filtrage souple
         else {
-            clientsNonTraites = filterClientsByRegion(currentUser, ClientStatus.NON_TRAITE, null, null);
-            clientsAbsents = filterClientsByRegion(currentUser, ClientStatus.ABSENT, null, null);
-            clientsContactes = filterClientsByRegion(currentUser, ClientStatus.CONTACTE, null, null);
-            clientsRefus = filterClientsByRegion(currentUser, ClientStatus.REFUS, null, null);
-            clientsInjoignables = filterClientsByRegion(currentUser, ClientStatus.INJOIGNABLE, null, null);
-            clientsNumeroErrone = filterClientsByRegion(currentUser, ClientStatus.NUMERO_ERRONE, null, null);
+            allClientsNonTraites = filterClientsByRegion(currentUser, ClientStatus.NON_TRAITE, null, null);
+            allClientsAbsents = filterClientsByRegion(currentUser, ClientStatus.ABSENT, null, null);
+            allClientsContactes = filterClientsByRegion(currentUser, ClientStatus.CONTACTE, null, null);
+            allClientsRefus = filterClientsByRegion(currentUser, ClientStatus.REFUS, null, null);
+            allClientsInjoignables = filterClientsByRegion(currentUser, ClientStatus.INJOIGNABLE, null, null);
+            allClientsNumeroErrone = filterClientsByRegion(currentUser, ClientStatus.NUMERO_ERRONE, null, null);
         }
 
-        // Ajouter des logs pour déboguer
-        System.out.println("Clients non traités: " + clientsNonTraites.size());
-        System.out.println("Clients absents: " + clientsAbsents.size());
-        System.out.println("Clients contactés: " + clientsContactes.size());
-        System.out.println("Clients refus: " + clientsRefus.size());
-        System.out.println("Clients injoignables: " + clientsInjoignables.size());
-        System.out.println("Clients numéro erroné: " + clientsNumeroErrone.size());
+        // PAGINATION : Calculer les sous-listes
+        int startIndex = page * size;
 
-        // Récupérer les rappels
+        List<Client> clientsNonTraites = getPagedList(allClientsNonTraites, startIndex, size);
+        List<Client> clientsAbsents = getPagedList(allClientsAbsents, startIndex, size);
+        List<Client> clientsContactes = getPagedList(allClientsContactes, startIndex, size);
+        List<Client> clientsRefus = getPagedList(allClientsRefus, startIndex, size);
+        List<Client> clientsInjoignables = getPagedList(allClientsInjoignables, startIndex, size);
+        List<Client> clientsNumeroErrone = getPagedList(allClientsNumeroErrone, startIndex, size);
+
+        // Reste de la logique existante (conservée)
         List<Rappel> rappels;
         if (isSuperAdmin) {
             rappels = rappelService.getAllActiveRappels();
         } else if (isDirectionAdmin && currentUser.getDirection() != null) {
-            // Récupérer les rappels pour cette direction
             String directionCode = currentUser.getDirection().getCode();
             rappels = rappelService.getAllActiveRappels().stream()
                     .filter(rappel -> {
@@ -599,7 +608,6 @@ public class AdminController {
                     })
                     .collect(Collectors.toList());
         } else {
-            // Pour un admin régional, filtrer les rappels manuellement
             final List<String> regionCodes = currentUser.getRegions().stream()
                     .filter(region -> region != null && region.getCode() != null)
                     .map(Region::getCode)
@@ -609,9 +617,7 @@ public class AdminController {
                     .filter(rappel -> {
                         Client client = rappel.getClient();
                         if (client == null || client.getNMREG() == null) return false;
-
                         String clientRegion = client.getNMREG().toUpperCase().replace(" ", "");
-
                         return regionCodes.stream().anyMatch(regionCode -> {
                             String normalizedRegionCode = regionCode.toUpperCase().replace("_", "");
                             return clientRegion.contains(normalizedRegionCode) ||
@@ -625,11 +631,38 @@ public class AdminController {
                     .collect(Collectors.toList());
         }
 
-        System.out.println("Rappels actifs: " + rappels.size());
+        Map<Long, Rappel> clientRappelMap = new HashMap<>();
+        for (Client client : clientsAbsents) {
+            List<Rappel> clientRappels = rappels.stream()
+                    .filter(rappel -> rappel.getClient().getId().equals(client.getId()))
+                    .sorted((r1, r2) -> r2.getDateRappel().compareTo(r1.getDateRappel()))
+                    .collect(Collectors.toList());
+            if (!clientRappels.isEmpty()) {
+                clientRappelMap.put(client.getId(), clientRappels.get(0));
+            }
+        }
 
-        // Le reste du code reste le même...
-        // [code existant pour clientRappelMap, todayRappels, stats, etc.]
+        List<Rappel> todayRappels = rappelService.findByDate(LocalDate.now());
+        Set<Long> todayRappelClientIds = todayRappels.stream()
+                .map(rappel -> rappel.getClient().getId())
+                .collect(Collectors.toSet());
 
+        Map<String, Integer> stats = new HashMap<>();
+        stats.put("nonTraites", allClientsNonTraites.size());
+        stats.put("absents", allClientsAbsents.size());
+        stats.put("contactes", allClientsContactes.size());
+        stats.put("refus", allClientsRefus.size());
+        stats.put("injoignables", allClientsInjoignables.size());
+        stats.put("numerosErrones", allClientsNumeroErrone.size());
+
+        // NOUVEAUX ATTRIBUTS pour pagination
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("hasNextPage", hasNextPageForAnyList(startIndex, size,
+                allClientsNonTraites, allClientsAbsents, allClientsContactes,
+                allClientsRefus, allClientsInjoignables, allClientsNumeroErrone));
+
+        // Attributs existants
         model.addAttribute("clientsNonTraites", clientsNonTraites);
         model.addAttribute("clientsAbsents", clientsAbsents);
         model.addAttribute("clientsContactes", clientsContactes);
@@ -637,48 +670,11 @@ public class AdminController {
         model.addAttribute("clientsInjoignables", clientsInjoignables);
         model.addAttribute("clientsNumeroErrone", clientsNumeroErrone);
         model.addAttribute("rappels", rappels);
-
-        // Créer une map client_id -> rappel pour afficher les dates de rappel
-        Map<Long, Rappel> clientRappelMap = new HashMap<>();
-        for (Rappel rappel : rappels) {
-            if (!rappel.getCompleted()) {
-                Long clientId = rappel.getClient().getId();
-                // Si plusieurs rappels existent pour un client, prendre le plus récent
-                if (!clientRappelMap.containsKey(clientId) ||
-                        rappel.getDateRappel().isAfter(clientRappelMap.get(clientId).getDateRappel())) {
-                    clientRappelMap.put(clientId, rappel);
-                }
-            }
-        }
-
-        // Récupérer les rappels pour aujourd'hui
-        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
-        List<Rappel> todayRappels = rappels.stream()
-                .filter(r -> !r.getCompleted() && r.getDateRappel().isAfter(startOfDay) && r.getDateRappel().isBefore(endOfDay))
-                .collect(Collectors.toList());
-
-        // Extraire les IDs des clients ayant un rappel aujourd'hui
-        Set<Long> todayRappelClientIds = todayRappels.stream()
-                .map(r -> r.getClient().getId())
-                .collect(Collectors.toSet());
-
-        Map<String, Object> stats = new HashMap<>();
-
-        // Utiliser les tailles des listes filtrées pour les statistiques
-        stats.put("nonTraites", clientsNonTraites.size());
-        stats.put("absents", clientsAbsents.size());
-        stats.put("contactes", clientsContactes.size());
-        stats.put("refus", clientsRefus.size());
-        stats.put("injoignables", clientsInjoignables.size());
-        stats.put("numeroErrones", clientsNumeroErrone.size());
-
-        // Ajouter la liste des utilisateurs pour l'assignation
-        List<UserDto> users = userService.findAllUsers();
-
         model.addAttribute("clientRappelMap", clientRappelMap);
         model.addAttribute("todayRappelClientIds", todayRappelClientIds);
         model.addAttribute("stats", stats);
+
+        List<UserDto> users = userService.findAllUsers();
         model.addAttribute("users", users);
 
         return "admin/agenda";
@@ -1266,5 +1262,107 @@ public class AdminController {
                     "Erreur lors de l'assignation par branche: " + e.getMessage());
             return "redirect:/admin/unassigned-clients";
         }
+    }
+
+    private List<Client> filterClientsByCurrentUserScope(ClientStatus status, User currentUser) {
+        // Si l'utilisateur est un directeur de division
+        if (userService.isDirectionAdmin(currentUser) && currentUser.getDirection() != null) {
+            String directionCode = currentUser.getDirection().getCode();
+            System.out.println("DEBUG - Filtrage par direction: " + directionCode);
+
+            // Utiliser directement la méthode du repository pour meilleure performance
+            if (status != null) {
+                return clientRepository.findByNMDIRAndStatusOrderByUpdatedAtDesc(directionCode, status);
+            } else {
+                return clientRepository.findByNMDIROrderByUpdatedAtDesc(directionCode);
+            }
+        }
+        // Si c'est un administrateur régional (ancienne méthode)
+        else if (!currentUser.getRegions().isEmpty()) {
+            // Récupérer les codes de régions
+            List<String> regionCodes = currentUser.getRegions().stream()
+                    .filter(region -> region != null && region.getCode() != null)
+                    .map(Region::getCode)
+                    .collect(Collectors.toList());
+
+            System.out.println("DEBUG - Filtrage par régions: " + regionCodes);
+
+            // Récupérer tous les clients du statut donné
+            List<Client> allClients;
+            if (status != null) {
+                allClients = clientService.findByStatus(status);
+            } else {
+                allClients = clientService.findAll();
+            }
+
+            List<Client> filteredClients = new ArrayList<>();
+
+            for (Client client : allClients) {
+                // Vérifier si le client appartient à une des régions de l'admin
+                boolean regionMatch = false;
+                String clientRegion = client.getNMREG();
+
+                if (clientRegion != null) {
+                    // Nettoyer et normaliser la région du client
+                    String normalizedClientRegion = clientRegion.toUpperCase().replace(" ", "");
+
+                    // Vérifier si la région du client correspond à une des régions de l'admin
+                    for (String regionCode : regionCodes) {
+                        String normalizedRegionCode = regionCode.toUpperCase().replace("_", "");
+
+                        // Correspondance exacte ou partielle
+                        if (normalizedClientRegion.contains(normalizedRegionCode) ||
+                                normalizedRegionCode.contains(normalizedClientRegion)) {
+                            regionMatch = true;
+                            break;
+                        }
+
+                        // Gestion des cas spéciaux (variations d'orthographe)
+                        if ((normalizedClientRegion.contains("SIDI") && normalizedRegionCode.contains("SEDY")) ||
+                                (normalizedClientRegion.contains("SEDY") && normalizedRegionCode.contains("SIDI")) ||
+                                (normalizedClientRegion.contains("FIDAA") && normalizedRegionCode.contains("FIDA")) ||
+                                (normalizedClientRegion.contains("FIDA") && normalizedRegionCode.contains("FIDAA"))) {
+                            regionMatch = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (regionMatch) {
+                    filteredClients.add(client);
+                }
+            }
+
+            return filteredClients;
+        }
+
+        // Si aucune condition n'est remplie, retourner une liste vide
+        return new ArrayList<>();
+    }
+
+    private List<Client> getPagedList(List<Client> fullList, int startIndex, int size) {
+        if (fullList == null || fullList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        int endIndex = Math.min(startIndex + size, fullList.size());
+        if (startIndex >= fullList.size()) {
+            return new ArrayList<>();
+        }
+        return fullList.subList(startIndex, endIndex);
+    }
+
+    // Méthode pour vérifier s'il y a une page suivante pour UNE liste
+    private boolean hasNextPageForList(List<Client> list, int startIndex, int size) {
+        return list != null && (startIndex + size) < list.size();
+    }
+
+    // Méthode pour vérifier s'il y a une page suivante pour PLUSIEURS listes
+    private boolean hasNextPageForAnyList(int startIndex, int size, List<Client>... lists) {
+        for (List<Client> list : lists) {
+            if (list != null && (startIndex + size) < list.size()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -369,7 +369,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-0">Erronés</h6>
-                            <h2 class="mt-2 mb-0" th:text="${stats.numeroErrones}">0</h2>
+                            <h2 class="mt-2 mb-0" th:text="${stats.numerosErrones}">0</h2>
                         </div>
                         <div>
                             <i class="fas fa-times-circle fa-3x opacity-50"></i>
@@ -463,6 +463,28 @@
                             </tr>
                             </tbody>
                         </table>
+                        <div th:if="${hasNextPage}" class="text-center mt-3">
+                            <div class="btn-group" role="group">
+                                <a th:if="${currentPage > 0}"
+                                   th:href="@{/admin/agenda(page=${currentPage - 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-chevron-left me-1"></i>Précédent
+                                </a>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    Page <span th:text="${currentPage + 1}">1</span>
+                                </button>
+                                <a th:if="${hasNextPage}"
+                                   th:href="@{/admin/agenda(page=${currentPage + 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    Suivant<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                            <div class="mt-2 text-muted small">
+                                Affichage de <span th:text="${currentPage * pageSize + 1}">1</span>
+                                à <span th:text="${currentPage * pageSize + pageSize}">50</span>
+                                (Page <span th:text="${currentPage + 1}">1</span>)
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -521,6 +543,28 @@
                             </tr>
                             </tbody>
                         </table>
+                        <div th:if="${hasNextPage}" class="text-center mt-3">
+                            <div class="btn-group" role="group">
+                                <a th:if="${currentPage > 0}"
+                                   th:href="@{/admin/agenda(page=${currentPage - 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-chevron-left me-1"></i>Précédent
+                                </a>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    Page <span th:text="${currentPage + 1}">1</span>
+                                </button>
+                                <a th:if="${hasNextPage}"
+                                   th:href="@{/admin/agenda(page=${currentPage + 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    Suivant<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                            <div class="mt-2 text-muted small">
+                                Affichage de <span th:text="${currentPage * pageSize + 1}">1</span>
+                                à <span th:text="${currentPage * pageSize + pageSize}">50</span>
+                                (Page <span th:text="${currentPage + 1}">1</span>)
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -569,6 +613,28 @@
                             </tr>
                             </tbody>
                         </table>
+                        <div th:if="${hasNextPage}" class="text-center mt-3">
+                            <div class="btn-group" role="group">
+                                <a th:if="${currentPage > 0}"
+                                   th:href="@{/admin/agenda(page=${currentPage - 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-chevron-left me-1"></i>Précédent
+                                </a>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    Page <span th:text="${currentPage + 1}">1</span>
+                                </button>
+                                <a th:if="${hasNextPage}"
+                                   th:href="@{/admin/agenda(page=${currentPage + 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    Suivant<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                            <div class="mt-2 text-muted small">
+                                Affichage de <span th:text="${currentPage * pageSize + 1}">1</span>
+                                à <span th:text="${currentPage * pageSize + pageSize}">50</span>
+                                (Page <span th:text="${currentPage + 1}">1</span>)
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -615,6 +681,28 @@
                             </tr>
                             </tbody>
                         </table>
+                        <div th:if="${hasNextPage}" class="text-center mt-3">
+                            <div class="btn-group" role="group">
+                                <a th:if="${currentPage > 0}"
+                                   th:href="@{/admin/agenda(page=${currentPage - 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-chevron-left me-1"></i>Précédent
+                                </a>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    Page <span th:text="${currentPage + 1}">1</span>
+                                </button>
+                                <a th:if="${hasNextPage}"
+                                   th:href="@{/admin/agenda(page=${currentPage + 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    Suivant<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                            <div class="mt-2 text-muted small">
+                                Affichage de <span th:text="${currentPage * pageSize + 1}">1</span>
+                                à <span th:text="${currentPage * pageSize + pageSize}">50</span>
+                                (Page <span th:text="${currentPage + 1}">1</span>)
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -711,6 +799,28 @@
                             </tr>
                             </tbody>
                         </table>
+                        <div th:if="${hasNextPage}" class="text-center mt-3">
+                            <div class="btn-group" role="group">
+                                <a th:if="${currentPage > 0}"
+                                   th:href="@{/admin/agenda(page=${currentPage - 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-chevron-left me-1"></i>Précédent
+                                </a>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    Page <span th:text="${currentPage + 1}">1</span>
+                                </button>
+                                <a th:if="${hasNextPage}"
+                                   th:href="@{/admin/agenda(page=${currentPage + 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    Suivant<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                            <div class="mt-2 text-muted small">
+                                Affichage de <span th:text="${currentPage * pageSize + 1}">1</span>
+                                à <span th:text="${currentPage * pageSize + pageSize}">50</span>
+                                (Page <span th:text="${currentPage + 1}">1</span>)
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -756,9 +866,40 @@
                             </tr>
                             </tbody>
                         </table>
+                        <div th:if="${hasNextPage}" class="text-center mt-3">
+                            <div class="btn-group" role="group">
+                                <a th:if="${currentPage > 0}"
+                                   th:href="@{/admin/agenda(page=${currentPage - 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-chevron-left me-1"></i>Précédent
+                                </a>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    Page <span th:text="${currentPage + 1}">1</span>
+                                </button>
+                                <a th:if="${hasNextPage}"
+                                   th:href="@{/admin/agenda(page=${currentPage + 1}, size=${pageSize})}"
+                                   class="btn btn-outline-primary">
+                                    Suivant<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                            <div class="mt-2 text-muted small">
+                                Affichage de <span th:text="${currentPage * pageSize + 1}">1</span>
+                                à <span th:text="${currentPage * pageSize + pageSize}">50</span>
+                                (Page <span th:text="${currentPage + 1}">1</span>)
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+        <div th:if="${showAll}" class="alert alert-success text-center mt-3">
+            <div class="mb-2">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Affichage complet activé</strong> - Tous les clients sont affichés
+            </div>
+            <a th:href="@{/admin/agenda(showAll=false)}" class="btn btn-success">
+                <i class="fas fa-compress me-2"></i>Revenir à l'affichage limité (50 premiers)
+            </a>
         </div>
     </div>
 

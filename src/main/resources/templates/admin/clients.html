@@ -469,6 +469,34 @@
                     </tr>
                     </tbody>
                 </table>
+                <div class="card-footer" th:if="${currentPage > 0 or hasNextPage}">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+            <span class="text-muted">
+                Affichage de <span th:text="${currentPage * pageSize + 1}">1</span>
+                à <span th:text="${currentPage * pageSize + clients.size()}">50</span>
+                sur <span th:text="${allClientsCount}">total</span> clients
+            </span>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <div class="btn-group" role="group">
+                                <a th:if="${currentPage > 0}"
+                                   th:href="@{/admin/clients(page=${currentPage - 1}, size=${pageSize}, q=${searchQuery}, status=${selectedStatus}, userId=${selectedUserId}, branche=${selectedBranche}, rdvDate=${rdvDate})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-chevron-left me-1"></i>Précédent
+                                </a>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    Page <span th:text="${currentPage + 1}">1</span>
+                                </button>
+                                <a th:if="${hasNextPage}"
+                                   th:href="@{/admin/clients(page=${currentPage + 1}, size=${pageSize}, q=${searchQuery}, status=${selectedStatus}, userId=${selectedUserId}, branche=${selectedBranche}, rdvDate=${rdvDate})}"
+                                   class="btn btn-outline-primary">
+                                    Suivant<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
